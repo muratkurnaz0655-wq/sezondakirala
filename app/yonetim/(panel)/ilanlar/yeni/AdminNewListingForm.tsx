@@ -3,7 +3,15 @@
 import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { createAdminListing } from "../actions";
-import { BOLGELER, KATEGORILER, OZELLIKLER } from "@/lib/villa-sabitleri";
+import {
+  BOLGELER,
+  KATEGORILER,
+  OZELLIKLER,
+  TEKNE_LIMANLARI,
+  TEKNE_OZELLIKLERI,
+  TEKNE_SURE_SECENEKLERI,
+  TEKNE_TIPLERI,
+} from "@/lib/villa-sabitleri";
 
 export function AdminNewListingForm() {
   const [isPending, startTransition] = useTransition();
@@ -24,13 +32,10 @@ export function AdminNewListingForm() {
 
   const villaFeatures = OZELLIKLER.map((oz) => ({ key: oz.value, label: oz.label }));
   const tekneFeatures = [
-    { key: "kabin", label: "Özel Kabin" },
-    { key: "tekne_iskelesi", label: "Iskele" },
-    { key: "jenerator", label: "Jeneratör" },
-    { key: "smart_tv", label: "Smart TV" },
-    { key: "wifi", label: "WiFi" },
-    { key: "klima", label: "Klima" },
-  ] as const;
+    ...TEKNE_TIPLERI.map((item) => ({ key: item.value, label: item.label })),
+    ...TEKNE_SURE_SECENEKLERI.map((item) => ({ key: item.value, label: item.label })),
+    ...TEKNE_OZELLIKLERI.map((item) => ({ key: item.value, label: item.label })),
+  ];
   const featureOptions = tip === "villa" ? villaFeatures : tekneFeatures;
 
   const previews = useMemo(
@@ -108,7 +113,7 @@ export function AdminNewListingForm() {
           className="h-10 w-full rounded-lg border border-slate-300 px-3 text-sm text-slate-900 outline-none transition focus:border-sky-400"
         >
           <option value="">Bölge seçin</option>
-          {BOLGELER.map((b) => (
+          {(tip === "tekne" ? TEKNE_LIMANLARI : BOLGELER).map((b) => (
             <option key={b} value={b}>
               {b}
             </option>
@@ -217,6 +222,7 @@ export function AdminNewListingForm() {
       </label>
       </div>
 
+      {tip === "villa" ? (
       <label className="block">
         <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500">
           Temizlik Ücreti
@@ -230,6 +236,7 @@ export function AdminNewListingForm() {
           className="h-10 w-full rounded-lg border border-slate-300 px-3 text-sm text-slate-900 outline-none transition focus:border-sky-400"
         />
       </label>
+      ) : null}
 
       <div className="md:col-span-2">
         <p className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500">

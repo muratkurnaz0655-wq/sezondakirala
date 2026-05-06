@@ -16,7 +16,15 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { createListing, createOwnerPackage } from "@/app/actions/owner";
-import { BOLGELER, KATEGORILER, OZELLIKLER } from "@/lib/villa-sabitleri";
+import {
+  BOLGELER,
+  KATEGORILER,
+  OZELLIKLER,
+  TEKNE_LIMANLARI,
+  TEKNE_OZELLIKLERI,
+  TEKNE_SURE_SECENEKLERI,
+  TEKNE_TIPLERI,
+} from "@/lib/villa-sabitleri";
 
 type NewListingWizardProps = {
   initialStep: number;
@@ -133,6 +141,10 @@ export function NewListingWizard({ initialStep }: NewListingWizardProps) {
     bebek_izin: false,
   });
   const [rulesAccepted, setRulesAccepted] = useState(false);
+  const ozellikSecenekleri =
+    tip === "tekne"
+      ? [...TEKNE_TIPLERI, ...TEKNE_SURE_SECENEKLERI, ...TEKNE_OZELLIKLERI]
+      : OZELLIKLER;
 
   useEffect(() => {
     if (tip !== "paket") return;
@@ -427,7 +439,7 @@ export function NewListingWizard({ initialStep }: NewListingWizardProps) {
                 onChange={(e) => setKonum(e.target.value)}
               >
                 <option value="">Bölge seçin</option>
-                {BOLGELER.map((b) => (
+                {(tip === "tekne" ? TEKNE_LIMANLARI : BOLGELER).map((b) => (
                   <option key={b} value={b}>
                     {b}
                   </option>
@@ -543,7 +555,7 @@ export function NewListingWizard({ initialStep }: NewListingWizardProps) {
 
       {step === 3 && tip !== "paket" ? (
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-          {OZELLIKLER.map((oz) => (
+          {ozellikSecenekleri.map((oz) => (
             <label
               key={oz.value}
               className={`flex cursor-pointer items-center gap-2 rounded-xl border p-2.5 transition-all ${
@@ -591,21 +603,23 @@ export function NewListingWizard({ initialStep }: NewListingWizardProps) {
                   </div>
                   <p className="mt-1 text-xs text-gray-400">Standart dönem için gecelik fiyat</p>
                 </div>
-                <div>
-                  <label className="mb-1 block text-sm font-medium text-slate-700">Temizlik Ücreti (₺) *</label>
-                  <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 font-medium text-gray-400">₺</span>
-                    <input
-                      type="number"
-                      min={0}
-                      placeholder="500"
-                      className="w-full rounded-xl border border-slate-200 py-3 pl-8 pr-4 text-sm"
-                      value={temizlikUcreti}
-                      onChange={(e) => setTemizlikUcreti(e.target.value)}
-                    />
+                {tip === "villa" ? (
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-slate-700">Temizlik Ücreti (₺) *</label>
+                    <div className="relative">
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 font-medium text-gray-400">₺</span>
+                      <input
+                        type="number"
+                        min={0}
+                        placeholder="500"
+                        className="w-full rounded-xl border border-slate-200 py-3 pl-8 pr-4 text-sm"
+                        value={temizlikUcreti}
+                        onChange={(e) => setTemizlikUcreti(e.target.value)}
+                      />
+                    </div>
+                    <p className="mt-1 text-xs text-gray-400">Rezervasyon başına tek seferlik</p>
                   </div>
-                  <p className="mt-1 text-xs text-gray-400">Rezervasyon başına tek seferlik</p>
-                </div>
+                ) : null}
               </div>
 
               <div className="grid gap-3 md:grid-cols-2">
@@ -735,7 +749,9 @@ export function NewListingWizard({ initialStep }: NewListingWizardProps) {
             <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
               {tip === "paket"
                 ? "Gönder için: başlık ve açıklama uzunlukları, en az 2 ilan seçimi, toplam fiyat (100 ₺+) ve yukarıdaki onay kutusu tamamlanmalıdır."
-                : "Gönder için: 1. adımda başlık (10+ karakter), açıklama (50+), bölge; 2. adımda en az 3 fotoğraf; burada gecelik fiyat (100 ₺+), temizlik (rakam veya boş bırakıp 0), yukarıdaki onay kutusu işaretli olmalıdır."}
+                : tip === "villa"
+                  ? "Gönder için: 1. adımda başlık (10+ karakter), açıklama (50+), bölge; 2. adımda en az 3 fotoğraf; burada gecelik fiyat (100 ₺+), temizlik (rakam veya boş bırakıp 0), yukarıdaki onay kutusu işaretli olmalıdır."
+                  : "Gönder için: 1. adımda başlık (10+ karakter), açıklama (50+), bölge; 2. adımda en az 3 fotoğraf; burada gecelik fiyat (100 ₺+) ve yukarıdaki onay kutusu işaretli olmalıdır."}
             </p>
           ) : null}
         </div>
