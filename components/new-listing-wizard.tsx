@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { createListing, createOwnerPackage } from "@/app/actions/owner";
+import { BOLGELER, KATEGORILER, OZELLIKLER } from "@/lib/villa-sabitleri";
 
 type NewListingWizardProps = {
   initialStep: number;
@@ -33,27 +34,6 @@ type ListingRow = { id: string; baslik: string; tip: string };
 type PhotoRow = { file: File; preview: string };
 
 const ADIM_BASLIKLARI = ["Temel Bilgiler", "Fotoğraflar", "Özellikler & Konum", "Fiyat & Kurallar"] as const;
-
-const BOLGELER = ["Ölüdeniz", "Çalış", "Göcek", "Hisarönü", "Kayaköy", "Fethiye Merkez"] as const;
-
-const OZELLIKLER: { key: string; label: string; icon: string }[] = [
-  { key: "havuz", label: "Özel Havuz", icon: "🏊" },
-  { key: "wifi", label: "WiFi", icon: "📶" },
-  { key: "klima", label: "Klima", icon: "❄️" },
-  { key: "deniz_manzarasi", label: "Deniz Manzarası", icon: "🌊" },
-  { key: "bahce", label: "Bahçe", icon: "🌿" },
-  { key: "bbq", label: "BBQ / Mangal", icon: "🔥" },
-  { key: "otopark", label: "Otopark", icon: "🚗" },
-  { key: "camasir_makinesi", label: "Çamaşır Makinesi", icon: "🧺" },
-  { key: "bulasik_makinesi", label: "Bulaşık Makinesi", icon: "🍽️" },
-  { key: "smart_tv", label: "Smart TV", icon: "📺" },
-  { key: "jenerator", label: "Jeneratör", icon: "⚡" },
-  { key: "tekne_iskelesi", label: "Tekne İskelesi", icon: "⚓" },
-  { key: "jakuzi", label: "Jakuzi", icon: "🛁" },
-  { key: "sauna", label: "Sauna", icon: "🧖" },
-  { key: "cocuk_dostu", label: "Çocuk Dostu", icon: "👶" },
-  { key: "evcil_hayvan", label: "Evcil Hayvan İzinli", icon: "🐾" },
-];
 
 const EV_KURALLARI: { key: string; label: string; icon: string }[] = [
   { key: "sigara_izin", label: "Sigara İzinli", icon: "🚬" },
@@ -116,6 +96,7 @@ export function NewListingWizard({ initialStep }: NewListingWizardProps) {
   const [message, setMessage] = useState<string | null>(null);
 
   const [tip, setTip] = useState<"villa" | "tekne" | "paket">("villa");
+  const [kategori, setKategori] = useState<(typeof KATEGORILER)[number]["value"]>("luks");
   const [baslik, setBaslik] = useState("");
   const [aciklama, setAciklama] = useState("");
   const [konum, setKonum] = useState("");
@@ -133,7 +114,7 @@ export function NewListingWizard({ initialStep }: NewListingWizardProps) {
   const [seciliOzellikler, setSeciliOzellikler] = useState<Record<string, boolean>>(() => {
     const init: Record<string, boolean> = {};
     OZELLIKLER.forEach((o) => {
-      init[o.key] = o.key === "wifi";
+      init[o.value] = o.value === "wifi";
     });
     return init;
   });
@@ -263,7 +244,14 @@ export function NewListingWizard({ initialStep }: NewListingWizardProps) {
       return;
     }
 
-    const mergedOzellikler = { ...seciliOzellikler, ...evKuralCheckbox };
+    const secilenOzellikler = Object.entries(seciliOzellikler)
+      .filter(([, secili]) => secili)
+      .map(([key]) => key);
+    const ozellikPayload = {
+      kategori: tip === "villa" ? kategori : null,
+      etiketler: secilenOzellikler,
+      kurallar: evKuralCheckbox,
+    };
     const formData = new FormData();
     formData.set("baslik", baslik.trim());
     formData.set("aciklama", aciklama.trim());
@@ -284,7 +272,8 @@ export function NewListingWizard({ initialStep }: NewListingWizardProps) {
     formData.set("iptal_politikasi", iptalPolitikasi);
     formData.set("ev_kurallari", evKurallariMetin);
     formData.set("min_kiralama_suresi", String(minSure));
-    formData.set("ozellikler", JSON.stringify(mergedOzellikler));
+    formData.set("kategori", kategori);
+    formData.set("ozellikler", JSON.stringify(ozellikPayload));
     fotograflar.forEach((row) => formData.append("medya", row.file));
 
     startTransition(async () => {
@@ -447,6 +436,28 @@ export function NewListingWizard({ initialStep }: NewListingWizardProps) {
             </div>
           ) : null}
 
+          {tip === "villa" ? (
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-700">Tatil Türü *</label>
+              <div className="grid grid-cols-2 gap-2">
+                {KATEGORILER.map((kat) => (
+                  <button
+                    key={kat.value}
+                    type="button"
+                    onClick={() => setKategori(kat.value)}
+                    className={`rounded-xl border p-3 text-left text-sm font-medium transition-all ${
+                      kategori === kat.value
+                        ? "border-[#0e9aa7] bg-[#0e9aa7]/10 text-[#0e9aa7]"
+                        : "border-slate-200 text-slate-600 hover:border-[#0e9aa7]/50"
+                    }`}
+                  >
+                    {kat.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <SayiInput label="Kapasite" altBaslik="Kişi sayısı" min={1} max={30} value={kapasite} onChange={setKapasite} />
             {tip !== "paket" ? (
@@ -531,28 +542,26 @@ export function NewListingWizard({ initialStep }: NewListingWizardProps) {
       ) : null}
 
       {step === 3 && tip !== "paket" ? (
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-          {OZELLIKLER.map(({ key, label, icon }) => (
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+          {OZELLIKLER.map((oz) => (
             <label
-              key={key}
-              className={`flex cursor-pointer items-center gap-3 rounded-xl border-2 p-3 transition-all ${
-                seciliOzellikler[key] ? "border-sky-500 bg-sky-50" : "border-gray-200 hover:border-gray-300"
+              key={oz.value}
+              className={`flex cursor-pointer items-center gap-2 rounded-xl border p-2.5 transition-all ${
+                seciliOzellikler[oz.value] ? "border-[#0e9aa7] bg-[#0e9aa7]/10" : "border-slate-200 hover:border-[#0e9aa7]/50"
               }`}
             >
               <input
                 type="checkbox"
-                className="hidden"
-                checked={seciliOzellikler[key] ?? false}
+                className="accent-[#0e9aa7]"
+                checked={seciliOzellikler[oz.value] ?? false}
                 onChange={(e) =>
                   setSeciliOzellikler((prev) => ({
                     ...prev,
-                    [key]: e.target.checked,
+                    [oz.value]: e.target.checked,
                   }))
                 }
               />
-              <span className="text-xl">{icon}</span>
-              <span className="text-sm font-medium text-gray-700">{label}</span>
-              {seciliOzellikler[key] ? <Check size={14} className="ml-auto text-sky-500" /> : null}
+              <span className="text-sm text-slate-600">{oz.label}</span>
             </label>
           ))}
         </div>

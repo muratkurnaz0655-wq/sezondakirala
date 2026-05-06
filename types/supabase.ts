@@ -29,7 +29,7 @@ export type Ilan = {
   kapasite: number;
   yatak_odasi: number;
   banyo: number;
-  ozellikler: Record<string, boolean>;
+  ozellikler: Record<string, unknown> | string[];
   aktif: boolean;
   sponsorlu: boolean;
   olusturulma_tarihi: string;

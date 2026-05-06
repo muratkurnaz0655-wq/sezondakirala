@@ -3,6 +3,7 @@
 import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { createAdminListing } from "../actions";
+import { BOLGELER, KATEGORILER, OZELLIKLER } from "@/lib/villa-sabitleri";
 
 export function AdminNewListingForm() {
   const [isPending, startTransition] = useTransition();
@@ -15,21 +16,13 @@ export function AdminNewListingForm() {
   const [temizlikUcreti, setTemizlikUcreti] = useState(0);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [coverIndex, setCoverIndex] = useState(0);
+  const [kategori, setKategori] = useState<(typeof KATEGORILER)[number]["value"]>("luks");
   const [selectedFeatures, setSelectedFeatures] = useState<Record<string, boolean>>({
     wifi: true,
     klima: false,
   });
 
-  const villaFeatures = [
-    { key: "havuz", label: "Özel Havuz" },
-    { key: "bahce", label: "Bahçe" },
-    { key: "deniz_manzarasi", label: "Deniz Manzarası" },
-    { key: "jakuzi", label: "Jakuzi" },
-    { key: "cocuk_dostu", label: "Çocuk Dostu" },
-    { key: "evcil_hayvan", label: "Evcil Hayvan İzinli" },
-    { key: "wifi", label: "WiFi" },
-    { key: "klima", label: "Klima" },
-  ] as const;
+  const villaFeatures = OZELLIKLER.map((oz) => ({ key: oz.value, label: oz.label }));
   const tekneFeatures = [
     { key: "kabin", label: "Özel Kabin" },
     { key: "tekne_iskelesi", label: "Iskele" },
@@ -109,12 +102,41 @@ export function AdminNewListingForm() {
         <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500">
           Bölge
         </span>
-        <input
-          name="bolge"
-          placeholder="Örn. Ölüdeniz"
+        <select
+          name="konum"
+          required
           className="h-10 w-full rounded-lg border border-slate-300 px-3 text-sm text-slate-900 outline-none transition focus:border-sky-400"
-        />
+        >
+          <option value="">Bölge seçin</option>
+          {BOLGELER.map((b) => (
+            <option key={b} value={b}>
+              {b}
+            </option>
+          ))}
+        </select>
       </label>
+
+      {tip === "villa" ? (
+        <div>
+          <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500">Tatil Türü *</span>
+          <div className="grid grid-cols-2 gap-2">
+            {KATEGORILER.map((kat) => (
+              <button
+                key={kat.value}
+                type="button"
+                onClick={() => setKategori(kat.value)}
+                className={`rounded-xl border p-3 text-left text-sm font-medium transition-all ${
+                  kategori === kat.value
+                    ? "border-[#0e9aa7] bg-[#0e9aa7]/10 text-[#0e9aa7]"
+                    : "border-slate-200 text-slate-600 hover:border-[#0e9aa7]/50"
+                }`}
+              >
+                {kat.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : null}
 
       <label className="block">
         <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -286,7 +308,17 @@ export function AdminNewListingForm() {
       ) : null}
 
       <input type="hidden" name="cover_index" value={coverIndex} />
-      <input type="hidden" name="ozellikler" value={JSON.stringify(selectedFeatures)} />
+      <input type="hidden" name="kategori" value={kategori} />
+      <input
+        type="hidden"
+        name="ozellikler"
+        value={JSON.stringify({
+          kategori: tip === "villa" ? kategori : null,
+          etiketler: Object.entries(selectedFeatures)
+            .filter(([, secili]) => secili)
+            .map(([key]) => key),
+        })}
+      />
 
       {error ? (
         <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div>

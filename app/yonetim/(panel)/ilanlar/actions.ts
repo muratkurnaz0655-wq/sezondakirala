@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
 import { requireAdminUser } from "@/lib/auth/guards";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { generateUniqueSlug } from "@/lib/slugify";
@@ -40,9 +39,9 @@ export async function createAdminListing(formData: FormData) {
   if (!admin.ok) return { success: false as const, error: admin.error };
 
   const ozelliklerRaw = String(formData.get("ozellikler") ?? "{}");
-  let ozellikler: Record<string, boolean> = {};
+  let ozellikler: Record<string, unknown> = {};
   try {
-    ozellikler = JSON.parse(ozelliklerRaw) as Record<string, boolean>;
+    ozellikler = JSON.parse(ozelliklerRaw) as Record<string, unknown>;
   } catch {
     ozellikler = {};
   }

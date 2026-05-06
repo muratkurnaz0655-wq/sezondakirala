@@ -354,9 +354,16 @@ export async function getFilteredListings(filters: ListingFilters) {
 
   const filteredRows = !filters.ozellikler?.length
     ? availabilityFilteredRows
-    : availabilityFilteredRows.filter((listing) =>
-    filters.ozellikler!.every((feature) => listing.ozellikler?.[feature]),
-  );
+    : availabilityFilteredRows.filter((listing) => {
+      const raw = listing.ozellikler as unknown;
+      if (Array.isArray(raw)) return filters.ozellikler!.every((feature) => raw.includes(feature));
+      if (!raw || typeof raw !== "object") return false;
+      const row = raw as Record<string, unknown>;
+      if (Array.isArray(row.etiketler)) {
+        return filters.ozellikler!.every((feature) => (row.etiketler as unknown[]).includes(feature));
+      }
+      return filters.ozellikler!.every((feature) => Boolean(row[feature]));
+    });
 
   return attachPreviewImages(filteredRows);
 }

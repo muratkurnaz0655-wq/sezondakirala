@@ -10,6 +10,15 @@ import type { Ilan } from "@/types/supabase";
 
 type ListingRow = Ilan & { ilan_medyalari?: Array<{ url: string; sira: number }> | null };
 
+function extractTags(ozellikler: unknown): string[] {
+  if (Array.isArray(ozellikler)) return ozellikler.filter((item): item is string => typeof item === "string");
+  if (!ozellikler || typeof ozellikler !== "object") return [];
+  const row = ozellikler as Record<string, unknown>;
+  const etiketler = row.etiketler;
+  if (Array.isArray(etiketler)) return etiketler.filter((item): item is string => typeof item === "string");
+  return Object.keys(row).filter((key) => row[key] === true);
+}
+
 function withCoverImage(rows: ListingRow[]): Ilan[] {
   return rows.map((row) => {
     const medyaKapak =
@@ -102,7 +111,7 @@ export default function BoatsPage() {
                 yorum_sayisi={0}
                 fotograflar={listing.ilk_resim_url ? [listing.ilk_resim_url] : []}
                 one_cikan={listing.sponsorlu}
-                ozellikler={Object.keys(listing.ozellikler ?? {}).filter((key) => listing.ozellikler?.[key])}
+                ozellikler={extractTags(listing.ozellikler)}
                 geceSayisi={kacGun}
                 giris={baslangic}
                 yetiskin={kisi}
