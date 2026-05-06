@@ -89,7 +89,7 @@ export function IlanListeKarti({
     };
   }, [id]);
 
-  const toplamFiyat = geceSayisi > 0 ? fiyat * geceSayisi : fiyat;
+  const toplamFiyat = geceSayisi > 1 ? fiyat * geceSayisi : fiyat;
   const temizlikDahil = toplamFiyat + (temizlikUcreti ?? 0);
 
   return (
@@ -203,16 +203,13 @@ export function IlanListeKarti({
             </div>
 
             <div className="text-right">
-              {geceSayisi > 0 ? (
+              {geceSayisi > 1 ? (
                 <>
                   <p className="text-xl font-bold text-[#0e9aa7]">
-                    {formatCurrency(fiyat)}
+                    {formatCurrency(temizlikDahil)}
                   </p>
-                  <p className="text-xs text-slate-500">/ gece</p>
-                  <p className="mt-0.5 text-sm text-slate-500">
-                    {geceSayisi} gece toplam:{" "}
-                    <span className="font-semibold text-slate-700">{formatCurrency(temizlikDahil)}</span>
-                  </p>
+                  <p className="text-xs text-slate-400">{geceSayisi} gece toplam</p>
+                  <p className="mt-0.5 text-xs text-slate-400">{formatCurrency(fiyat)} / gece</p>
                 </>
               ) : (
                 <>

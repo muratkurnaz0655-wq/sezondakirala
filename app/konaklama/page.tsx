@@ -84,7 +84,7 @@ export default function ListingsPage() {
     setGeceSayisi(0);
   }, [currentArama?.cikis, currentArama?.giris, currentArama?.tip]);
 
-  const fetchIlanlar = useCallback(async (aktifFiltre: VillaFiltre) => {
+  const fetchIlanlar = useCallback(async (aktifFiltre: VillaFiltre, aktifGeceSayisi = 1) => {
     const supabase = createClient();
     let query = supabase.from("ilanlar").select("*, ilan_medyalari(url,sira,tip)").eq("aktif", true).eq("tip", "villa");
 
@@ -95,9 +95,15 @@ export default function ListingsPage() {
       query = query.or(bolgeFiltre);
     }
 
-    query = query
-      .gte("gunluk_fiyat", Number(aktifFiltre.minFiyat) || 0)
-      .lte("gunluk_fiyat", Number(aktifFiltre.maxFiyat) || 50000);
+    if (aktifGeceSayisi > 1) {
+      const maxGecelik = Math.ceil((Number(aktifFiltre.maxFiyat) || 50000) / aktifGeceSayisi);
+      const minGecelik = Math.floor((Number(aktifFiltre.minFiyat) || 0) / aktifGeceSayisi);
+      query = query.gte("gunluk_fiyat", minGecelik).lte("gunluk_fiyat", maxGecelik);
+    } else {
+      query = query
+        .gte("gunluk_fiyat", Number(aktifFiltre.minFiyat) || 0)
+        .lte("gunluk_fiyat", Number(aktifFiltre.maxFiyat) || 50000);
+    }
     if (aktifFiltre.minKisi > 1) query = query.gte("kapasite", aktifFiltre.minKisi);
     if (aktifFiltre.minYatakOdasi > 1) query = query.gte("yatak_odasi", aktifFiltre.minYatakOdasi);
     if (aktifFiltre.minBanyo > 1) query = query.gte("banyo", aktifFiltre.minBanyo);
@@ -149,7 +155,7 @@ export default function ListingsPage() {
   useEffect(() => {
     void (async () => {
       setLoading(true);
-      await fetchIlanlar(filtre);
+      await fetchIlanlar(filtre, geceSayisi);
     })();
   }, [
     fetchIlanlar,
@@ -164,6 +170,7 @@ export default function ListingsPage() {
     filtre.minKisi,
     filtre.minYatakOdasi,
     filtre.siralama,
+    geceSayisi,
   ]);
 
   const aktifFiltreler = useMemo(
@@ -246,6 +253,7 @@ export default function ListingsPage() {
             onChange={setFiltre}
             onTemizle={() => setFiltre(defaultFiltre)}
             sonucSayisi={ilanlar.length}
+            geceSayisi={geceSayisi}
           />
         </div>
 
@@ -347,6 +355,7 @@ export default function ListingsPage() {
               onChange={setFiltre}
               onTemizle={() => setFiltre(defaultFiltre)}
               sonucSayisi={ilanlar.length}
+              geceSayisi={geceSayisi}
             />
           </div>
         </div>

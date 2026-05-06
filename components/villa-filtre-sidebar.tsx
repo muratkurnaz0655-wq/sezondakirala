@@ -31,12 +31,18 @@ export function VillaFiltreSidebar({
   onChange,
   onTemizle,
   sonucSayisi,
+  geceSayisi = 0,
 }: {
   filtre: VillaFiltre;
   onChange: (filtre: VillaFiltre) => void;
   onTemizle: () => void;
   sonucSayisi: number;
+  geceSayisi?: number;
 }) {
+  const toplamModu = geceSayisi > 1;
+  const maxFiyatLimit = toplamModu ? 200000 : 20000;
+  const fiyatStep = toplamModu ? 1000 : 500;
+
   return (
     <aside className="w-full shrink-0 lg:w-72">
       <div className="mb-5 flex items-center justify-between">
@@ -70,7 +76,7 @@ export function VillaFiltreSidebar({
           </div>
         </FiltreSection>
 
-        <FiltreSection title="Gecelik Fiyat">
+        <FiltreSection title={toplamModu ? `Toplam Fiyat (${geceSayisi} gece)` : "Gecelik Fiyat"}>
           <div className="space-y-3">
             <div className="flex items-center gap-2">
               <div className="flex-1">
@@ -80,7 +86,7 @@ export function VillaFiltreSidebar({
                   value={filtre.minFiyat}
                   min={0}
                   max={filtre.maxFiyat}
-                  step={500}
+                  step={fiyatStep}
                   onChange={(e) => onChange({ ...filtre, minFiyat: Number(e.target.value) })}
                   className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 outline-none focus:border-[#0e9aa7] focus:ring-1 focus:ring-[#0e9aa7]/20"
                 />
@@ -92,8 +98,8 @@ export function VillaFiltreSidebar({
                   type="number"
                   value={filtre.maxFiyat}
                   min={filtre.minFiyat}
-                  max={50000}
-                  step={500}
+                  max={maxFiyatLimit}
+                  step={fiyatStep}
                   onChange={(e) => onChange({ ...filtre, maxFiyat: Number(e.target.value) })}
                   className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 outline-none focus:border-[#0e9aa7] focus:ring-1 focus:ring-[#0e9aa7]/20"
                 />
