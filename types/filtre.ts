@@ -15,7 +15,7 @@ export interface VillaFiltre {
 export const defaultFiltre: VillaFiltre = {
   bolge: [],
   minFiyat: 0,
-  maxFiyat: 20000,
+  maxFiyat: 50000,
   minKisi: 1,
   maxKisi: 20,
   minYatakOdasi: 1,

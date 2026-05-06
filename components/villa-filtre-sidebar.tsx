@@ -40,7 +40,7 @@ export function VillaFiltreSidebar({
   geceSayisi?: number;
 }) {
   const toplamModu = geceSayisi > 1;
-  const maxFiyatLimit = toplamModu ? 200000 : 20000;
+  const maxFiyatLimit = toplamModu ? 200000 : 50000;
   const fiyatStep = toplamModu ? 1000 : 500;
 
   return (
