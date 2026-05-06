@@ -3,6 +3,7 @@
 import { Fragment, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -15,6 +16,7 @@ import { SITE_NAME, WHATSAPP_NUMBER } from "@/lib/constants";
 import { CalendarDays, Check, Info, MapPin, Users } from "lucide-react";
 import { ClientDayPicker } from "@/components/day-picker-client";
 import { dateFromYmdLocal } from "@/lib/tr-today";
+import { toast } from "sonner";
 
 const FALLBACK_KAPAK =
   "https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=400&q=80";
@@ -226,6 +228,7 @@ export function ReservationWizard({
   maxKapasite,
   packageSummary = null,
 }: ReservationWizardProps) {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [step, setStep] = useState(Math.min(4, Math.max(1, initialStep)));
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -385,6 +388,11 @@ export function ReservationWizard({
         referansNo: referenceNo,
       });
       if (!createResult.success) {
+        if ((createResult.error ?? "").toLocaleLowerCase("tr").includes("oturum")) {
+          toast.error("Oturumunuz sona erdi, lütfen tekrar giriş yapın");
+          router.push("/giris");
+          return;
+        }
         setErrorMessage(createResult.error);
         return;
       }

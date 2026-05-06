@@ -49,7 +49,7 @@ export function PackageCard({ paket }: PackageCardProps) {
   const emoji = KATEGORI_EMOJI[kat] ?? "📦";
 
   return (
-    <div className="group h-full min-h-0 overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-md transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-[#0e9aa7]/15">
+    <div className="group flex min-h-[380px] h-full flex-col rounded-2xl border border-slate-100 bg-white shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
       <div className="relative h-48 w-full overflow-hidden sm:h-52">
         <Image
           src={kapak}

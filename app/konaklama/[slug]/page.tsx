@@ -3,7 +3,6 @@ import { cookies } from "next/headers";
 import { notFound, permanentRedirect } from "next/navigation";
 import { ListingDetailPage } from "@/components/listing-detail-page";
 import { getListingBySlug } from "@/lib/data/phase2";
-import { SITE_NAME } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/server";
 import { fixTurkishDisplay } from "@/lib/utils/turkish-display";
 
@@ -74,12 +73,12 @@ export async function generateMetadata({
     "Fethiye villa kiralama ilan detayları.";
 
   return {
-    title: `${title} — Fethiye Kiralama | ${SITE_NAME}`,
+    title: `${title} — Fethiye Kiralama`,
     description,
-    openGraph: { title: `${title} — Fethiye Kiralama | ${SITE_NAME}`, description, images: ["/og-image.jpg"] },
+    openGraph: { title: `${title} — Fethiye Kiralama`, description, images: ["/og-image.jpg"] },
     twitter: {
       card: "summary_large_image",
-      title: `${title} — Fethiye Kiralama | ${SITE_NAME}`,
+      title: `${title} — Fethiye Kiralama`,
       description,
       images: ["/og-image.jpg"],
     },

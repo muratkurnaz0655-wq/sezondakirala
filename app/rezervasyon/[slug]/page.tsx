@@ -25,6 +25,7 @@ export default function ReservationPage() {
   const params = useParams<{ slug: string }>();
   const slug = Array.isArray(params.slug) ? params.slug[0] : params.slug;
   const [ready, setReady] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
   const [listing, setListing] = useState<ReservationListing | null>(null);
   const [stored] = useState<ReturnType<typeof rezervasyonStore.get>>(() => rezervasyonStore.get());
   const bugunIso = istanbulDateString();
@@ -39,6 +40,14 @@ export default function ReservationPage() {
     if (!slug) return;
     void (async () => {
       const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        router.replace(`/giris?redirect=${encodeURIComponent(window.location.pathname)}`);
+        return;
+      }
+      setAuthChecked(true);
       const { data: bySlug } = await supabase
         .from("ilanlar")
         .select("id,slug,tip,baslik,konum,kapasite,gunluk_fiyat,ilan_medyalari(url,sira)")
@@ -63,7 +72,7 @@ export default function ReservationPage() {
     })();
   }, [router, slug]);
 
-  if (!ready || !listing) {
+  if (!authChecked || !ready || !listing) {
     return <div className="py-12 text-center text-slate-600">Rezervasyon yükleniyor…</div>;
   }
 

@@ -1,33 +1,28 @@
 "use client";
 
-import { useMemo } from "react";
+import { AlertTriangle } from "lucide-react";
 
 type GlobalErrorProps = {
   reset: () => void;
 };
 
 export default function GlobalError({ reset }: GlobalErrorProps) {
-  const hataKodu = useMemo(() => {
-    const tarih = Date.now().toString(36).toUpperCase();
-    const rastgele = Math.random().toString(36).slice(2, 8).toUpperCase();
-    return `ERR-${tarih}-${rastgele}`;
-  }, []);
-
   return (
-    <div className="mx-auto w-full max-w-xl overflow-x-hidden rounded-2xl border border-red-200 bg-red-50 p-4 sm:p-6 text-center">
-      <div className="text-5xl">⚠️</div>
-      <h2 className="text-lg sm:text-xl font-semibold text-red-800">Bir hata oluştu</h2>
-      <p className="mt-2 text-sm text-red-700">
-        Beklenmeyen bir sorunla karşılaştık. Lütfen sayfayı yenileyin.
-      </p>
-      <p className="mt-2 text-xs font-mono text-red-600">Hata Kodu: {hataKodu}</p>
-      <button
-        type="button"
-        onClick={reset}
-        className="mt-4 w-full sm:w-auto rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white"
-      >
-        Tekrar Dene
-      </button>
+    <div className="flex min-h-screen items-center justify-center px-4">
+      <div className="w-full max-w-md text-center">
+        <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-red-50">
+          <AlertTriangle className="h-8 w-8 text-red-400" />
+        </div>
+        <h2 className="mb-2 text-xl font-bold text-slate-800">Bir şeyler ters gitti</h2>
+        <p className="mb-6 text-slate-500">Sayfayı yenilemeyi deneyin</p>
+        <button
+          type="button"
+          onClick={reset}
+          className="rounded-xl bg-[#0e9aa7] px-6 py-3 font-semibold text-white transition-all hover:bg-[#0f4c5c]"
+        >
+          Tekrar Dene
+        </button>
+      </div>
     </div>
   );
 }

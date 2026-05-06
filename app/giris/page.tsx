@@ -12,7 +12,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default function SignInPage() {
   return (
-    <div className="flex w-full flex-1 flex-col items-center justify-center bg-white py-10">
+    <div className="flex min-h-screen w-full items-center justify-center bg-gradient-to-br from-[#f0fdfd] via-white to-[#ecfeff] px-4">
       <AuthForm mode="signin" />
     </div>
   );

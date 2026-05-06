@@ -40,6 +40,7 @@ export function ListingGallery({ media }: ListingGalleryProps) {
             src={items[activeIndex]?.url}
             alt={`Galeri ${activeIndex + 1}`}
             className="h-full w-full cursor-pointer object-cover transition-opacity duration-200"
+            loading="lazy"
             onClick={() => setIsOpen(true)}
           />
           {items.length > 1 ? (
@@ -86,7 +87,7 @@ export function ListingGallery({ media }: ListingGalleryProps) {
               aria-label={`Fotoğraf ${i + 1}`}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={item.url} alt="" className="h-full w-full object-cover" />
+              <img src={item.url} alt="" className="h-full w-full object-cover" loading="lazy" />
             </button>
           ))}
         </div>

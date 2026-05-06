@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
-import { SlidersHorizontal, X } from "lucide-react";
+import { Search, SlidersHorizontal, X } from "lucide-react";
 import { IlanListeKarti } from "@/components/ilan-liste-karti";
 import { SearchForm } from "@/components/search-form";
 import { VillaFiltreSidebar } from "@/components/villa-filtre-sidebar";
@@ -307,6 +307,21 @@ export default function ListingsPage() {
                 {[...Array(6)].map((_, i) => (
                   <SkeletonKart key={i} />
                 ))}
+              </div>
+            ) : ilanlar.length === 0 ? (
+              <div className="col-span-full flex flex-col items-center justify-center py-20 text-center">
+                <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-2xl bg-[#f0fdfd]">
+                  <Search className="h-8 w-8 text-[#0e9aa7]/40" />
+                </div>
+                <h3 className="mb-2 text-lg font-semibold text-slate-700">Sonuç bulunamadı</h3>
+                <p className="mb-4 text-sm text-slate-500">Farklı filtre kriterleri deneyin</p>
+                <button
+                  onClick={() => setFiltre(defaultFiltre)}
+                  className="text-sm font-semibold text-[#0e9aa7] hover:underline"
+                  type="button"
+                >
+                  Filtreleri temizle
+                </button>
               </div>
             ) : (
               ilanlar.map((listing) => (

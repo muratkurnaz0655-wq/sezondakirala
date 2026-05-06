@@ -12,6 +12,7 @@ import { ListingQuestionForm } from "@/components/listing-detail-extras";
 import { RecentListingsTracker } from "@/components/recent-listings-tracker";
 import { RezervasyonBaslatButton } from "@/components/rezervasyon-baslat-button";
 import { getListingBySlug } from "@/lib/data/phase2";
+import { OZELLIKLER } from "@/lib/villa-sabitleri";
 import { reservationUrlSegmentFromListing } from "@/lib/rezervasyon-segment";
 import { getPlatformSettings } from "@/lib/settings";
 import { dateFromYmdLocal, istanbulDateString } from "@/lib/tr-today";
@@ -92,6 +93,15 @@ export async function ListingDetailPage({ tip, slug, selectedDates }: ListingDet
     `Merhaba, ${fixTurkishDisplay(detail.listing.baslik)} hakkında bilgi almak istiyorum.`,
   );
   const waLink = `https://wa.me/${waDigits}?text=${waMesaj}`;
+  const bolgeAdi = fixTurkishDisplay(detail.listing.konum.split(",")[0]?.trim() || detail.listing.konum);
+  const ozellikKaynak = detail.listing.ozellikler as unknown;
+  const etiketler = Array.isArray(ozellikKaynak)
+    ? ozellikKaynak.filter((x): x is string => typeof x === "string")
+    : (ozellikKaynak && typeof ozellikKaynak === "object" && Array.isArray((ozellikKaynak as { etiketler?: unknown[] }).etiketler)
+        ? (ozellikKaynak as { etiketler: unknown[] }).etiketler.filter((x): x is string => typeof x === "string")
+        : Object.entries((ozellikKaynak ?? {}) as Record<string, unknown>)
+            .filter(([, value]) => value === true)
+            .map(([key]) => key));
   return (
     <div className="w-full space-y-8 overflow-x-hidden pb-24 xl:pb-0">
       <RecentListingsTracker
@@ -106,15 +116,19 @@ export async function ListingDetailPage({ tip, slug, selectedDates }: ListingDet
         }}
       />
       <section className="space-y-3">
-        <nav className="mb-6 flex items-center gap-2 text-sm text-slate-400">
+        <nav className="mb-6 flex flex-wrap items-center gap-1.5 text-sm text-slate-400">
           <Link href="/" className="transition-colors hover:text-[#0e9aa7]">
             Ana Sayfa
           </Link>
-          <ChevronRight className="h-3.5 w-3.5" />
+          <ChevronRight className="h-3.5 w-3.5 flex-shrink-0" />
           <Link href="/konaklama" className="transition-colors hover:text-[#0e9aa7]">
             Konaklama
           </Link>
-          <ChevronRight className="h-3.5 w-3.5" />
+          <ChevronRight className="h-3.5 w-3.5 flex-shrink-0" />
+          <Link href={`/konaklama?bolge=${encodeURIComponent(bolgeAdi)}`} className="transition-colors hover:text-[#0e9aa7]">
+            {bolgeAdi}
+          </Link>
+          <ChevronRight className="h-3.5 w-3.5 flex-shrink-0" />
           <span className="line-clamp-1 font-medium text-slate-600">{fixTurkishDisplay(detail.listing.baslik)}</span>
         </nav>
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -163,6 +177,21 @@ export async function ListingDetailPage({ tip, slug, selectedDates }: ListingDet
                 <span className="mt-0.5 block text-xs text-slate-500">Kişi</span>
               </div>
             </div>
+            {etiketler.length > 0 ? (
+              <div className="mb-5 mt-2 flex flex-wrap gap-2">
+                {etiketler.map((oz) => {
+                  const ozDef = OZELLIKLER.find((item) => item.value === oz);
+                  return ozDef ? (
+                    <span
+                      key={oz}
+                      className="inline-flex items-center gap-1.5 rounded-full border border-[#0e9aa7]/20 bg-[#f0fdfd] px-3 py-1.5 text-xs font-medium text-[#0e9aa7]"
+                    >
+                      {ozDef.label}
+                    </span>
+                  ) : null;
+                })}
+              </div>
+            ) : null}
             <p className="mt-3 text-sm text-slate-700">{fixTurkishDisplay(detail.listing.aciklama)}</p>
           </section>
 

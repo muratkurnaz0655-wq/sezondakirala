@@ -162,7 +162,7 @@ export function AuthForm({ mode, redirectTo }: AuthFormProps) {
 
   if (isSignIn) {
     return (
-      <div className="min-h-screen w-full bg-white lg:grid lg:grid-cols-2">
+      <div className="min-h-screen w-full bg-gradient-to-br from-[#f0fdfd] via-white to-[#ecfeff] lg:grid lg:grid-cols-2">
         <div className="relative hidden overflow-hidden lg:flex">
           <Image
             src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1200"
@@ -191,7 +191,7 @@ export function AuthForm({ mode, redirectTo }: AuthFormProps) {
 
         <div className="flex items-center justify-center p-8">
           <div className="w-full max-w-md">
-            <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
+            <div className="mx-auto w-full max-w-md rounded-2xl border border-slate-200 bg-white p-8 shadow-xl">
               <div className="mb-8 text-center">
                 <Link href="/" className="mb-6 inline-flex items-center justify-center gap-2">
                   <Image
@@ -219,6 +219,7 @@ export function AuthForm({ mode, redirectTo }: AuthFormProps) {
                   <input
                     className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-800 outline-none transition-all focus:border-[#0e9aa7] focus:ring-2 focus:ring-[#0e9aa7]/20"
                     type="email"
+                    placeholder="ornek@email.com"
                     {...signInForm.register("email")}
                   />
                   <p className="text-xs text-red-500">{signInForm.formState.errors.email?.message}</p>
@@ -239,6 +240,7 @@ export function AuthForm({ mode, redirectTo }: AuthFormProps) {
                   <input
                     className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-800 outline-none transition-all focus:border-[#0e9aa7] focus:ring-2 focus:ring-[#0e9aa7]/20"
                     type={showSignInPassword ? "text" : "password"}
+                    placeholder="••••••••"
                     autoComplete="current-password"
                     {...signInForm.register("password")}
                   />
