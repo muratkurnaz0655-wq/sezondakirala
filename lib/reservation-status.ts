@@ -14,7 +14,9 @@ const RESERVATION_STATUS_ALIASES: Record<string, ReservationStatusValue> = {
   iptal: "iptal",
 };
 
-export function normalizeReservationStatus(value: string): ReservationStatusValue {
+export function normalizeReservationStatus(
+  value: string,
+): "beklemede" | "onaylandi" | "iptal" | "reddedildi" | string {
   const normalized = value.trim().toLowerCase();
   return RESERVATION_STATUS_ALIASES[normalized] ?? "beklemede";
 }
