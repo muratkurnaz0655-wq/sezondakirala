@@ -1,11 +1,13 @@
 export const BOLGELER = [
-  "Göcek",
-  "Ölüdeniz",
-  "Çalış",
-  "Kayaköy",
-  "Hisarönü",
+  "Göcek, Fethiye",
+  "Çalış, Fethiye",
+  "Ölüdeniz, Fethiye",
+  "Ölüdeniz İskelesi",
+  "Hisarönü, Fethiye",
+  "Kayaköy, Fethiye",
+  "Faralya, Fethiye",
   "Fethiye Merkez",
-  "Faralya",
+  "Fethiye Marina",
 ] as const;
 
 export const KATEGORILER = [

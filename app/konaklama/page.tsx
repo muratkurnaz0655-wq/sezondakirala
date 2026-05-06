@@ -69,7 +69,9 @@ export default function ListingsPage() {
     let query = supabase.from("ilanlar").select("*, ilan_medyalari(url,sira,tip)").eq("aktif", true).eq("tip", "villa");
 
     if (aktifFiltre.bolge.length > 0) {
-      const bolgeFiltre = aktifFiltre.bolge.map((b) => `konum.ilike.%${b}%`).join(",");
+      const bolgeFiltre = aktifFiltre.bolge
+        .map((b) => `konum.ilike.%${b.split(",")[0].trim()}%`)
+        .join(",");
       query = query.or(bolgeFiltre);
     }
 
