@@ -57,16 +57,32 @@ export default function ListingsPage() {
   const [filtre, setFiltre] = useState<VillaFiltre>(defaultFiltre);
   const [mobilFiltre, setMobilFiltre] = useState(false);
   const [loading, setLoading] = useState(true);
-  const giris = currentArama?.tip === "villa" && currentArama?.giris && currentArama?.cikis
-    ? currentArama.giris
-    : undefined;
-  const cikis = currentArama?.tip === "villa" && currentArama?.giris && currentArama?.cikis
-    ? currentArama.cikis
-    : undefined;
+  const [giris, setGiris] = useState<string>("");
+  const [cikis, setCikis] = useState<string>("");
+  const [geceSayisi, setGeceSayisi] = useState<number>(0);
   const yetiskin = currentArama?.yetiskin ?? 2;
   const cocuk = currentArama?.cocuk ?? 0;
   const bebek = currentArama?.bebek ?? 0;
   const bugunIso = useMemo(() => istanbulDateString(), []);
+  const bolgeKey = useMemo(() => filtre.bolge.join("|"), [filtre.bolge]);
+  const kategoriKey = useMemo(() => filtre.kategori.join("|"), [filtre.kategori]);
+  const ozellikKey = useMemo(() => filtre.ozellikler.join("|"), [filtre.ozellikler]);
+
+  useEffect(() => {
+    if (currentArama?.tip === "villa" && currentArama.giris && currentArama.cikis) {
+      setGiris(currentArama.giris);
+      setCikis(currentArama.cikis);
+      const fark = Math.max(
+        0,
+        Math.ceil((dateFromYmdLocal(currentArama.cikis).getTime() - dateFromYmdLocal(currentArama.giris).getTime()) / 86400000),
+      );
+      setGeceSayisi(fark);
+      return;
+    }
+    setGiris("");
+    setCikis("");
+    setGeceSayisi(0);
+  }, [currentArama?.cikis, currentArama?.giris, currentArama?.tip]);
 
   const fetchIlanlar = useCallback(async (aktifFiltre: VillaFiltre) => {
     const supabase = createClient();
@@ -79,9 +95,9 @@ export default function ListingsPage() {
       query = query.or(bolgeFiltre);
     }
 
-    const minFiyat = Number.isFinite(aktifFiltre.minFiyat) ? aktifFiltre.minFiyat : 0;
-    const maxFiyat = Number.isFinite(aktifFiltre.maxFiyat) ? aktifFiltre.maxFiyat : 50000;
-    query = query.gte("gunluk_fiyat", minFiyat).lte("gunluk_fiyat", maxFiyat);
+    query = query
+      .gte("gunluk_fiyat", Number(aktifFiltre.minFiyat) || 0)
+      .lte("gunluk_fiyat", Number(aktifFiltre.maxFiyat) || 50000);
     if (aktifFiltre.minKisi > 1) query = query.gte("kapasite", aktifFiltre.minKisi);
     if (aktifFiltre.minYatakOdasi > 1) query = query.gte("yatak_odasi", aktifFiltre.minYatakOdasi);
     if (aktifFiltre.minBanyo > 1) query = query.gte("banyo", aktifFiltre.minBanyo);
@@ -135,7 +151,20 @@ export default function ListingsPage() {
       setLoading(true);
       await fetchIlanlar(filtre);
     })();
-  }, [fetchIlanlar, filtre]);
+  }, [
+    fetchIlanlar,
+    bolgeKey,
+    kategoriKey,
+    ozellikKey,
+    filtre.maxFiyat,
+    filtre.maxKisi,
+    filtre.maxYatakOdasi,
+    filtre.minBanyo,
+    filtre.minFiyat,
+    filtre.minKisi,
+    filtre.minYatakOdasi,
+    filtre.siralama,
+  ]);
 
   const aktifFiltreler = useMemo(
     () => [
@@ -179,14 +208,6 @@ export default function ListingsPage() {
     [],
   );
 
-  const geceSayisi =
-    giris && cikis
-      ? Math.max(
-          0,
-          Math.round((dateFromYmdLocal(cikis).getTime() - dateFromYmdLocal(giris).getTime()) / 86400000),
-        )
-      : 0;
-
   return (
     <div className="min-h-0 w-full space-y-6 overflow-x-hidden py-6">
       <section className="overflow-visible rounded-2xl border border-slate-200 bg-white shadow-sm">
@@ -196,6 +217,8 @@ export default function ListingsPage() {
         <div className="p-4 md:p-5">
           <SearchForm
             bugunIso={bugunIso}
+            initialGiris={giris || undefined}
+            initialCikis={cikis || undefined}
             initialYetiskin={yetiskin}
             initialCocuk={cocuk}
             initialBebek={bebek}
@@ -286,6 +309,7 @@ export default function ListingsPage() {
                   baslik={listing.baslik}
                   konum={listing.konum ?? ""}
                   fiyat={listing.gunluk_fiyat}
+                  temizlikUcreti={listing.temizlik_ucreti}
                   tip="villa"
                   oda_sayisi={listing.yatak_odasi}
                   banyo_sayisi={listing.banyo}

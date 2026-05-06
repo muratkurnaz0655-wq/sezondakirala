@@ -28,6 +28,7 @@ interface IlanListeKartiProps {
   konum: string;
   ilce?: string;
   fiyat: number;
+  temizlikUcreti?: number;
   tip: "villa" | "tekne";
   oda_sayisi?: number;
   banyo_sayisi?: number;
@@ -52,6 +53,7 @@ export function IlanListeKarti({
   konum,
   ilce,
   fiyat,
+  temizlikUcreti = 0,
   tip,
   oda_sayisi,
   banyo_sayisi,
@@ -86,6 +88,9 @@ export function IlanListeKarti({
       window.removeEventListener(FAVORITES_CHANGED_EVENT, sync as EventListener);
     };
   }, [id]);
+
+  const toplamFiyat = geceSayisi > 0 ? fiyat * geceSayisi : fiyat;
+  const temizlikDahil = toplamFiyat + (temizlikUcreti ?? 0);
 
   return (
     <Link href={href} className="block w-full">
@@ -201,10 +206,13 @@ export function IlanListeKarti({
               {geceSayisi > 0 ? (
                 <>
                   <p className="text-xl font-bold text-[#0e9aa7]">
-                    {formatCurrency(fiyat * geceSayisi)}
+                    {formatCurrency(fiyat)}
                   </p>
-                  <p className="text-xs text-slate-500">{geceSayisi} gece toplam</p>
-                  <p className="text-xs text-slate-500">{formatCurrency(fiyat)} / gece</p>
+                  <p className="text-xs text-slate-500">/ gece</p>
+                  <p className="mt-0.5 text-sm text-slate-500">
+                    {geceSayisi} gece toplam:{" "}
+                    <span className="font-semibold text-slate-700">{formatCurrency(temizlikDahil)}</span>
+                  </p>
                 </>
               ) : (
                 <>
