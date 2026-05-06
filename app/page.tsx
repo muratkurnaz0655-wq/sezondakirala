@@ -6,6 +6,7 @@ import {
   getPublicCatalogCounts,
   getTopComments,
 } from "@/lib/data/phase2";
+import type { Ilan } from "@/types/supabase";
 import { WaveDivider } from "@/components/wave-divider";
 import { HomeHeroStacked } from "@/components/home-hero-stacked";
 import { HomeStatsBand } from "@/components/home-stats-band";
@@ -30,6 +31,21 @@ import {
   Star,
   Users,
 } from "lucide-react";
+
+type ListingRow = Ilan & { ilan_medyalari?: Array<{ url: string; sira: number }> | null };
+
+function withCoverImage(rows: ListingRow[]): Ilan[] {
+  return rows.map((row) => {
+    const medyaKapak =
+      row.ilan_medyalari && row.ilan_medyalari.length
+        ? [...row.ilan_medyalari].sort((a, b) => a.sira - b.sira)[0]?.url ?? null
+        : null;
+    return {
+      ...row,
+      ilk_resim_url: row.ilk_resim_url ?? medyaKapak ?? null,
+    };
+  });
+}
 
 function yorumAvatarHarf(ad: string | null): string {
   const t = ad?.trim();
@@ -56,13 +72,14 @@ export default async function Home() {
     supabase.from("ilanlar").select("*", { count: "exact", head: true }).eq("aktif", true).eq("tip", "tekne"),
     supabase.from("rezervasyonlar").select("*", { count: "exact", head: true }),
   ]);
-  const { data: oneIlanlar } = await supabase
+  const { data: oneIlanlarRaw } = await supabase
     .from("ilanlar")
-    .select("*")
+    .select("*, ilan_medyalari(url,sira)")
     .eq("aktif", true)
     .eq("tip", "villa")
     .order("olusturulma_tarihi", { ascending: false })
     .limit(4);
+  const oneIlanlar = withCoverImage((oneIlanlarRaw ?? []) as ListingRow[]);
   const statsCounts = {
     rezervasyon: rezervasyonCountRes.count ?? catalogCounts?.rezervasyonCount ?? 0,
     villa: ilanCountRes.count ?? catalogCounts?.villaCount ?? 0,
