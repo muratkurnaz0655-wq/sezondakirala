@@ -20,6 +20,19 @@ type TekneRow = {
   ilan_medyalari?: Array<{ url: string; sira: number; tip: string }> | null;
 };
 
+function parseEtiketler(ozellikler: unknown): string[] {
+  if (Array.isArray(ozellikler)) {
+    return ozellikler.filter((item): item is string => typeof item === "string");
+  }
+  if (!ozellikler || typeof ozellikler !== "object") return [];
+  const row = ozellikler as Record<string, unknown>;
+  const etiketler = row.etiketler;
+  if (Array.isArray(etiketler)) {
+    return etiketler.filter((item): item is string => typeof item === "string");
+  }
+  return Object.keys(row).filter((key) => row[key] === true);
+}
+
 export default function TeknelerPage() {
   const [tekneler, setTekneler] = useState<TekneRow[]>([]);
   const [filtre, setFiltre] = useState<TekneFiltre>(defaultTekneFiltre);
@@ -42,10 +55,6 @@ export default function TeknelerPage() {
       const limanFiltre = f.liman.map((l) => `konum.ilike.%${l.split(",")[0].trim()}%`).join(",");
       query = query.or(limanFiltre);
     }
-    if (f.sure.length > 0) query = query.overlaps("ozellikler", f.sure);
-    if (f.tekne_tipi.length > 0) query = query.overlaps("ozellikler", f.tekne_tipi);
-    if (f.ozellikler.length > 0) query = query.overlaps("ozellikler", f.ozellikler);
-
     switch (f.siralama) {
       case "fiyat_artan":
         query = query.order("gunluk_fiyat", { ascending: true });
@@ -62,7 +71,14 @@ export default function TeknelerPage() {
     }
 
     const { data } = await query;
-    setTekneler((data as TekneRow[]) ?? []);
+    const rows = ((data as TekneRow[]) ?? []).filter((row) => {
+      const etiketler = parseEtiketler(row.ozellikler);
+      const hasSure = f.sure.length === 0 || f.sure.every((sure) => etiketler.includes(sure));
+      const hasOzellik = f.ozellikler.length === 0 || f.ozellikler.every((oz) => etiketler.includes(oz));
+      const hasTip = f.tekne_tipi.length === 0 || f.tekne_tipi.some((tip) => etiketler.includes(tip));
+      return hasSure && hasOzellik && hasTip;
+    });
+    setTekneler(rows);
     setYukleniyor(false);
   };
 
