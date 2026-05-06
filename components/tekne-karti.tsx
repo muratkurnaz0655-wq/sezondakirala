@@ -27,10 +27,11 @@ function parseOzellikler(value: unknown): string[] {
   return Object.keys(row).filter((key) => row[key] === true);
 }
 
-const labelMap = new Map<string, string>([
-  ...TEKNE_OZELLIKLERI.map((item) => [item.value, item.label]),
-  ...TEKNE_TIPLERI.map((item) => [item.value, item.label]),
-]);
+const labelMapEntries: Array<[string, string]> = [
+  ...TEKNE_OZELLIKLERI.map((item): [string, string] => [item.value, item.label]),
+  ...TEKNE_TIPLERI.map((item): [string, string] => [item.value, item.label]),
+];
+const labelMap = new Map<string, string>(labelMapEntries);
 
 export function TekneKarti({ tekne }: { tekne: Tekne }) {
   const medya = tekne.ilan_medyalari ?? [];
