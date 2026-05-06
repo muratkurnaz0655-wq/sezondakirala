@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "seed:ilanlar": "npx tsx scripts/seed-ilanlar.ts",
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build",
     "test:smoke": "npm run lint",
