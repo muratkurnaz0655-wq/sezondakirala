@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { TekneFiltreSidebar } from "@/components/tekne-filtre-sidebar";
 import { TekneKarti } from "@/components/tekne-karti";
-import { SlidersHorizontal, X } from "lucide-react";
+import { Search, SlidersHorizontal, X } from "lucide-react";
 import { defaultTekneFiltre, type TekneFiltre } from "@/lib/villa-sabitleri";
 
 type TekneRow = {
@@ -14,6 +14,7 @@ type TekneRow = {
   konum: string;
   gunluk_fiyat: number;
   kapasite: number;
+  yatak_odasi: number;
   ozellikler: unknown;
   sponsorlu: boolean;
   olusturulma_tarihi: string;
@@ -38,13 +39,17 @@ export default function TeknelerPage() {
   const [filtre, setFiltre] = useState<TekneFiltre>(defaultTekneFiltre);
   const [yukleniyor, setYukleniyor] = useState(true);
   const [mobilFiltre, setMobilFiltre] = useState(false);
+  const [baslangicTarihi, setBaslangicTarihi] = useState("");
+  const [sure, setSure] = useState("1");
+  const [kisiSayisi, setKisiSayisi] = useState(2);
+  const bugunIso = new Date().toISOString().split("T")[0];
 
   const fetchTekneler = async (f: TekneFiltre) => {
     setYukleniyor(true);
     const supabase = createClient();
     let query = supabase
       .from("ilanlar")
-      .select("id, slug, baslik, konum, gunluk_fiyat, kapasite, ozellikler, sponsorlu, olusturulma_tarihi, ilan_medyalari(url, sira, tip)")
+      .select("id, slug, baslik, konum, gunluk_fiyat, kapasite, yatak_odasi, ozellikler, sponsorlu, olusturulma_tarihi, ilan_medyalari(url, sira, tip)")
       .eq("aktif", true)
       .eq("tip", "tekne")
       .gte("gunluk_fiyat", Number(f.minFiyat) || 0)
@@ -96,7 +101,80 @@ export default function TeknelerPage() {
   ].length;
 
   return (
-    <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-8 lg:flex-row">
+    <div className="min-h-0 w-full space-y-6 overflow-x-hidden py-6">
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#0e9aa7] to-[#06b6d4] px-6 py-10 text-white md:px-10">
+        <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10" />
+        <div className="absolute -bottom-8 -left-8 h-32 w-32 rounded-full bg-white/10" />
+        <p className="mb-2 text-sm text-white/70">Ana Sayfa / Tekneler</p>
+        <h1 className="mb-2 text-3xl font-bold md:text-4xl">Fethiye Tekne Kiralama</h1>
+        <p className="mb-6 max-w-xl text-white/80">{tekneler.length}+ tekne ile hayalinizdeki deniz tatilini bulun</p>
+        <div className="flex flex-wrap gap-2">
+          {["Günlük / Haftalık", "Mürettebatlı Seçenekler", "TURSAB Güvencesi"].map((chip) => (
+            <span key={chip} className="rounded-full bg-white/20 px-3 py-1 text-sm text-white backdrop-blur-sm">
+              {chip}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      <div className="overflow-visible rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">TARİH VE KİŞİ SAYISI</p>
+        <div className="flex flex-col gap-3 md:flex-row md:items-stretch">
+          <div className="flex-1 rounded-xl border border-slate-200 px-4 py-3">
+            <p className="mb-1 text-xs text-slate-400">BAŞLANGIÇ TARİHİ</p>
+            <input
+              type="date"
+              value={baslangicTarihi}
+              min={bugunIso}
+              onChange={(e) => setBaslangicTarihi(e.target.value)}
+              className="w-full bg-transparent text-sm font-medium text-slate-800 outline-none"
+            />
+          </div>
+          <div className="flex-1 rounded-xl border border-slate-200 px-4 py-3">
+            <p className="mb-1 text-xs text-slate-400">KİRALAMA SÜRESİ</p>
+            <select
+              value={sure}
+              onChange={(e) => setSure(e.target.value)}
+              className="w-full cursor-pointer bg-transparent text-sm font-medium text-slate-800 outline-none"
+            >
+              <option value="1">Günlük</option>
+              <option value="3">3 Günlük</option>
+              <option value="7">Haftalık</option>
+              <option value="14">2 Haftalık</option>
+            </select>
+          </div>
+          <div className="flex-1 rounded-xl border border-slate-200 px-4 py-3">
+            <p className="mb-1 text-xs text-slate-400">KİŞİ SAYISI</p>
+            <select
+              value={kisiSayisi}
+              onChange={(e) => setKisiSayisi(Number(e.target.value))}
+              className="w-full cursor-pointer bg-transparent text-sm font-medium text-slate-800 outline-none"
+            >
+              {[2, 4, 6, 8, 10, 12, 15].map((n) => (
+                <option key={n} value={n}>
+                  {n} Kişi
+                </option>
+              ))}
+            </select>
+          </div>
+          <button
+            type="button"
+            onClick={() =>
+              setFiltre({
+                ...filtre,
+                minKapasite: kisiSayisi,
+                sure: sure === "7" || sure === "14" ? ["haftalik"] : ["gunluk"],
+              })
+            }
+            className="flex items-center gap-2 whitespace-nowrap rounded-xl bg-gradient-to-r from-[#0e9aa7] to-[#06b6d4] px-8 py-3 font-semibold text-white shadow-lg shadow-[#0e9aa7]/25 transition-all hover:from-[#0f4c5c] hover:to-[#0e9aa7] active:scale-95"
+          >
+            <Search className="h-4 w-4" />
+            Tekne Ara
+          </button>
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-6 lg:flex-row">
       <button
         type="button"
         onClick={() => setMobilFiltre(true)}
@@ -109,13 +187,15 @@ export default function TeknelerPage() {
         ) : null}
       </button>
 
-      <div className="hidden lg:block">
-        <TekneFiltreSidebar
-          filtre={filtre}
-          onChange={(f) => setFiltre(f)}
-          onTemizle={() => setFiltre(defaultTekneFiltre)}
-          sonucSayisi={tekneler.length}
-        />
+      <div className="w-full lg:w-72 lg:flex-shrink-0">
+        <div className="hidden lg:block">
+          <TekneFiltreSidebar
+            filtre={filtre}
+            onChange={(f) => setFiltre(f)}
+            onTemizle={() => setFiltre(defaultTekneFiltre)}
+            sonucSayisi={tekneler.length}
+          />
+        </div>
       </div>
 
       {mobilFiltre ? (
@@ -193,6 +273,7 @@ export default function TeknelerPage() {
             ))}
           </div>
         ) : null}
+      </div>
       </div>
     </div>
   );
