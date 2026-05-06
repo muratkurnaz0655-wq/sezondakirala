@@ -25,6 +25,13 @@ type ListingCardProps = {
   showWhatsappCta?: boolean;
 };
 
+function hasFeature(ozellikler: Ilan["ozellikler"], key: string): boolean {
+  if (Array.isArray(ozellikler)) return ozellikler.includes(key);
+  if (!ozellikler || typeof ozellikler !== "object") return false;
+  if (Array.isArray(ozellikler.etiketler)) return ozellikler.etiketler.includes(key);
+  return ozellikler[key] === true;
+}
+
 export function ListingCard({ listing, selectedDates, showWhatsappCta = true }: ListingCardProps) {
   const [imageErrored, setImageErrored] = useState(false);
   const safeSlug = listing.slug || listing.id;
@@ -136,13 +143,13 @@ export function ListingCard({ listing, selectedDates, showWhatsappCta = true }: 
             </div>
             {listing.tip !== "tekne" && listing.ozellikler ? (
               <div className="flex flex-wrap gap-1">
-                {listing.ozellikler.havuz ? (
+                {hasFeature(listing.ozellikler, "havuz") ? (
                   <span className="rounded-full bg-sky-50 px-2 py-0.5 text-xs text-sky-600">🏊</span>
                 ) : null}
-                {listing.ozellikler.wifi ? (
+                {hasFeature(listing.ozellikler, "wifi") ? (
                   <span className="rounded-full bg-sky-50 px-2 py-0.5 text-xs text-sky-600">📶</span>
                 ) : null}
-                {listing.ozellikler.deniz_manzarasi ? (
+                {hasFeature(listing.ozellikler, "deniz_manzarasi") ? (
                   <span className="rounded-full bg-sky-50 px-2 py-0.5 text-xs text-sky-600">🌊</span>
                 ) : null}
               </div>
