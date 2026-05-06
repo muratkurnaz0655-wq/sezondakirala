@@ -122,11 +122,6 @@ export default async function Home() {
   ];
   const homeStats = [
     {
-      num: String(statsCounts.rezervasyon),
-      label: "Mutlu Misafir",
-      icon: <Users className="h-5 w-5 text-[#22d3ee]" />,
-    },
-    {
       num: String(statsCounts.villa),
       label: "Onaylı Villa",
       icon: <HomeIcon className="h-5 w-5 text-[#22d3ee]" />,
@@ -135,11 +130,6 @@ export default async function Home() {
       num: String(statsCounts.tekne),
       label: "Özel Tekne",
       icon: <Anchor className="h-5 w-5 text-[#22d3ee]" />,
-    },
-    {
-      num: catalogCounts?.averageRating ?? "5.0",
-      label: "Ortalama Puan",
-      icon: <Star className="h-5 w-5 text-amber-400" />,
     },
     { num: "TURSAB", label: "Güvenceli", icon: <ShieldCheck className="h-5 w-5 text-green-500" /> },
   ] as const;
