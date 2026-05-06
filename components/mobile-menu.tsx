@@ -43,7 +43,7 @@ export function MobileMenu({ siteName: _siteName, variant, user, profil: _profil
   };
 
   return (
-    <div className="relative shrink-0 md:hidden">
+    <div className="shrink-0 md:hidden">
       <button
         type="button"
         aria-expanded={menuOpen}
@@ -54,9 +54,17 @@ export function MobileMenu({ siteName: _siteName, variant, user, profil: _profil
       >
         <Menu size={22} strokeWidth={2} />
       </button>
+      {menuOpen ? (
+        <button
+          type="button"
+          aria-label="Menüyü kapat"
+          onClick={kapat}
+          className="fixed inset-0 z-40 bg-black/30 md:hidden"
+        />
+      ) : null}
       <div
         id="mobile-nav-dropdown"
-        className={`${menuOpen ? "flex" : "hidden"} absolute left-0 right-0 top-full z-50 flex-col gap-1 border-b border-slate-100 bg-white p-4 shadow-lg md:hidden`}
+        className={`${menuOpen ? "flex" : "hidden"} fixed inset-x-0 top-[4.5rem] z-50 max-h-[calc(100dvh-4.5rem)] flex-col gap-1 overflow-y-auto border-b border-slate-100 bg-white p-4 shadow-lg md:hidden`}
       >
         {navLinks.map((link) => (
           <Link
