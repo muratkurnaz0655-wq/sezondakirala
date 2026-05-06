@@ -143,6 +143,18 @@ export function SearchForm({
   const inlineDatePanelRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
+    setGiris(toDate(initialGiris));
+    setCikis(toDate(initialCikis));
+  }, [initialGiris, initialCikis]);
+
+  useEffect(() => {
+    setYetiskin(Math.max(1, initialYetiskin));
+    setCocuk(Math.max(0, initialCocuk));
+    setBebek(Math.max(0, initialBebek));
+    setTekneGun(Math.max(1, initialGun));
+  }, [initialYetiskin, initialCocuk, initialBebek, initialGun]);
+
+  useEffect(() => {
     function onDocPointerDown(event: PointerEvent) {
       const target = event.target as Node;
       const inGuest =
