@@ -8,10 +8,17 @@ export const createClient = async () => {
     {
       cookies: {
         getAll: () => cookieStore.getAll(),
-        setAll: (cookiesToSet) =>
-          cookiesToSet.forEach(({ name, value, options }) =>
-            cookieStore.set(name, value, options),
-          ),
+        setAll: (cookiesToSet) => {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            try {
+              // In Server Components, cookie mutations are not allowed.
+              // Supabase can still read the session, so we safely ignore writes here.
+              cookieStore.set(name, value, options);
+            } catch {
+              // no-op
+            }
+          });
+        },
       },
     },
   );
