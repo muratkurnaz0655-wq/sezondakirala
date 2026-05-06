@@ -1,0 +1,290 @@
+import {
+  deleteAdminPackage,
+  updateAdminPackageStatus,
+} from "@/app/actions/admin";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { formatCurrency } from "@/lib/utils/format";
+import Link from "next/link";
+import { Plus } from "lucide-react";
+import { PackageEditButton } from "./PackageEditButton";
+import { AdminStatsRow } from "@/components/admin/AdminStatsRow";
+import { AdminFilterBar } from "@/components/admin/AdminFilterBar";
+import { AdminPageLayout } from "@/components/admin/AdminPageLayout";
+
+type AdminPackagesPageProps = {
+  searchParams?: Promise<{ durum?: string; q?: string }>;
+};
+
+export default async function AdminPackagesPage({ searchParams }: AdminPackagesPageProps) {
+  const resolvedSearchParams = searchParams ? await searchParams : undefined;
+  const durumRaw = resolvedSearchParams?.durum;
+  const durum = durumRaw === "aktif" || durumRaw === "pasif" ? durumRaw : "tumu";
+  const q = (resolvedSearchParams?.q ?? "").trim().toLowerCase();
+  const supabase = createAdminClient();
+  const buildPackageBaseQuery = () =>
+    durum === "aktif"
+      ? supabase.from("paketler").select("*").eq("aktif", true)
+      : durum === "pasif"
+        ? supabase.from("paketler").select("*").eq("aktif", false)
+        : supabase.from("paketler").select("*");
+
+  // Bazı ortamlarda `olusturulma_tarihi` kolonu olmayabiliyor; bu durumda fallback ile yine listele.
+  let packagesResult = await buildPackageBaseQuery()
+    .order("olusturulma_tarihi", { ascending: false })
+    .order("id", { ascending: false });
+  if (packagesResult.error) {
+    packagesResult = await buildPackageBaseQuery().order("id", { ascending: false });
+  }
+
+  const [{ data: listings }, { data: packageMedias }] = await Promise.all([
+    supabase
+      .from("ilanlar")
+      .select("id,baslik,tip,ilan_medyalari(url,sira)")
+      .order("olusturulma_tarihi", { ascending: false }),
+    supabase.from("paket_medyalari").select("id,paket_id,url,tip,sira"),
+  ]);
+  const packages = packagesResult.data ?? [];
+  const filteredPackages = packages.filter((row) => {
+    if (!q) return true;
+    return (
+      row.baslik?.toLowerCase().includes(q) ||
+      row.id?.toLowerCase().includes(q) ||
+      row.kategori?.toLowerCase().includes(q)
+    );
+  });
+  const aktifCount = filteredPackages.filter((p) => p.aktif).length;
+  const pasifCount = filteredPackages.length - aktifCount;
+  const totalRevenue = filteredPackages.reduce((sum, p) => sum + Number(p.fiyat ?? 0), 0);
+  const firstImageMap = new Map<string, string>();
+  (listings ?? []).forEach((listing) => {
+    const media = (listing.ilan_medyalari ?? []) as { url: string; sira: number }[];
+    const first = [...media].sort((a, b) => a.sira - b.sira)[0]?.url;
+    if (first) firstImageMap.set(listing.id, first);
+  });
+  const listingTypeMap = new Map<string, string>();
+  (listings ?? []).forEach((listing) => {
+    listingTypeMap.set(listing.id, listing.tip ?? "villa");
+  });
+  const packageMediaMap = new Map<string, { id: string; url: string; tip: string; sira: number }[]>();
+  (packageMedias ?? []).forEach((media) => {
+    const current = packageMediaMap.get(media.paket_id) ?? [];
+    current.push(media);
+    packageMediaMap.set(media.paket_id, current);
+  });
+
+  return (
+    <AdminPageLayout
+      title="Paketler"
+      description="Paket içeriklerini, durumlarını ve takvimlerini merkezi olarak yönetin."
+      actions={
+        <Link
+          href="/yonetim/paketler/yeni"
+          className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-lg shadow-[#0e9aa7]/25 transition-all duration-200 hover:scale-[1.02] hover:bg-blue-700 active:scale-[0.98]"
+        >
+          <Plus className="h-4 w-4" /> Yeni Paket Ekle
+        </Link>
+      }
+    >
+      <AdminStatsRow
+        items={[
+          { label: "Toplam Paket", value: filteredPackages.length, tone: "default" },
+          { label: "Aktif / Pasif", value: `${aktifCount} / ${pasifCount}`, tone: "success" },
+          { label: "Toplam Fiyat Hacmi", value: formatCurrency(totalRevenue), tone: "info" },
+        ]}
+      />
+      <AdminFilterBar>
+        <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Arama</label>
+        <input
+          name="q"
+          defaultValue={resolvedSearchParams?.q ?? ""}
+          placeholder="Paket adı, paket ID, kategori..."
+          className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-800 transition-all placeholder:text-slate-400 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+        />
+      </AdminFilterBar>
+      <div className="flex w-full gap-1 overflow-x-auto rounded-xl bg-slate-100 p-1">
+        <a
+          href="/yonetim/paketler"
+          className={`px-4 py-1.5 text-sm font-medium transition-all ${
+            durum === "tumu" ? "rounded-lg bg-white text-slate-800 shadow-sm" : "rounded-lg text-slate-500 hover:text-slate-700"
+          }`}
+        >
+          Tümü
+        </a>
+        <a
+          href="/yonetim/paketler?durum=aktif"
+          className={`px-4 py-1.5 text-sm font-medium transition-all ${
+            durum === "aktif" ? "rounded-lg bg-white text-slate-800 shadow-sm" : "rounded-lg text-slate-500 hover:text-slate-700"
+          }`}
+        >
+          Aktif Paketler
+        </a>
+        <a
+          href="/yonetim/paketler?durum=pasif"
+          className={`px-4 py-1.5 text-sm font-medium transition-all ${
+            durum === "pasif" ? "rounded-lg bg-white text-slate-800 shadow-sm" : "rounded-lg text-slate-500 hover:text-slate-700"
+          }`}
+        >
+          Pasif Paketler
+        </a>
+      </div>
+
+      {packagesResult.error ? (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+          Paketler listelenirken bir sorgu hatası oluştu: {packagesResult.error.message}
+        </div>
+      ) : null}
+
+      <div className="block space-y-3 lg:hidden">
+        {filteredPackages.map((row) => (
+          <article key={row.id} className="rounded-2xl border border-slate-200 bg-white p-4">
+            <p className="text-sm font-semibold text-slate-800">{row.baslik}</p>
+            <p className="mt-1 text-xs text-slate-500">{row.kategori}</p>
+            <p className="mt-2 text-sm font-semibold text-[#0e9aa7]">{formatCurrency(row.fiyat)}</p>
+            <div className="mt-3">
+              <PackageEditButton
+                pkg={{ ...row, paket_medyalari: packageMediaMap.get(row.id) ?? [] }}
+                listings={(listings ?? []).map((listing) => ({
+                  id: listing.id,
+                  baslik: listing.baslik,
+                  tip: listing.tip ?? "villa",
+                  imageUrl: firstImageMap.get(listing.id) ?? null,
+                }))}
+              />
+            </div>
+          </article>
+        ))}
+      </div>
+      <div className="hidden w-full overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm lg:block">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[720px] text-sm">
+            <thead className="border-b border-slate-200 bg-slate-50">
+              <tr>
+                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">
+                  Başlık
+                </th>
+                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">
+                  Kategori
+                </th>
+                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">
+                  Fiyat
+                </th>
+                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">
+                  İlan
+                </th>
+                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">
+                  Kombinasyon
+                </th>
+                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">
+                  Görseller
+                </th>
+                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">
+                  Durum
+                </th>
+                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">
+                  İşlem
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredPackages.map((row) => {
+                const ids = Array.isArray(row.ilan_idleri) ? row.ilan_idleri : [];
+                const villaCount = ids.filter((id: string) => listingTypeMap.get(id) === "villa").length;
+                const tekneCount = ids.filter((id: string) => listingTypeMap.get(id) === "tekne").length;
+                return (
+                  <tr
+                    key={row.id}
+                    className="border-b border-slate-100 transition-colors hover:bg-slate-50/70"
+                  >
+                  <td className="border-b border-slate-100 px-5 py-4 text-sm text-slate-700">{row.baslik}</td>
+                  <td className="border-b border-slate-100 px-5 py-4 text-sm text-slate-700">{row.kategori}</td>
+                  <td className="border-b border-slate-100 px-5 py-4 text-sm font-semibold text-slate-800">{formatCurrency(row.fiyat)}</td>
+                  <td className="border-b border-slate-100 px-5 py-4 text-sm text-slate-700">
+                    {ids.length}
+                  </td>
+                  <td className="border-b border-slate-100 px-5 py-4 text-sm text-slate-700">
+                    <span className="inline-flex items-center gap-1 rounded-lg bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-600">
+                      {villaCount} Villa + {tekneCount} Tekne
+                    </span>
+                  </td>
+                  <td className="border-b border-slate-100 px-5 py-4 text-sm text-slate-700">
+                    {row.gorsel_url ? (
+                      <div className="h-8 w-8 overflow-hidden rounded-lg border border-slate-200 bg-slate-200">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={row.gorsel_url} alt="" className="h-full w-full object-cover" />
+                      </div>
+                    ) : (
+                      <div className="flex gap-1">
+                        {ids.slice(0, 3)
+                          .map((listingId: string) => (
+                            <div key={listingId} className="h-8 w-8 overflow-hidden rounded-lg border border-slate-200 bg-slate-200">
+                              {firstImageMap.get(listingId) ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img src={firstImageMap.get(listingId)} alt="" className="h-full w-full object-cover" />
+                              ) : null}
+                            </div>
+                          ))}
+                      </div>
+                    )}
+                  </td>
+                  <td className="border-b border-slate-100 px-5 py-4 text-sm text-slate-700">
+                    <form action={updateAdminPackageStatus}>
+                      <input type="hidden" name="id" value={row.id} />
+                      <input type="hidden" name="aktif" value={row.aktif ? "false" : "true"} />
+                      <button
+                        type="submit"
+                        className={`inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium transition-all duration-200 hover:shadow-md active:scale-[0.98] ${
+                          row.aktif
+                            ? "bg-amber-50 text-amber-600 hover:bg-amber-100"
+                            : "bg-emerald-50 text-emerald-600 hover:bg-emerald-100"
+                        }`}
+                      >
+                        {row.aktif ? "Pasife Al" : "Aktif Et"}
+                      </button>
+                    </form>
+                  </td>
+                  <td className="border-b border-slate-100 px-5 py-4 text-sm text-slate-700">
+                    <div className="flex items-center gap-2">
+                      <PackageEditButton
+                        pkg={{
+                          ...row,
+                          paket_medyalari: packageMediaMap.get(row.id) ?? [],
+                        }}
+                        listings={(listings ?? []).map((listing) => ({
+                          id: listing.id,
+                          baslik: listing.baslik,
+                          tip: listing.tip ?? "villa",
+                          imageUrl: firstImageMap.get(listing.id) ?? null,
+                        }))}
+                      />
+                      <Link
+                        href={`/yonetim/paketler/${row.id}/takvim`}
+                        className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-all duration-200 hover:bg-slate-50 hover:shadow-md active:scale-[0.98]"
+                      >
+                        Müsaitlik Takvimi
+                      </Link>
+                      <form action={deleteAdminPackage}>
+                        <input type="hidden" name="id" value={row.id} />
+                        <button
+                          type="submit"
+                          className="inline-flex items-center gap-2 rounded-lg bg-red-50 px-3 py-1.5 text-sm font-medium text-red-600 transition-all duration-200 hover:bg-red-100 hover:shadow-md active:scale-[0.98]"
+                        >
+                          Sil
+                        </button>
+                      </form>
+                    </div>
+                  </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+          {filteredPackages.length === 0 ? (
+            <div className="px-5 py-8 text-sm text-slate-500">
+              Bu filtrede gösterilecek paket bulunamadı.
+            </div>
+          ) : null}
+        </div>
+      </div>
+    </AdminPageLayout>
+  );
+}

@@ -1,26 +1,1168 @@
 @import "tailwindcss";
+@import "react-day-picker/style.css";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --color-primary: #0e9aa7;
+  --color-primary-dark: #0f4c5c;
+  --color-secondary: #06b6d4;
+  --color-secondary-dark: #0e9aa7;
+  --color-accent: #4a7c7e;
+  --color-dark: #0f172a;
+  --color-surface: #ffffff;
+  --color-card: #ffffff;
+  --color-text: #0f172a;
+  --color-text-muted: #475569;
+
+  /* Sayfa geçiş renkleri (V16 konaklama teması) */
+  --bg-primary: #ffffff;
+  --bg-card: #ffffff;
+  --bg-ocean: #e0f2fe;
+  --bg-nature: #f0fdf4;
+  --bg-coral: #fff7ed;
+  --bg-dark: #0f172a;
+  --accent-ocean: #0ea5e9;
+  --accent-teal: #06b6d4;
+  --accent-nature: #22c55e;
+  --accent-sand: #f59e0b;
+  --accent-coral: #f97316;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --color-background: var(--color-surface);
+  --color-foreground: var(--color-text);
+  --font-sans: var(--font-inter);
+  --font-serif: var(--font-playfair), ui-serif, Georgia, serif;
   --font-mono: var(--font-geist-mono);
+
+  /* V6 palette — sea / nature / sand / dusk */
+  --color-sea-50: #eff9ff;
+  --color-sea-100: #dbeafe;
+  --color-sea-400: #38bdf8;
+  --color-sea-500: #0ea5e9;
+  --color-sea-600: #0284c7;
+  --color-sea-900: #0c4a6e;
+
+  --color-nature-50: #f0fdf4;
+  --color-nature-100: #dcfce7;
+  --color-nature-400: #4ade80;
+  --color-nature-500: #22c55e;
+  --color-nature-600: #16a34a;
+  --color-nature-900: #14532d;
+
+  --color-sand-50: #fffbeb;
+  --color-sand-100: #fef3c7;
+  --color-sand-400: #fbbf24;
+  --color-sand-500: #f59e0b;
+
+  /* V16 — deniz teması (tailwind.config yerine @theme) */
+  --color-ocean-50: #f0f9ff;
+  --color-ocean-100: #e0f2fe;
+  --color-ocean-200: #bae6fd;
+  --color-ocean-400: #38bdf8;
+  --color-ocean-500: #0ea5e9;
+  --color-ocean-600: #0284c7;
+  --color-ocean-900: #0c4a6e;
+
+  --color-teal-50: #f0fdfa;
+  --color-teal-100: #ccfbf1;
+  --color-teal-400: #2dd4bf;
+  --color-teal-500: #14b8a6;
+
+  --color-dusk-800: #1e293b;
+  --color-dusk-900: #0f172a;
+  --color-dusk-950: #020617;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+html,
+body {
+  overflow-x: hidden;
+}
+
+/* Footer üstü dalga — yatay sonsuz kayma */
+@keyframes footer-wave-scroll {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-50%, 0, 0);
   }
 }
 
+.footer-wave-track {
+  display: flex;
+  width: 200%;
+  flex-shrink: 0;
+  animation: footer-wave-scroll 18s linear infinite;
+  will-change: transform;
+}
+
+.header-wave-track {
+  display: flex;
+  width: 200%;
+  flex-shrink: 0;
+  /* Footer’dan biraz hızlı — hareket daha fark edilir */
+  animation: footer-wave-scroll 14s linear infinite reverse;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .footer-wave-track {
+    animation: none;
+    transform: none;
+  }
+
+  .header-wave-track {
+    animation: none;
+    transform: none;
+  }
+}
+
+html {
+  background: #ffffff;
+}
+
+.hero-video-section {
+  width: 100vw;
+  margin-left: calc(-50vw + 50%);
+}
+
+/* Hero — V10: daha küçük / zarif yükseklik */
+.hero-section {
+  height: 70vh;
+  min-height: 500px;
+  max-height: 680px;
+}
+
+@media (max-width: 768px) {
+  .hero-section {
+    height: 55vh !important;
+    min-height: 420px !important;
+    max-height: 560px !important;
+  }
+
+  .hero-video-container {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /**
+   * Stacked hero: 85vh min + 100vh max içeriği sıkıştırıp videonun “kaydığı” hissi veriyordu.
+   * Tek viewport yüksekliği + taşan içerik üst katmanda kayar.
+   */
+  .hero-stacked-video {
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+    overscroll-behavior: auto;
+    touch-action: pan-y;
+  }
+
+  .search-form-inner {
+    flex-direction: column !important;
+  }
+}
+
+/* iOS video compositing */
+video {
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: #ffffff;
+  color: var(--color-text);
+  font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 400;
+}
+
+body,
+p,
+span,
+button,
+input,
+textarea,
+select,
+label {
+  font-family: var(--font-inter), system-ui, sans-serif;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-playfair), Georgia, serif;
+}
+
+.heading-hero {
+  font-size: clamp(2.5rem, 6vw, 5rem);
+  font-weight: 700;
+  line-height: 1.18;
+  letter-spacing: -0.02em;
+}
+
+/* Ana sayfa video üstü başlık: Playfair descend/yan hizalar kırılmasın */
+.heading-hero--video {
+  line-height: 1.22;
+  padding-bottom: 0.12em;
+  overflow: visible;
+}
+
+.heading-section {
+  font-size: clamp(1.75rem, 3vw, 2.5rem);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.card {
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.08);
+  transition: box-shadow 0.3s, transform 0.3s;
+}
+
+.card:hover {
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.15);
+  transform: translateY(-4px);
+}
+
+/* Premium listing card (ana sayfa / liste) */
+.villa-card {
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.07);
+  transition:
+    box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid #e2e8f0;
+}
+
+.villa-card:hover {
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.12);
+  transform: translateY(-4px);
+  border-color: rgba(14, 154, 167, 0.3);
+}
+
+.villa-card .card-image {
+  overflow: hidden;
+}
+
+.villa-card .card-image img {
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.villa-card:hover .card-image img {
+  transform: scale(1.08);
+}
+
+/* V16 — konaklama sayfası & bölüm arka planları */
+.page-konaklama {
+  background: linear-gradient(180deg, #0f4c5c 0%, #0d1117 60%, #0d1117 100%);
+}
+
+.section-ocean {
+  background: linear-gradient(135deg, #0f4c5c 0%, #0e9aa7 100%);
+}
+
+.section-nature {
+  background: linear-gradient(135deg, #4a7c7e 0%, #0f4c5c 100%);
+}
+
+.section-warm {
+  background: linear-gradient(135deg, #0d1117 0%, #4a7c7e 100%);
+}
+
+.section-teal {
+  background: linear-gradient(135deg, #0e9aa7 0%, #22d3ee 100%);
+}
+
+.card-glass {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(14, 165, 233, 0.1);
+  border-radius: 20px;
+  box-shadow: 0 4px 24px rgba(14, 165, 233, 0.08);
+}
+
+.filter-sidebar {
+  background: linear-gradient(180deg, #ffffff 0%, #f0f9ff 100%);
+  border: 1px solid #bae6fd;
+  border-radius: 20px;
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #0e9aa7 0%, #22d3ee 100%);
+  color: #0d1117;
+  border-radius: 14px;
+  padding: 12px 24px;
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.01em;
+  box-shadow: 0 4px 15px rgba(14, 154, 167, 0.3);
+  transition: all 0.25s;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(34, 211, 238, 0.35);
+  background: linear-gradient(135deg, #22d3ee 0%, #0e9aa7 100%);
+}
+
+.btn-primary:focus-visible {
+  outline: 2px solid #0ea5e9;
+  outline-offset: 2px;
+}
+
+.btn-ocean {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #06b6d4 0%, #0ea5e9 100%);
+  color: white;
+  border-radius: 14px;
+  padding: 12px 24px;
+  font-weight: 700;
+  font-size: 15px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.25s;
+  box-shadow: 0 4px 15px rgba(6, 182, 212, 0.3);
+  text-decoration: none;
+}
+
+.btn-ocean:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(6, 182, 212, 0.4);
+}
+
+.badge-macera {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: white;
+  border-radius: 99px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.badge-luks {
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+  color: white;
+  border-radius: 99px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.badge-romantik {
+  background: linear-gradient(135deg, #ec4899, #db2777);
+  color: white;
+  border-radius: 99px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.badge-aile {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: white;
+  border-radius: 99px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.badge-one-cikan {
+  background: linear-gradient(135deg, #f59e0b, #f97316);
+  color: white;
+  border-radius: 99px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.btn-whatsapp {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
+  color: white;
+  border-radius: 14px;
+  padding: 14px 28px;
+  font-weight: 600;
+  font-size: 15px;
+  box-shadow: 0 4px 15px rgba(37, 211, 102, 0.35);
+  transition: filter 0.2s, transform 0.2s, box-shadow 0.2s;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.btn-whatsapp:hover {
+  filter: brightness(1.05);
+  box-shadow: 0 6px 20px rgba(37, 211, 102, 0.45);
+  transform: translateY(-1px);
+}
+
+.btn-whatsapp:focus-visible {
+  outline: 2px solid #25d366;
+  outline-offset: 2px;
+}
+
+.btn-secondary {
+  background: #22c55e;
+  color: white;
+  border-radius: 12px;
+  padding: 12px 24px;
+  font-weight: 600;
+}
+
+.btn-secondary:hover {
+  background: #16a34a;
+}
+
+.input-field {
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-size: 15px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.input-field:focus {
+  outline: none;
+  border-color: #0ea5e9;
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+}
+
+h1 {
+  font-size: 48px;
+  line-height: 56px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+h2 {
+  font-size: 36px;
+  line-height: 44px;
+  font-weight: 700;
+}
+
+h3 {
+  font-size: 24px;
+  line-height: 32px;
+  font-weight: 600;
+}
+
+h4 {
+  font-size: 18px;
+  line-height: 28px;
+  font-weight: 600;
+}
+
+small {
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.page-fade-in {
+  animation: pageFadeIn 0.3s ease-out both;
+}
+
+.fade-in-up {
+  animation: fadeInUp 0.5s ease-out both;
+}
+
+.fade-in-stagger-1 {
+  animation: fadeInUp 0.45s ease-out both;
+}
+
+.fade-in-stagger-2 {
+  animation: fadeInUp 0.55s ease-out both;
+}
+
+.fade-in-stagger-3 {
+  animation: fadeInUp 0.65s ease-out both;
+}
+
+.fade-in-stagger-4 {
+  animation: fadeInUp 0.75s ease-out both;
+}
+
+.hover-lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 16px 32px rgba(15, 23, 42, 0.14);
+}
+
+.shimmer {
+  background: linear-gradient(90deg, #e5e7eb 25%, #f1f5f9 50%, #e5e7eb 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.2s infinite linear;
+}
+
+.button-animate {
+  transition: transform 150ms ease, filter 150ms ease;
+}
+
+.button-animate:hover {
+  transform: scale(1.02);
+  filter: brightness(1.05);
+}
+
+.glass-panel {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.45);
+}
+
+.premium-ring {
+  box-shadow: 0 0 0 1px rgba(14, 165, 233, 0.15), 0 16px 40px rgba(15, 23, 42, 0.12);
+}
+
+.hover-glow {
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.hover-glow:hover {
+  transform: translateY(-4px);
+  border-color: rgba(14, 165, 233, 0.35);
+  box-shadow: 0 14px 40px rgba(14, 165, 233, 0.18);
+}
+
+/* Icon tokens */
+.icon-xs { width: 12px; height: 12px; }
+.icon-sm { width: 14px; height: 14px; }
+.icon-md { width: 16px; height: 16px; }
+.icon-lg { width: 20px; height: 20px; }
+.icon-primary { color: #0ea5e9; }
+.icon-muted { color: #64748b; }
+.icon-success { color: #22c55e; }
+.icon-accent { color: #f59e0b; }
+
+.toast-slide-in {
+  animation: toastIn 0.25s ease-out both;
+}
+
+.gallery-fade {
+  animation: galleryFade 0.35s ease-out both;
+}
+
+.rdp-day_button {
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.rdp-day_selected {
+  background: #0ea5e9 !important;
+  color: #fff !important;
+  border-radius: 9999px !important;
+}
+
+.rdp-day_range_middle {
+  background: linear-gradient(90deg, rgba(14, 165, 233, 0.18), rgba(34, 197, 94, 0.18)) !important;
+  color: #0f172a !important;
+  border-radius: 0 !important;
+}
+
+.rdp-day_range_start {
+  border-radius: 9999px 0 0 9999px !important;
+  background: #0ea5e9 !important;
+  color: #fff !important;
+}
+
+.rdp-day_range_end {
+  border-radius: 0 9999px 9999px 0 !important;
+  background: #22c55e !important;
+  color: #fff !important;
+}
+
+.rdp-day:hover:not(.rdp-day_disabled) {
+  background: #f1f5f9;
+}
+
+.rdp-day_disabled {
+  color: #cbd5e1 !important;
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* react-day-picker: stay above hero / sticky bars / fixed UI */
+.rdp {
+  --rdp-accent-color: #0ea5e9;
+  --rdp-cell-size: 40px;
+  margin: 0;
+  position: relative !important;
+  z-index: 9999 !important;
+}
+
+.rdp-months {
+  position: relative !important;
+  z-index: 9999 !important;
+}
+
+[data-radix-popper-content-wrapper] {
+  z-index: 9999 !important;
+}
+
+.rdp-months {
+  gap: 16px;
+}
+
+.rdp-caption_label {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pageFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes toastIn {
+  from {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes galleryFade {
+  from {
+    opacity: 0.45;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Bölüm 7 — WhatsApp sabit buton (hafif sallama) */
+@keyframes wiggle {
+  0%,
+  100% {
+    transform: rotate(-3deg) scale(1);
+  }
+  50% {
+    transform: rotate(3deg) scale(1.05);
+  }
+}
+
+.animate-wiggle {
+  animation: wiggle 2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-wiggle {
+    animation: none;
+  }
+}
+
+/* Bölüm 5 — mobil temel */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+button,
+a,
+input,
+select,
+textarea,
+label[for] {
+  touch-action: manipulation;
+}
+
+@media (max-width: 768px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Admin Panel Tema */
+.admin-layout {
+  --admin-bg: #0a0a1a;
+  --admin-sidebar-bg: rgba(255, 255, 255, 0.03);
+  --admin-card-bg: rgba(255, 255, 255, 0.05);
+  --admin-card-border: rgba(255, 255, 255, 0.08);
+  --admin-text: #e2e8f0;
+  --admin-text-muted: #64748b;
+  --admin-primary: #0ea5e9;
+  --admin-primary-glow: rgba(14, 165, 233, 0.3);
+  --admin-secondary: #22c55e;
+  --admin-accent: #8b5cf6;
+  --admin-danger: #ef4444;
+  --admin-warning: #f59e0b;
+  font-family: var(--font-inter), system-ui, sans-serif;
+}
+
+.admin-card {
+  background: var(--admin-card-bg);
+  border: 1px solid var(--admin-card-border);
+  border-radius: 16px;
+  backdrop-filter: blur(10px);
+  transition: all 0.2s;
+}
+
+.admin-card:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.admin-label {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--admin-text-muted);
+}
+
+.admin-btn-primary {
+  background: linear-gradient(135deg, #0ea5e9, #0284c7);
+  color: white;
+  border-radius: 10px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.25);
+}
+
+.admin-btn-primary:hover {
+  filter: brightness(1.05);
+}
+
+.admin-btn-success {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: white;
+  border-radius: 10px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.25);
+}
+
+.admin-btn-success:hover {
+  filter: brightness(1.05);
+}
+
+.admin-btn-danger {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+  border-radius: 10px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+}
+
+.admin-btn-danger:hover {
+  filter: brightness(1.05);
+}
+
+.admin-badge-beklemede {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.admin-badge-onaylandi {
+  background: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.admin-badge-iptal {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.admin-badge-neutral {
+  background: rgba(148, 163, 184, 0.12);
+  color: #94a3b8;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+.admin-input {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 10px 14px;
+  color: white;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+  width: 100%;
+}
+
+.admin-input:focus {
+  border-color: #0ea5e9;
+}
+
+.admin-input::placeholder {
+  color: #475569;
+}
+
+.admin-select {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 10px 14px;
+  color: #e2e8f0;
+  font-size: 14px;
+  outline: none;
+  cursor: pointer;
+}
+
+.admin-select:focus {
+  border-color: #0ea5e9;
+}
+
+/* V10 — liste sayfaları başlığı, iskelet, rozetler */
+.section-title {
+  font-size: clamp(1.75rem, 2.5vw, 2rem);
+  font-weight: 700;
+  color: #e2e8f0;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.section-subtitle {
+  margin-top: 0.5rem;
+  max-width: 42rem;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: #94a3b8;
+}
+
+.btn-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  border: 1.5px solid #e5e7eb;
+  background: #fff;
+  padding: 11px 24px;
+  font-weight: 600;
+  font-size: 14px;
+  color: #374151;
+  cursor: pointer;
+  transition:
+    border-color 0.2s,
+    color 0.2s,
+    background 0.2s;
+}
+
+.btn-outline:hover {
+  border-color: #0ea5e9;
+  color: #0ea5e9;
+  background: #eff6ff;
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  padding: 12px 24px;
+  font-weight: 600;
+  font-size: 14px;
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(34, 197, 94, 0.3);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.badge-blue {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.badge-green {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.badge-amber {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.badge-red {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.badge-purple {
+  background: #ede9fe;
+  color: #6d28d9;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton {
+  border-radius: 8px;
+  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Admin panel — koyu tema yardımcı sınıfları */
+.admin-root {
+  font-family: var(--font-inter), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.admin-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 16px;
+  padding: 24px;
+}
+
+.admin-card-hover:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.admin-stat-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 16px;
+  padding: 20px;
+  transition: all 0.2s;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.admin-table th {
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #475569;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.admin-table td {
+  padding: 14px 16px;
+  font-size: 13px;
+  color: #cbd5e1;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.admin-table tr:hover td {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.admin-input {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 10px 14px;
+  color: white;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.2s;
+  width: 100%;
+}
+
+.admin-input:focus {
+  border-color: #0ea5e9;
+}
+
+.admin-input::placeholder {
+  color: #475569;
+}
+
+.admin-btn {
+  padding: 8px 16px;
+  border-radius: 9px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.admin-btn-primary {
+  background: linear-gradient(135deg, #0ea5e9, #0284c7);
+  color: white;
+  box-shadow: 0 2px 10px rgba(14, 165, 233, 0.25);
+}
+
+.admin-btn-success {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: white;
+  box-shadow: 0 2px 10px rgba(34, 197, 94, 0.25);
+}
+
+.admin-btn-danger {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+  box-shadow: 0 2px 10px rgba(239, 68, 68, 0.25);
+}
+
+.admin-btn-ghost {
+  background: rgba(255, 255, 255, 0.06);
+  color: #94a3b8;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.admin-badge {
+  padding: 3px 10px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.admin-badge-yellow {
+  background: rgba(234, 179, 8, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(234, 179, 8, 0.2);
+}
+
+.admin-badge-green {
+  background: rgba(34, 197, 94, 0.15);
+  color: #4ade80;
+  border: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+.admin-badge-red {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.admin-badge-blue {
+  background: rgba(14, 165, 233, 0.15);
+  color: #38bdf8;
+  border: 1px solid rgba(14, 165, 233, 0.2);
+}
+
+/* Admin panel readability hotfix (light surface + high contrast) */
+.admin-root .admin-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  color: #0f172a;
+}
+
+.admin-root .admin-input,
+.admin-root .admin-select {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #0f172a;
+}
+
+.admin-root .admin-input::placeholder {
+  color: #94a3b8;
+}
+
+.admin-root .admin-select option {
+  color: #0f172a;
+  background: #ffffff;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #0e9aa7;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #06b6d4;
 }

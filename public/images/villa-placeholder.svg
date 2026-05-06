@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" role="img" aria-label="Villa placeholder">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#dbeafe" />
+      <stop offset="100%" stop-color="#dcfce7" />
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="800" fill="url(#bg)" />
+  <path d="M200 470L600 220L1000 470V650H200V470Z" fill="#ffffff" opacity="0.9" />
+  <path d="M330 650V450H520V650H330Z" fill="#bfdbfe" />
+  <path d="M680 490H850V650H680V490Z" fill="#bae6fd" />
+  <circle cx="980" cy="160" r="70" fill="#fef08a" opacity="0.85" />
+  <text x="600" y="740" text-anchor="middle" font-size="46" fill="#0f172a" font-family="Arial, sans-serif">
+    Sezondakirala
+  </text>
+</svg>

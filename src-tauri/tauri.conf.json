@@ -1,0 +1,37 @@
+{
+  "productName": "Sezondakirala Admin",
+  "version": "1.0.0",
+  "identifier": "com.sezondakirala.admin",
+  "build": {
+    "beforeDevCommand": "",
+    "beforeBuildCommand": "",
+    "devUrl": "https://www.sezondakirala.com/yonetim",
+    "frontendDist": "https://www.sezondakirala.com/yonetim"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Sezondakirala Admin",
+        "width": 1400,
+        "height": 900,
+        "minWidth": 1024,
+        "minHeight": 700,
+        "resizable": true,
+        "center": true,
+        "url": "https://www.sezondakirala.com/yonetim"
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "nsis",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/icon.ico"
+    ]
+  }
+}

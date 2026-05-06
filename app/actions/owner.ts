@@ -1,0 +1,340 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { createClient } from "@/lib/supabase/server";
+import {
+  requireAuthenticatedUser,
+  requireOwnerListingAccess,
+  requireOwnerReservationAccess,
+} from "@/lib/auth/guards";
+import { STORAGE_BUCKET } from "@/lib/constants";
+import { normalizeReservationStatus } from "@/lib/reservation-status";
+import { storageUploadUserMessage } from "@/lib/storage-upload-messages";
+import { generateUniqueSlug } from "@/lib/slugify";
+
+function normalizeDate(value: string) {
+  return new Date(`${value}T00:00:00`);
+}
+
+function formatDate(value: Date) {
+  return value.toISOString().slice(0, 10);
+}
+
+function eachDateInRange(start: string, end: string) {
+  const dates: string[] = [];
+  const startDate = normalizeDate(start);
+  const endDate = normalizeDate(end);
+  const current = new Date(startDate);
+
+  while (current <= endDate) {
+    dates.push(formatDate(current));
+    current.setDate(current.getDate() + 1);
+  }
+
+  return dates;
+}
+
+function safeStorageFileName(name: string) {
+  const trimmed = name.trim().slice(0, 180);
+  const base = trimmed.replace(/[^\w.\-]+/g, "_");
+  return base || "upload";
+}
+
+export async function deleteListing(formData: FormData) {
+  const listingId = String(formData.get("listing_id") ?? "");
+  const access = await requireOwnerListingAccess(listingId);
+  if (!access.ok) return;
+  const supabase = access.supabase;
+
+  await supabase.from("ilanlar").delete().eq("id", listingId);
+  revalidatePath("/panel/ilanlarim");
+  revalidatePath("/panel/rezervasyonlar");
+  revalidatePath("/");
+  revalidatePath("/konaklama");
+  revalidatePath("/tekneler");
+}
+
+export async function createOwnerPackage(formData: FormData) {
+  const auth = await requireAuthenticatedUser();
+  if (!auth.ok) return { success: false, error: auth.error };
+  const supabase = auth.supabase;
+
+  const baslik = String(formData.get("baslik") ?? "").trim();
+  const aciklama = String(formData.get("aciklama") ?? "").trim();
+  const kategori = String(formData.get("kategori") ?? "macera");
+  const sure_gun = Number(formData.get("sure_gun") ?? 1);
+  const kapasite = Number(formData.get("kapasite") ?? 1);
+  const fiyat = Number(formData.get("fiyat") ?? 0);
+
+  let ilan_idleri: string[] = [];
+  try {
+    ilan_idleri = JSON.parse(String(formData.get("ilan_idleri") ?? "[]")) as string[];
+  } catch {
+    return { success: false, error: "Ilan listesi okunamadi." };
+  }
+
+  if (!baslik || baslik.length < 10) return { success: false, error: "Baslik en az 10 karakter olmali." };
+  if (!aciklama || aciklama.length < 50) return { success: false, error: "Aciklama en az 50 karakter olmali." };
+  if (ilan_idleri.length < 2) return { success: false, error: "En az iki ilan secmelisiniz." };
+  if (fiyat < 100) return { success: false, error: "Fiyat en az 100 TL olmali." };
+
+  const { data: ilanlar, error: ilanErr } = await supabase
+    .from("ilanlar")
+    .select("id,tip,sahip_id")
+    .in("id", ilan_idleri);
+
+  if (ilanErr || !ilanlar?.length) return { success: false, error: "Ilanlar yuklenemedi." };
+  if (ilanlar.length !== ilan_idleri.length) return { success: false, error: "Gecersiz ilan secimi." };
+  if (ilanlar.some((row) => row.sahip_id !== auth.user.id)) {
+    return { success: false, error: "Sadece kendi ilanlarinizi pakete ekleyebilirsiniz." };
+  }
+
+  const hasVilla = ilanlar.some((row) => row.tip === "villa");
+  const hasTekne = ilanlar.some((row) => row.tip === "tekne");
+  if (!hasVilla || !hasTekne) {
+    return { success: false, error: "Paket icin en az bir villa ve bir tekne secmelisiniz." };
+  }
+
+  const slug = await generateUniqueSlug(supabase, baslik, "paketler");
+
+  const { error } = await supabase.from("paketler").insert({
+    baslik,
+    aciklama,
+    kategori,
+    sure_gun,
+    kapasite,
+    fiyat,
+    ilan_idleri,
+    slug,
+    aktif: false,
+  });
+
+  if (error) return { success: false, error: error.message ?? "Paket olusturulamadi." };
+
+  revalidatePath("/panel/ilanlarim");
+  revalidatePath("/paketler");
+  return { success: true };
+}
+
+export async function createListing(formData: FormData) {
+  const auth = await requireAuthenticatedUser();
+  if (!auth.ok) return { success: false, error: auth.error };
+  const supabase = auth.supabase;
+
+  const baslik = String(formData.get("baslik") ?? "");
+  const aciklama = String(formData.get("aciklama") ?? "");
+  const tip = String(formData.get("tip") ?? "villa");
+  const konum = String(formData.get("konum") ?? "");
+  const kapasite = Number(formData.get("kapasite") ?? 1);
+  const yatak_odasi = Number(formData.get("yatak_odasi") ?? 1);
+  const banyo = Number(formData.get("banyo") ?? 1);
+  const gunluk_fiyat = Number(formData.get("gunluk_fiyat") ?? 0);
+  const temizlik_ucreti = Number(formData.get("temizlik_ucreti") ?? 0);
+  const ozellikler = JSON.parse(String(formData.get("ozellikler") ?? "{}"));
+  const medya = formData.getAll("medya") as File[];
+
+  const slug = await generateUniqueSlug(supabase, baslik, "ilanlar");
+
+  const { data: inserted, error } = await supabase
+    .from("ilanlar")
+    .insert({
+      sahip_id: auth.user.id,
+      tip,
+      baslik,
+      aciklama,
+      slug,
+      konum,
+      kapasite,
+      yatak_odasi,
+      banyo,
+      gunluk_fiyat,
+      temizlik_ucreti,
+      ozellikler,
+      aktif: false,
+      sponsorlu: false,
+    })
+    .select("id")
+    .single();
+
+  if (error || !inserted) return { success: false, error: "Ilan olusturulamadi." };
+
+  const filesToUpload = medya.filter((f): f is File => Boolean(f && f.size > 0));
+  let mediaIndex = 0;
+  let lastMediaError: string | null = null;
+
+  for (const file of filesToUpload) {
+    mediaIndex += 1;
+    const path = `${inserted.id}/${Date.now()}-${safeStorageFileName(file.name)}`;
+    const { error: uploadError } = await supabase.storage
+      .from(STORAGE_BUCKET)
+      .upload(path, file, { upsert: true });
+    if (uploadError) {
+      lastMediaError = storageUploadUserMessage(uploadError.message);
+      continue;
+    }
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(path);
+    const { error: insertMediaError } = await supabase.from("ilan_medyalari").insert({
+      ilan_id: inserted.id,
+      url: publicUrl,
+      tip: "resim",
+      sira: mediaIndex,
+    });
+    if (insertMediaError) {
+      lastMediaError =
+        insertMediaError.message?.trim() ||
+        "Fotograf veritabanina kaydedilemedi (ilan_medyalari). Supabase RLS veya sema kontrol edin.";
+    }
+  }
+
+  if (filesToUpload.length > 0) {
+    const { count, error: countErr } = await supabase
+      .from("ilan_medyalari")
+      .select("id", { count: "exact", head: true })
+      .eq("ilan_id", inserted.id);
+    if (countErr || !count) {
+      await supabase.from("ilanlar").delete().eq("id", inserted.id);
+      return {
+        success: false,
+        error:
+          lastMediaError ??
+          countErr?.message?.trim() ??
+          "Fotograflar yuklenemedi. Baglantiyi ve dosya boyutunu kontrol edip tekrar deneyin.",
+      };
+    }
+  }
+
+  revalidatePath("/panel/ilanlarim");
+  return { success: true };
+}
+
+export async function upsertAvailability(formData: FormData) {
+  const ilanId = String(formData.get("ilan_id") ?? "");
+  const access = await requireOwnerListingAccess(ilanId);
+  if (!access.ok) return { success: false, error: access.error };
+  const supabase = access.supabase;
+
+  await supabase.from("musaitlik").upsert({
+    ilan_id: ilanId,
+    tarih: String(formData.get("tarih") ?? ""),
+    durum: String(formData.get("durum") ?? "musait"),
+    fiyat_override: Number(formData.get("fiyat_override") ?? 0) || null,
+  });
+  revalidatePath("/panel/takvim");
+  return { success: true };
+}
+
+export async function setAvailabilityRangeByOwner(formData: FormData) {
+  const ilanId = String(formData.get("ilan_id") ?? "");
+  const access = await requireOwnerListingAccess(ilanId);
+  if (!access.ok) throw new Error(access.error);
+  const supabase = access.supabase;
+  const baslangic = String(formData.get("baslangic_tarihi") ?? "");
+  const bitis = String(formData.get("bitis_tarihi") ?? "");
+  const durum = String(formData.get("durum") ?? "musait");
+  const fiyatOverride = Number(formData.get("fiyat_override") ?? 0) || null;
+  const dates = eachDateInRange(baslangic, bitis);
+
+  if (durum === "musait") {
+    await supabase.from("musaitlik").delete().eq("ilan_id", ilanId).in("tarih", dates);
+  } else {
+    await supabase.from("musaitlik").upsert(
+      dates.map((tarih) => ({
+        ilan_id: ilanId,
+        tarih,
+        durum,
+        fiyat_override: durum === "ozel_fiyat" ? fiyatOverride : null,
+      })),
+      { onConflict: "ilan_id,tarih" },
+    );
+  }
+
+  revalidatePath("/panel/takvim");
+}
+
+export async function upsertSeasonPrice(formData: FormData) {
+  const ilanId = String(formData.get("ilan_id") ?? "");
+  const access = await requireOwnerListingAccess(ilanId);
+  if (!access.ok) throw new Error(access.error);
+  const supabase = access.supabase;
+  await supabase.from("sezon_fiyatlari").insert({
+    ilan_id: ilanId,
+    baslangic_tarihi: String(formData.get("baslangic_tarihi") ?? ""),
+    bitis_tarihi: String(formData.get("bitis_tarihi") ?? ""),
+    gunluk_fiyat: Number(formData.get("gunluk_fiyat") ?? 0),
+  });
+  revalidatePath("/panel/fiyat");
+  revalidatePath("/panel/takvim");
+}
+
+export async function deleteSeasonPriceByOwner(formData: FormData) {
+  const id = String(formData.get("id") ?? "");
+  const auth = await requireAuthenticatedOwner();
+  if (!auth.ok) throw new Error(auth.error);
+  const { data: seasonPrice } = await auth.supabase
+    .from("sezon_fiyatlari")
+    .select("id,ilan_id")
+    .eq("id", id)
+    .maybeSingle();
+  if (!seasonPrice) throw new Error("Sezon fiyat kaydi bulunamadi.");
+  const listingAccess = await requireOwnerListingAccess(seasonPrice.ilan_id);
+  if (!listingAccess.ok) throw new Error(listingAccess.error);
+  const supabase = listingAccess.supabase;
+  await supabase.from("sezon_fiyatlari").delete().eq("id", id);
+  revalidatePath("/panel/fiyat");
+  revalidatePath("/panel/takvim");
+}
+
+async function requireAuthenticatedOwner() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false as const, error: "Oturum bulunamadi." };
+  return { ok: true as const, user, supabase };
+}
+
+export async function updateReservationStatus(formData: FormData) {
+  const id = String(formData.get("id") ?? "");
+  const access = await requireOwnerReservationAccess(id);
+  if (!access.ok) throw new Error(access.error);
+  const supabase = access.supabase;
+  const durum = normalizeReservationStatus(String(formData.get("durum") ?? "beklemede"));
+  await supabase.from("rezervasyonlar").update({ durum }).eq("id", id);
+  const { data: reservation } = await supabase
+    .from("rezervasyonlar")
+    .select("ilan_id,giris_tarihi,cikis_tarihi")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (reservation) {
+    const start = normalizeDate(reservation.giris_tarihi);
+    const end = normalizeDate(reservation.cikis_tarihi);
+    end.setDate(end.getDate() - 1);
+
+    if (end >= start) {
+      const dates = eachDateInRange(formatDate(start), formatDate(end));
+      if (durum === "onaylandi") {
+        await supabase.from("musaitlik").upsert(
+          dates.map((tarih) => ({
+            ilan_id: reservation.ilan_id,
+            tarih,
+            durum: "dolu",
+            fiyat_override: null,
+          })),
+          { onConflict: "ilan_id,tarih" },
+        );
+      }
+      if (durum === "iptal") {
+        await supabase
+          .from("musaitlik")
+          .delete()
+          .eq("ilan_id", reservation.ilan_id)
+          .in("tarih", dates);
+      }
+    }
+  }
+
+  revalidatePath("/panel/talepler");
+}

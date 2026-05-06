@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" role="img" aria-label="Tekne placeholder">
+  <defs>
+    <linearGradient id="sea" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#bae6fd" />
+      <stop offset="100%" stop-color="#93c5fd" />
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="800" fill="#e0f2fe" />
+  <rect y="430" width="1200" height="370" fill="url(#sea)" />
+  <path d="M230 470H970L860 580H340L230 470Z" fill="#ffffff" />
+  <path d="M570 250H650V470H570V250Z" fill="#0f172a" opacity="0.85" />
+  <path d="M640 270L830 390H640V270Z" fill="#f8fafc" />
+  <path d="M560 270L370 390H560V270Z" fill="#f8fafc" />
+  <text x="600" y="740" text-anchor="middle" font-size="46" fill="#0f172a" font-family="Arial, sans-serif">
+    Sezondakirala
+  </text>
+</svg>
