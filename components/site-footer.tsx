@@ -3,7 +3,8 @@ import Link from "next/link";
 import { getPlatformSettings } from "@/lib/settings";
 import { TURSAB_NO, formatWhatsappTrDisplay, whatsappHref } from "@/lib/constants";
 import { WaveDivider } from "@/components/wave-divider";
-import { Clock3, Facebook, Instagram, Mail, MapPin, MessageCircle, PhoneCall, Twitter, Youtube } from "lucide-react";
+import { Clock3, Mail, MapPin, MessageCircle, PhoneCall } from "lucide-react";
+import { FaFacebook, FaInstagram, FaXTwitter, FaYoutube } from "react-icons/fa6";
 
 const quickLinks = [
   { href: "/", label: "Ana Sayfa" },
@@ -26,10 +27,10 @@ const serviceLinks = [
 ] as const;
 
 const socialLinks = [
-  { icon: Instagram, href: "https://instagram.com/sezondakirala", label: "Instagram" },
-  { icon: Facebook, href: "https://facebook.com/sezondakirala", label: "Facebook" },
-  { icon: Twitter, href: "https://twitter.com/sezondakirala", label: "Twitter" },
-  { icon: Youtube, href: "https://youtube.com/sezondakirala", label: "YouTube" },
+  { icon: FaInstagram, href: "https://instagram.com/sezondakirala", label: "Instagram" },
+  { icon: FaFacebook, href: "https://facebook.com/sezondakirala", label: "Facebook" },
+  { icon: FaXTwitter, href: "https://twitter.com/sezondakirala", label: "Twitter" },
+  { icon: FaYoutube, href: "https://youtube.com/sezondakirala", label: "YouTube" },
 ];
 
 export async function SiteFooter() {
