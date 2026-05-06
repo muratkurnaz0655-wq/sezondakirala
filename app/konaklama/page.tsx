@@ -57,8 +57,12 @@ export default function ListingsPage() {
   const [filtre, setFiltre] = useState<VillaFiltre>(defaultFiltre);
   const [mobilFiltre, setMobilFiltre] = useState(false);
   const [loading, setLoading] = useState(true);
-  const giris = currentArama?.giris ?? undefined;
-  const cikis = currentArama?.cikis ?? undefined;
+  const giris = currentArama?.tip === "villa" && currentArama?.giris && currentArama?.cikis
+    ? currentArama.giris
+    : undefined;
+  const cikis = currentArama?.tip === "villa" && currentArama?.giris && currentArama?.cikis
+    ? currentArama.cikis
+    : undefined;
   const yetiskin = currentArama?.yetiskin ?? 2;
   const cocuk = currentArama?.cocuk ?? 0;
   const bebek = currentArama?.bebek ?? 0;
@@ -75,8 +79,9 @@ export default function ListingsPage() {
       query = query.or(bolgeFiltre);
     }
 
-    if (aktifFiltre.minFiyat > 0) query = query.gte("gunluk_fiyat", aktifFiltre.minFiyat);
-    if (aktifFiltre.maxFiyat < 50000) query = query.lte("gunluk_fiyat", aktifFiltre.maxFiyat);
+    const minFiyat = Number.isFinite(aktifFiltre.minFiyat) ? aktifFiltre.minFiyat : 0;
+    const maxFiyat = Number.isFinite(aktifFiltre.maxFiyat) ? aktifFiltre.maxFiyat : 50000;
+    query = query.gte("gunluk_fiyat", minFiyat).lte("gunluk_fiyat", maxFiyat);
     if (aktifFiltre.minKisi > 1) query = query.gte("kapasite", aktifFiltre.minKisi);
     if (aktifFiltre.minYatakOdasi > 1) query = query.gte("yatak_odasi", aktifFiltre.minYatakOdasi);
     if (aktifFiltre.minBanyo > 1) query = query.gte("banyo", aktifFiltre.minBanyo);
@@ -191,8 +196,6 @@ export default function ListingsPage() {
         <div className="p-4 md:p-5">
           <SearchForm
             bugunIso={bugunIso}
-            initialGiris={giris}
-            initialCikis={cikis}
             initialYetiskin={yetiskin}
             initialCocuk={cocuk}
             initialBebek={bebek}
