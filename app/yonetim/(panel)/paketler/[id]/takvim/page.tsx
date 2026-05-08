@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { AdminPageLayout } from "@/components/admin/AdminPageLayout";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { normalizePaketListingIds } from "@/lib/paket-ilan-idleri";
 
@@ -30,14 +31,10 @@ export default async function AdminPackageCalendarPage({ params }: AdminPackageC
   );
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Paket Müsaitlik Takvimi</h1>
-        <p className="mt-1 text-sm text-slate-500">
-          {paket.baslik} paketine bağlı ilanların takvimlerini buradan yönetebilirsin.
-        </p>
-      </div>
-
+    <AdminPageLayout
+      title="Paket Müsaitlik Takvimi"
+      description={`${paket.baslik} paketine bağlı ilanların takvimlerini buradan yönetebilirsin.`}
+    >
       <div className="rounded-2xl border border-slate-200 bg-white p-5">
         {orderedListings.length === 0 ? (
           <p className="text-sm text-slate-500">Bu pakete bağlı ilan bulunamadı.</p>
@@ -65,6 +62,6 @@ export default async function AdminPackageCalendarPage({ params }: AdminPackageC
           </div>
         )}
       </div>
-    </div>
+    </AdminPageLayout>
   );
 }

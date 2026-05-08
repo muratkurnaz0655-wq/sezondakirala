@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { AdminListingCalendarManager } from "@/components/admin-listing-calendar-manager";
+import { AdminPageLayout } from "@/components/admin/AdminPageLayout";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { formatCurrency } from "@/lib/utils/format";
 
@@ -39,15 +40,10 @@ export default async function AdminListingCalendarPage({ params }: AdminListingC
   ]);
 
   return (
-    <div className="space-y-6">
-      <div className="admin-card p-6">
-        <h1 className="text-2xl font-bold text-slate-900">İlan Takvimi</h1>
-        <p className="mt-2 text-sm text-slate-600">
-          <span className="font-medium text-slate-800">{listing.baslik}</span> · {listing.tip} ·{" "}
-          {formatCurrency(listing.gunluk_fiyat)}/gece
-        </p>
-      </div>
-
+    <AdminPageLayout
+      title="İlan Takvimi"
+      description={`${listing.baslik} · ${listing.tip} · ${formatCurrency(listing.gunluk_fiyat)}/gece`}
+    >
       <AdminListingCalendarManager
         variant="admin"
         ilanId={listing.id}
@@ -55,6 +51,6 @@ export default async function AdminListingCalendarPage({ params }: AdminListingC
         sezonFiyatlari={sezonRes.data ?? []}
         rezervasyonlar={rezervasyonRes.data ?? []}
       />
-    </div>
+    </AdminPageLayout>
   );
 }

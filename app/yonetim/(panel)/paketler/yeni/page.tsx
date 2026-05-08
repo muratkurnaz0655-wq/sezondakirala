@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { requireAdminUser } from "@/lib/auth/guards";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { AdminPageLayout } from "@/components/admin/AdminPageLayout";
 import { AdminPackageCreateForm } from "../AdminPackageCreateForm";
 
 export default async function AdminNewPackagePage() {
@@ -23,13 +24,10 @@ export default async function AdminNewPackagePage() {
   });
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Admin Yeni Paket Ekle</h1>
-        <p className="mt-1 text-sm text-slate-500">
-          Paket oluştururken en az bir villa ve bir tekne seçimi zorunludur.
-        </p>
-      </div>
+    <AdminPageLayout
+      title="Admin Yeni Paket Ekle"
+      description="Paket oluştururken en az bir villa ve bir tekne seçimi zorunludur."
+    >
       <AdminPackageCreateForm
         listings={(listings ?? []).map((listing) => ({
           id: listing.id,
@@ -38,6 +36,6 @@ export default async function AdminNewPackagePage() {
           imageUrl: firstImageMap.get(listing.id) ?? null,
         }))}
       />
-    </div>
+    </AdminPageLayout>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { Bell, ChevronDown } from "lucide-react";
+import { Bell, ChevronDown, Menu } from "lucide-react";
 import { AdminSupportButton } from "@/components/admin/AdminSupportButton";
 
 export type AdminKullaniciOzeti = {
@@ -25,15 +25,29 @@ function baslikForPath(pathname: string): string {
   return "Yönetim";
 }
 
-export function AdminTopbar({ kullanici }: { kullanici: AdminKullaniciOzeti | null }) {
+export function AdminTopbar({
+  kullanici,
+  onMenuClick,
+}: {
+  kullanici: AdminKullaniciOzeti | null;
+  onMenuClick?: () => void;
+}) {
   const pathname = usePathname();
   const baslik = baslikForPath(pathname);
   const harf = kullanici?.ad_soyad?.[0] ?? kullanici?.email?.[0] ?? "A";
   const ad = kullanici?.ad_soyad ?? kullanici?.email ?? "Admin";
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-slate-200 bg-white px-8 shadow-sm">
+    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-slate-200 bg-white px-4 shadow-sm sm:px-6 lg:px-8">
       <div>
+        <button
+          type="button"
+          aria-label="Menüyü aç"
+          onClick={onMenuClick}
+          className="mr-3 inline-flex rounded-lg p-2 text-slate-600 hover:bg-slate-100 lg:hidden"
+        >
+          <Menu className="h-5 w-5" />
+        </button>
         <h1 className="text-xl font-semibold text-slate-800" id="admin-page-title">
           {baslik}
         </h1>
@@ -50,7 +64,7 @@ export function AdminTopbar({ kullanici }: { kullanici: AdminKullaniciOzeti | nu
           <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-red-500" />
         </button>
 
-        <div className="flex cursor-pointer items-center gap-3">
+        <div className="hidden cursor-pointer items-center gap-3 sm:flex">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600 text-sm font-semibold text-white">
             {harf}
           </div>

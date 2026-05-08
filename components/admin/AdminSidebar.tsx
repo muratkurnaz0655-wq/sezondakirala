@@ -26,9 +26,10 @@ const menuItems = [
 
 type AdminSidebarProps = {
   onNavigate?: () => void;
+  className?: string;
 };
 
-export function AdminSidebar({ onNavigate }: AdminSidebarProps) {
+export function AdminSidebar({ onNavigate, className = "" }: AdminSidebarProps) {
   const pathname = usePathname();
 
   const handleCikis = async () => {
@@ -38,7 +39,7 @@ export function AdminSidebar({ onNavigate }: AdminSidebarProps) {
   };
 
   return (
-    <aside className="fixed left-0 top-0 z-40 flex h-full w-64 flex-col border-r border-slate-800 bg-slate-900">
+    <aside className={`flex h-full w-64 flex-col border-r border-slate-800 bg-slate-900 ${className}`}>
       <div className="border-b border-slate-800 px-6 py-5">
         <div className="flex items-center gap-3">
           <Image
