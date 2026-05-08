@@ -216,7 +216,7 @@ export function SiteHeaderClient({ siteName }: SiteHeaderClientProps) {
   };
 
   const notificationTitle = (item: (typeof notifications)[number]) => {
-    if (item.tip === "yeni_rezervasyon") return "Yeni rezervasyon";
+    if (item.tip === "yeni_rezervasyon") return item.baslik ?? "Rezervasyonunuz oluşturuldu";
     if (item.tip === "iptal_rezervasyon") return "Rezervasyon iptal edildi";
     if (item.tip === "yeni_kullanici") return "Yeni kullanıcı kaydı";
     if (item.tip === "yeni_ilan") return "Yeni ilan eklendi";
@@ -237,7 +237,7 @@ export function SiteHeaderClient({ siteName }: SiteHeaderClientProps) {
   };
 
   function notificationHref(item: (typeof notifications)[number]) {
-    if (item.entity_tip === "rezervasyon" && item.entity_id) return `/panel/rezervasyonlar/${item.entity_id}`;
+    if (item.entity_tip === "rezervasyon") return "/panel/rezervasyonlar";
     if (item.entity_tip === "ilan" && item.entity_id) return "/panel/ilanlarim";
     if (item.entity_tip === "kullanici" && item.entity_id) return "/panel/profilim";
     return "/panel";

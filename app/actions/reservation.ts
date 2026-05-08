@@ -95,6 +95,14 @@ export async function createReservation(input: CreateReservationInput) {
         .select("id")
         .single();
       if (!error && data?.id) {
+        await supabase.from("bildirimler").insert({
+          tip: "yeni_rezervasyon",
+          baslik: "Rezervasyonunuz oluşturuldu",
+          mesaj: `Rezervasyonunuz başarıyla alındı. Rezervasyon No: ${input.referansNo}`,
+          entity_tip: "rezervasyon",
+          entity_id: data.id,
+          okundu: false,
+        });
         return { success: true as const, id: data.id };
       }
     }
