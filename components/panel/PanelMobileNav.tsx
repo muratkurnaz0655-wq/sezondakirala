@@ -13,7 +13,7 @@ import {
   User,
 } from "lucide-react";
 
-const tatilciHrefs = ["/panel/rezervasyonlar", "/panel/favoriler", "/panel/mesajlar", "/panel/profilim"];
+const tatilciHrefs = ["/panel/rezervasyonlar", "/panel/bildirimler", "/panel/favoriler", "/panel/mesajlar", "/panel/profilim"];
 
 const hostExtraHrefs = ["/panel/ilanlarim", "/panel/talepler", "/panel/takvim", "/panel/fiyat"];
 
@@ -24,6 +24,7 @@ function linkAktif(pathname: string, href: string) {
 
 const iconMap: Record<string, typeof Calendar> = {
   "/panel/rezervasyonlar": Calendar,
+  "/panel/bildirimler": Bell,
   "/panel/favoriler": Heart,
   "/panel/mesajlar": MessageCircle,
   "/panel/profilim": User,
@@ -35,6 +36,7 @@ const iconMap: Record<string, typeof Calendar> = {
 
 const labelMap: Record<string, string> = {
   "/panel/rezervasyonlar": "Rezervasyon",
+  "/panel/bildirimler": "Bildirim",
   "/panel/favoriler": "Favoriler",
   "/panel/mesajlar": "Mesajlar",
   "/panel/profilim": "Profil",

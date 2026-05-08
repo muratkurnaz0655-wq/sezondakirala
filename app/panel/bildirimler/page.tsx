@@ -47,6 +47,9 @@ export default async function PanelNotificationsPage() {
   const legacyReservationRows = (notifications ?? []).filter(
     (item) => !item.hedef_kullanici_id && item.entity_tip === "rezervasyon" && Boolean(item.entity_id),
   );
+  const legacyReservationByRefRows = (notifications ?? []).filter(
+    (item) => !item.hedef_kullanici_id && item.entity_tip === "rezervasyon" && !item.entity_id && Boolean(item.mesaj),
+  );
   const { data: ownedReservations } = legacyReservationRows.length
     ? await supabase
         .from("rezervasyonlar")
@@ -55,9 +58,25 @@ export default async function PanelNotificationsPage() {
     : { data: [] as { id: string }[] };
   const ownedLegacyReservationIds = new Set((ownedReservations ?? []).map((item) => item.id));
 
+  const reservationRefs = legacyReservationByRefRows
+    .map((item) => {
+      const match = String(item.mesaj ?? "").match(/Rezervasyon No:\s*([A-Z0-9-]+)/i);
+      return match?.[1]?.trim() ?? null;
+    })
+    .filter((value): value is string => Boolean(value));
+  const { data: ownedReservationsByRef } = reservationRefs.length
+    ? await supabase.from("rezervasyonlar").select("referans_no").in("referans_no", reservationRefs)
+    : { data: [] as { referans_no: string }[] };
+  const ownedLegacyReservationRefs = new Set((ownedReservationsByRef ?? []).map((item) => item.referans_no));
+
   const visibleNotifications = (notifications ?? []).filter((item) => {
     if (!item.hedef_kullanici_id && item.entity_tip === "rezervasyon" && item.entity_id) {
       return ownedLegacyReservationIds.has(String(item.entity_id));
+    }
+    if (!item.hedef_kullanici_id && item.entity_tip === "rezervasyon" && !item.entity_id) {
+      const match = String(item.mesaj ?? "").match(/Rezervasyon No:\s*([A-Z0-9-]+)/i);
+      const ref = match?.[1]?.trim() ?? "";
+      return Boolean(ref) && ownedLegacyReservationRefs.has(ref);
     }
     if (item.hedef_kullanici_id === user.id) return true;
     if (!item.hedef_kullanici_id && item.tip === "duyuru") return true;

@@ -17,6 +17,7 @@ import { createClient } from "@/lib/supabase/client";
 
 const tatilciMenusu = [
   { href: "/panel/rezervasyonlar", label: "Rezervasyonlarım", icon: Calendar },
+  { href: "/panel/bildirimler", label: "Bildirimlerim", icon: Bell },
   { href: "/panel/favoriler", label: "Favorilerim", icon: Heart },
   { href: "/panel/mesajlar", label: "Mesajlarım", icon: MessageCircle },
   { href: "/panel/profilim", label: "Profilim", icon: User },
@@ -31,6 +32,7 @@ const ilanYonetimiLinks = [
 
 const ilanSahibiHesabimLinks = [
   { href: "/panel/rezervasyonlar", label: "Rezervasyonlarım", icon: Calendar },
+  { href: "/panel/bildirimler", label: "Bildirimlerim", icon: Bell },
   { href: "/panel/favoriler", label: "Favorilerim", icon: Heart },
   { href: "/panel/mesajlar", label: "Mesajlarım", icon: MessageCircle },
   { href: "/panel/profilim", label: "Profilim", icon: User },
