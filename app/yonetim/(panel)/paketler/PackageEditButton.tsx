@@ -8,6 +8,7 @@ import {
   updatePackage,
 } from "./actions";
 import { AdminActionButton } from "@/components/admin/AdminActionButton";
+import { ConfirmModal } from "@/components/admin/ConfirmModal";
 
 type ListingItem = {
   id: string;
@@ -37,10 +38,8 @@ export function PackageEditButton({ pkg, listings }: { pkg: PackageRow; listings
   const [mediaNotice, setMediaNotice] = useState<string | null>(null);
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [mediaRows, setMediaRows] = useState((pkg.paket_medyalari ?? []) as NonNullable<PackageRow["paket_medyalari"]>);
+  const [mediaToDelete, setMediaToDelete] = useState<{ id: string; label: string } | null>(null);
 
-  useEffect(() => {
-    if (open) setMediaRows((pkg.paket_medyalari ?? []) as NonNullable<PackageRow["paket_medyalari"]>);
-  }, [open, pkg.paket_medyalari]);
   useEffect(() => {
     if (!mediaNotice) return;
     const timer = window.setTimeout(() => setMediaNotice(null), 2200);
@@ -122,7 +121,10 @@ export function PackageEditButton({ pkg, listings }: { pkg: PackageRow; listings
   return (
     <>
       <AdminActionButton
-        onClick={() => setOpen(true)}
+        onClick={() => {
+          setMediaRows((pkg.paket_medyalari ?? []) as NonNullable<PackageRow["paket_medyalari"]>);
+          setOpen(true);
+        }}
         variant="secondary"
       >
         Düzenle
@@ -300,15 +302,7 @@ export function PackageEditButton({ pkg, listings }: { pkg: PackageRow; listings
                         <button
                           type="button"
                           disabled={mediaPending}
-                          onClick={() => {
-                            const shouldDelete = window.confirm("Kapak görselini kaldırmak istediğinize emin misiniz?");
-                            if (!shouldDelete) return;
-                            startMediaTransition(async () => {
-                              const result = await deletePackageMedia(pkg.id, coverMedia.id);
-                              applyMediaResult(result);
-                              if (result.success) setMediaNotice("Kapak görsel kaldırıldı.");
-                            });
-                          }}
+                          onClick={() => setMediaToDelete({ id: coverMedia.id, label: "Kapak görseli" })}
                           className="h-8 rounded-md border border-red-200 bg-red-50 px-3 text-xs font-semibold text-red-700 transition-all duration-200 hover:bg-red-100 hover:shadow-md active:scale-[0.98] disabled:opacity-50"
                         >
                           Kapağı Kaldır
@@ -421,15 +415,7 @@ export function PackageEditButton({ pkg, listings }: { pkg: PackageRow; listings
                             <button
                               type="button"
                               disabled={mediaPending}
-                              onClick={() => {
-                                const shouldDelete = window.confirm("Bu detay görselini silmek istediğinize emin misiniz?");
-                                if (!shouldDelete) return;
-                                startMediaTransition(async () => {
-                                  const result = await deletePackageMedia(pkg.id, media.id);
-                                  applyMediaResult(result);
-                                  if (result.success) setMediaNotice("Detay görsel silindi.");
-                                });
-                              }}
+                              onClick={() => setMediaToDelete({ id: media.id, label: "Detay görseli" })}
                               className="rounded border border-red-200 bg-red-50 px-1 py-1 text-[10px] font-semibold text-red-700 transition-all duration-200 hover:bg-red-100 hover:shadow-md active:scale-[0.98] disabled:opacity-50"
                             >
                               Sil
@@ -473,6 +459,25 @@ export function PackageEditButton({ pkg, listings }: { pkg: PackageRow; listings
           </form>
         </div>
       )}
+      {mediaToDelete ? (
+        <ConfirmModal
+          title={`${mediaToDelete.label} silinsin mi?`}
+          message="Bu işlem geri alınamaz. Seçilen görsel kalıcı olarak silinecek."
+          confirmText="Evet, Sil"
+          confirmColor="red"
+          pending={mediaPending}
+          onCancel={() => setMediaToDelete(null)}
+          onConfirm={() => {
+            const target = mediaToDelete;
+            startMediaTransition(async () => {
+              const result = await deletePackageMedia(pkg.id, target.id);
+              applyMediaResult(result);
+              if (result.success) setMediaNotice(`${target.label} silindi.`);
+              setMediaToDelete(null);
+            });
+          }}
+        />
+      ) : null}
     </>
   );
 }

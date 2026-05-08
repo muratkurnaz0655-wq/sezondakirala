@@ -1,5 +1,12 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { formatCurrency } from "@/lib/utils/format";
+import { normalizeReservationStatus, STATUS_MAP } from "@/lib/reservation-status";
+
+function formatDate(value: unknown) {
+  const date = new Date(`${String(value).slice(0, 10)}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return "-";
+  return date.toLocaleDateString("tr-TR", { day: "2-digit", month: "2-digit", year: "numeric" });
+}
 
 export async function SonRezervasyonlar() {
   const supabase = createAdminClient();
@@ -28,34 +35,28 @@ export async function SonRezervasyonlar() {
 
   return (
     <ul className="space-y-1">
-      {rows.map((r) => (
-        <li
-          key={r.id}
-          className="flex items-center justify-between rounded-lg border-b border-slate-100 px-2 py-3 text-sm text-slate-700 transition-colors last:border-0 hover:bg-slate-50/50"
-        >
-          <div className="min-w-0 flex-1">
-            <div className="truncate font-medium text-slate-800">{ilanMap.get(r.ilan_id) ?? "İlan"}</div>
-            <div className="text-xs text-slate-500">
-              {userMap.get(r.kullanici_id) ?? "-"} · {String(r.giris_tarihi).slice(0, 10)} →{" "}
-              {String(r.cikis_tarihi).slice(0, 10)}
+      {rows.map((r) => {
+        const status = STATUS_MAP[normalizeReservationStatus(String(r.durum))] ?? STATUS_MAP.beklemede;
+        return (
+          <li
+            key={r.id}
+            className="flex items-center justify-between rounded-lg border-b border-slate-100 px-2 py-3 text-sm text-slate-700 transition-colors last:border-0 hover:bg-slate-50/50"
+          >
+            <div className="min-w-0 flex-1">
+              <div className="truncate font-medium text-slate-800">{ilanMap.get(r.ilan_id) ?? "İlan"}</div>
+              <div className="text-xs text-slate-500">
+                {userMap.get(r.kullanici_id) ?? "-"} · {formatDate(r.giris_tarihi)} → {formatDate(r.cikis_tarihi)}
+              </div>
             </div>
-          </div>
-          <div className="flex shrink-0 flex-col items-end gap-1">
-            <span
-              className={`rounded-full border px-2.5 py-0.5 text-xs font-medium ${
-                r.durum === "onaylandi"
-                  ? "border-blue-200 bg-blue-50 text-blue-700"
-                  : r.durum === "beklemede"
-                    ? "border-amber-200 bg-amber-50 text-amber-700"
-                    : "border-red-200 bg-red-50 text-red-700"
-              }`}
-            >
-              {r.durum === "onaylandi" ? "Onaylandı" : r.durum === "beklemede" ? "Beklemede" : "İptal"}
-            </span>
-            <span className="text-sm font-semibold text-slate-800">{formatCurrency(Number(r.toplam_fiyat ?? 0))}</span>
-          </div>
-        </li>
-      ))}
+            <div className="flex shrink-0 flex-col items-end gap-1">
+              <span className={`rounded-full border px-2.5 py-0.5 text-xs font-medium ${status.color} ${status.bg}`}>
+                {status.label}
+              </span>
+              <span className="text-sm font-semibold text-slate-800">{formatCurrency(Number(r.toplam_fiyat ?? 0))}</span>
+            </div>
+          </li>
+        );
+      })}
     </ul>
   );
 }

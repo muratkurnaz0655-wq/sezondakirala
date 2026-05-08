@@ -6,6 +6,7 @@ import {
   reorderListingMediaByAdmin,
   updateListing,
 } from "./actions";
+import { ConfirmModal } from "@/components/admin/ConfirmModal";
 
 type Listing = {
   id: string;
@@ -33,6 +34,7 @@ export function EditListingModal({
   const [isPending, startTransition] = useTransition();
   const [mediaPending, startMediaTransition] = useTransition();
   const [mediaError, setMediaError] = useState<string | null>(null);
+  const [mediaToDelete, setMediaToDelete] = useState<string | null>(null);
   const [mediaNotice, setMediaNotice] = useState<string | null>(null);
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -102,12 +104,11 @@ export function EditListingModal({
   };
 
   const deleteMedia = (mediaId: string) => {
-    const shouldDelete = window.confirm("Bu görseli silmek istediğinize emin misiniz?");
-    if (!shouldDelete) return;
     startMediaTransition(async () => {
       const result = await deleteListingMediaByAdmin(listing.id, mediaId);
       applyMediaResult(result);
       if (result.success) setMediaNotice("Görsel silindi.");
+      setMediaToDelete(null);
     });
   };
 
@@ -331,7 +332,7 @@ export function EditListingModal({
                       </button>
                       <button
                         type="button"
-                        onClick={() => deleteMedia(item.id)}
+                        onClick={() => setMediaToDelete(item.id)}
                         disabled={mediaPending}
                         className="h-7 flex-1 rounded-md border border-red-200 bg-red-50 text-xs font-semibold text-red-700 transition hover:bg-red-100 disabled:opacity-50"
                       >
@@ -364,6 +365,17 @@ export function EditListingModal({
           </div>
         </div>
       </form>
+      {mediaToDelete ? (
+        <ConfirmModal
+          title="Görseli silmek istediğinize emin misiniz?"
+          message="Bu işlem geri alınamaz. Görsel kalıcı olarak silinecek."
+          confirmText="Evet, Sil"
+          confirmColor="red"
+          pending={mediaPending}
+          onCancel={() => setMediaToDelete(null)}
+          onConfirm={() => deleteMedia(mediaToDelete)}
+        />
+      ) : null}
     </div>
   );
 }

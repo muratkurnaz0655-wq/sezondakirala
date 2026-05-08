@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { requireAdminUser } from "@/lib/auth/guards";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { generateUniqueSlug } from "@/lib/slugify";
+import { recordAdminAction } from "@/lib/admin-log";
 
 function composeKonum(bolgeRaw: FormDataEntryValue | null, locationRaw: FormDataEntryValue | null) {
   const bolge = String(bolgeRaw ?? "").trim();
@@ -142,7 +143,34 @@ export async function deleteListing(id: string) {
   const supabase = admin.supabase;
   const { error } = await supabase.from("ilanlar").delete().eq("id", id);
   if (error) throw new Error(error.message);
+  await recordAdminAction({ action: "İlan silindi", target: id });
   revalidatePath("/yonetim/ilanlar");
+}
+
+export async function bulkDeactivateListings(ids: string[]) {
+  const admin = await assertAdminForMedia();
+  if (!admin.ok) return { success: false as const, error: admin.error };
+  const cleanIds = ids.filter(Boolean);
+  if (!cleanIds.length) return { success: false as const, error: "İlan seçin." };
+
+  const { error } = await admin.supabase.from("ilanlar").update({ aktif: false }).in("id", cleanIds);
+  if (error) return { success: false as const, error: error.message };
+  await recordAdminAction({ action: "Toplu ilan pasife alma", target: `${cleanIds.length} ilan` });
+  revalidatePath("/yonetim/ilanlar");
+  return { success: true as const };
+}
+
+export async function bulkDeleteListings(ids: string[]) {
+  const admin = await assertAdminForMedia();
+  if (!admin.ok) return { success: false as const, error: admin.error };
+  const cleanIds = ids.filter(Boolean);
+  if (!cleanIds.length) return { success: false as const, error: "İlan seçin." };
+
+  const { error } = await admin.supabase.from("ilanlar").delete().in("id", cleanIds);
+  if (error) return { success: false as const, error: error.message };
+  await recordAdminAction({ action: "Toplu ilan silme", target: `${cleanIds.length} ilan` });
+  revalidatePath("/yonetim/ilanlar");
+  return { success: true as const };
 }
 
 type ListingMediaRow = {

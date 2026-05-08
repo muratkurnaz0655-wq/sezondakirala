@@ -1,44 +1,57 @@
 import { createClient } from "@/lib/supabase/server";
 import { formatCurrency } from "@/lib/utils/format";
-import { Home, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { ListingActions } from "./ListingActions";
 import { AdminStatsRow } from "@/components/admin/AdminStatsRow";
 import { AdminFilterBar } from "@/components/admin/AdminFilterBar";
-import { AdminFormField, AdminInput } from "@/components/admin/AdminFormControls";
+import { AdminFormField, AdminInput, AdminSelect } from "@/components/admin/AdminFormControls";
 import { AdminPageLayout } from "@/components/admin/AdminPageLayout";
 import { AdminMobileCard, AdminMobileCardList } from "@/components/admin/AdminMobileCardList";
 import { AdminSegmentedTabs } from "@/components/admin/AdminSegmentedTabs";
-import {
-  AdminDataTable,
-  AdminTableCell,
-  AdminTableHead,
-  AdminTableHeaderCell,
-  AdminTableRow,
-} from "@/components/admin/AdminDataTable";
 import { AdminActionButton } from "@/components/admin/AdminActionButton";
+import { ListingsBulkTable, type ListingTableRow } from "./ListingsBulkTable";
+import { AdminEmptyState } from "@/components/admin/AdminEmptyState";
 
 type AdminListingsPageProps = {
-  searchParams: Promise<{ durum?: string; filtre?: string; q?: string }>;
+  searchParams: Promise<{
+    durum?: string;
+    filtre?: string;
+    q?: string;
+    min_fiyat?: string;
+    max_fiyat?: string;
+    konum?: string;
+    sahip?: string;
+    siralama?: string;
+  }>;
 };
-
-function ilkResim(medyalar: { id?: string; url: string; sira: number }[] | null | undefined) {
-  if (!medyalar?.length) return null;
-  return [...medyalar].sort((a, b) => a.sira - b.sira)[0]?.url ?? null;
-}
 
 export default async function AdminListingsPage({ searchParams }: AdminListingsPageProps) {
   const params = await searchParams;
   const durum = params.durum ?? "";
   const filtre = params.filtre ?? "tumu";
   const q = (params.q ?? "").trim().toLowerCase();
+  const minFiyat = Number(params.min_fiyat ?? "");
+  const maxFiyat = Number(params.max_fiyat ?? "");
   const supabase = await createClient();
   let query = supabase
     .from("ilanlar")
-    .select("*, ilan_medyalari(id,url,sira)")
-    .order("olusturulma_tarihi", { ascending: false })
-    .order("id", { ascending: false });
+    .select("*, ilan_medyalari(id,url,sira)");
+  if (params.siralama === "eski") {
+    query = query.order("olusturulma_tarihi", { ascending: true });
+  } else if (params.siralama === "fiyat_artan") {
+    query = query.order("gunluk_fiyat", { ascending: true });
+  } else if (params.siralama === "fiyat_azalan") {
+    query = query.order("gunluk_fiyat", { ascending: false });
+  } else {
+    query = query.order("olusturulma_tarihi", { ascending: false });
+  }
+  query = query.order("id", { ascending: false });
   if (durum === "bekleyen" || durum === "reddedildi") query = query.eq("aktif", false);
   if (durum === "yayinda") query = query.eq("aktif", true);
+  if (Number.isFinite(minFiyat)) query = query.gte("gunluk_fiyat", minFiyat);
+  if (Number.isFinite(maxFiyat)) query = query.lte("gunluk_fiyat", maxFiyat);
+  if (params.konum) query = query.eq("konum", params.konum);
+  if (params.sahip) query = query.eq("sahip_id", params.sahip);
 
   const [{ data: listings }, { data: users }] = await Promise.all([
     query,
@@ -47,6 +60,7 @@ export default async function AdminListingsPage({ searchParams }: AdminListingsP
   const userMap = new Map(
     (users ?? []).map((user) => [user.id, user.ad_soyad ?? user.email ?? "-"]),
   );
+  const locationOptions = [...new Set((listings ?? []).map((row) => row.konum).filter(Boolean))].sort();
   const filteredListings = (listings ?? []).filter((row) => {
     if (filtre === "villa") return row.tip === "villa";
     if (filtre === "tekne") return row.tip === "tekne";
@@ -88,7 +102,7 @@ export default async function AdminListingsPage({ searchParams }: AdminListingsP
           { label: "Villa / Tekne", value: `${villaCount} / ${tekneCount}`, tone: "info" },
         ]}
       />
-      <AdminFilterBar>
+      <AdminFilterBar className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-6">
         <AdminFormField label="Arama">
           <AdminInput
             name="q"
@@ -96,6 +110,40 @@ export default async function AdminListingsPage({ searchParams }: AdminListingsP
             placeholder="İlan başlığı, konum, ilan ID, ilan sahibi..."
           />
         </AdminFormField>
+        <AdminFormField label="Min fiyat">
+          <AdminInput name="min_fiyat" type="number" defaultValue={params.min_fiyat ?? ""} placeholder="₺ min" />
+        </AdminFormField>
+        <AdminFormField label="Max fiyat">
+          <AdminInput name="max_fiyat" type="number" defaultValue={params.max_fiyat ?? ""} placeholder="₺ max" />
+        </AdminFormField>
+        <AdminFormField label="Bölge / Konum">
+          <AdminSelect name="konum" defaultValue={params.konum ?? ""}>
+            <option value="">Tüm konumlar</option>
+            {locationOptions.map((konum) => (
+              <option key={konum} value={konum}>{konum}</option>
+            ))}
+          </AdminSelect>
+        </AdminFormField>
+        <AdminFormField label="İlan sahibi">
+          <AdminSelect name="sahip" defaultValue={params.sahip ?? ""}>
+            <option value="">Tüm sahipler</option>
+            {(users ?? []).map((user) => (
+              <option key={user.id} value={user.id}>{user.ad_soyad ?? user.email ?? user.id}</option>
+            ))}
+          </AdminSelect>
+        </AdminFormField>
+        <AdminFormField label="Sıralama">
+          <AdminSelect name="siralama" defaultValue={params.siralama ?? "yeni"}>
+            <option value="yeni">Ekleniş tarihi (yeni)</option>
+            <option value="eski">Ekleniş tarihi (eski)</option>
+            <option value="fiyat_artan">Fiyat artan</option>
+            <option value="fiyat_azalan">Fiyat azalan</option>
+          </AdminSelect>
+        </AdminFormField>
+        <div className="flex flex-wrap gap-2 xl:col-span-6">
+          <AdminActionButton type="submit" variant="primary" size="md">Filtrele</AdminActionButton>
+          <AdminActionButton href="/yonetim/ilanlar" variant="secondary" size="md">Temizle</AdminActionButton>
+        </div>
       </AdminFilterBar>
       <p className="text-sm text-slate-500">{filteredListings.length} ilan</p>
 
@@ -135,75 +183,11 @@ export default async function AdminListingsPage({ searchParams }: AdminListingsP
           );
         })}
       </AdminMobileCardList>
-      <AdminDataTable minWidthClass="min-w-[900px]">
-            <AdminTableHead>
-              <tr>
-                <AdminTableHeaderCell>İlan</AdminTableHeaderCell>
-                <AdminTableHeaderCell>Tip</AdminTableHeaderCell>
-                <AdminTableHeaderCell>Fiyat</AdminTableHeaderCell>
-                <AdminTableHeaderCell>Durum</AdminTableHeaderCell>
-                <AdminTableHeaderCell align="right">İşlemler</AdminTableHeaderCell>
-              </tr>
-            </AdminTableHead>
-            <tbody>
-              {filteredListings.map((listing) => {
-                const row = listing as {
-                  id: string;
-                  baslik: string;
-                  konum: string;
-                  tip: string;
-                  sahip_id: string;
-                  gunluk_fiyat: number;
-                  aktif: boolean;
-                  slug?: string;
-                  olusturulma_tarihi: string;
-                  ilan_medyalari?: { id: string; url: string; sira: number }[] | null;
-                };
-                const url = ilkResim(row.ilan_medyalari);
-                return (
-                  <AdminTableRow key={row.id}>
-                    <AdminTableCell>
-                      <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-xl bg-slate-100">
-                          {url ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img src={url} alt="" className="h-full w-full object-cover" />
-                          ) : (
-                            <div className="flex h-full w-full items-center justify-center">
-                              <Home className="h-5 w-5 text-slate-400" />
-                            </div>
-                          )}
-                        </div>
-                        <div>
-                          <p className="line-clamp-1 text-sm font-semibold text-slate-800">{row.baslik}</p>
-                          <p className="mt-0.5 text-xs text-slate-400">{row.konum}</p>
-                        </div>
-                      </div>
-                    </AdminTableCell>
-                    <AdminTableCell>
-                      <span className="rounded-md bg-slate-100 px-2 py-1 text-xs font-medium capitalize text-slate-600">
-                        {row.tip}
-                      </span>
-                    </AdminTableCell>
-                    <AdminTableCell>
-                      <span className="font-semibold text-slate-800">{formatCurrency(Number(row.gunluk_fiyat ?? 0))}</span>
-                      <span className="text-xs text-slate-500"> /gece</span>
-                    </AdminTableCell>
-                    <AdminTableCell>
-                      <span className={`rounded-full border px-2.5 py-0.5 text-xs font-medium ${row.aktif ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-slate-200 bg-slate-100 text-slate-600"}`}>
-                        {row.aktif ? "Yayında" : "Pasif"}
-                      </span>
-                    </AdminTableCell>
-                    <AdminTableCell className="text-right">
-                      <div className="flex items-center justify-end">
-                        <ListingActions listing={row} />
-                      </div>
-                    </AdminTableCell>
-                  </AdminTableRow>
-                );
-              })}
-            </tbody>
-      </AdminDataTable>
+      {filteredListings.length ? (
+        <ListingsBulkTable listings={filteredListings as ListingTableRow[]} />
+      ) : (
+        <AdminEmptyState message="Henüz kayıt yok" actionHref="/yonetim/ilanlar/yeni" actionLabel="İlk ilanı ekle →" />
+      )}
     </AdminPageLayout>
   );
 }

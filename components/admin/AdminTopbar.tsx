@@ -3,11 +3,19 @@
 import { usePathname } from "next/navigation";
 import { Bell, ChevronDown, Menu } from "lucide-react";
 import { AdminSupportButton } from "@/components/admin/AdminSupportButton";
+import { useState } from "react";
 
 export type AdminKullaniciOzeti = {
   ad_soyad: string | null;
   email: string | null;
   rol: string | null;
+};
+
+export type AdminNotification = {
+  id: string;
+  label: string;
+  href: string;
+  tone: "info" | "warning" | "danger";
 };
 
 const sayfaBasliklari: Record<string, string> = {
@@ -28,14 +36,19 @@ function baslikForPath(pathname: string): string {
 export function AdminTopbar({
   kullanici,
   onMenuClick,
+  notifications = [],
 }: {
   kullanici: AdminKullaniciOzeti | null;
   onMenuClick?: () => void;
+  notifications?: AdminNotification[];
 }) {
   const pathname = usePathname();
+  const [open, setOpen] = useState(false);
+  const [readIds, setReadIds] = useState<string[]>([]);
   const baslik = baslikForPath(pathname);
   const harf = kullanici?.ad_soyad?.[0] ?? kullanici?.email?.[0] ?? "A";
   const ad = kullanici?.ad_soyad ?? kullanici?.email ?? "Admin";
+  const unread = notifications.filter((item) => !readIds.includes(item.id));
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-slate-200 bg-white px-4 shadow-sm sm:px-6 lg:px-8">
@@ -55,14 +68,52 @@ export function AdminTopbar({
 
       <div className="flex items-center gap-3">
         <AdminSupportButton compact />
-        <button
-          type="button"
-          aria-label="Bildirimler"
-          className="relative rounded-xl p-2 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900"
-        >
-          <Bell className="h-5 w-5" />
-          <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-red-500" />
-        </button>
+        <div className="relative">
+          <button
+            type="button"
+            aria-label="Bildirimler"
+            onClick={() => setOpen((value) => !value)}
+            className="relative rounded-xl p-2 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900"
+          >
+            <Bell className="h-5 w-5" />
+            {unread.length ? <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-red-500" /> : null}
+          </button>
+          {open ? (
+            <div className="absolute right-0 top-11 w-80 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl">
+              <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
+                <p className="text-sm font-semibold text-slate-900">Bildirimler</p>
+                <button
+                  type="button"
+                  onClick={() => setReadIds(notifications.map((item) => item.id))}
+                  className="text-xs font-medium text-blue-600 hover:text-blue-700"
+                >
+                  Tümünü okundu işaretle
+                </button>
+              </div>
+              <div className="max-h-80 overflow-y-auto p-2">
+                {notifications.length ? (
+                  notifications.map((item) => (
+                    <a
+                      key={item.id}
+                      href={item.href}
+                      onClick={() => setReadIds((ids) => [...new Set([...ids, item.id])])}
+                      className="block rounded-xl px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                    >
+                      <span
+                        className={`mr-2 inline-block h-2 w-2 rounded-full ${
+                          item.tone === "danger" ? "bg-red-500" : item.tone === "warning" ? "bg-amber-500" : "bg-sky-500"
+                        }`}
+                      />
+                      {item.label}
+                    </a>
+                  ))
+                ) : (
+                  <p className="px-3 py-5 text-center text-sm text-slate-500">Yeni bildirim yok</p>
+                )}
+              </div>
+            </div>
+          ) : null}
+        </div>
 
         <div className="hidden cursor-pointer items-center gap-3 sm:flex">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600 text-sm font-semibold text-white">

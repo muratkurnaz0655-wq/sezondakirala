@@ -1,4 +1,3 @@
-import { updateUserRole } from "@/app/actions/admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { AdminStatsRow } from "@/components/admin/AdminStatsRow";
 import { AdminFilterBar } from "@/components/admin/AdminFilterBar";
@@ -6,13 +5,8 @@ import { AdminFormField, AdminInput, AdminSelect } from "@/components/admin/Admi
 import { AdminPageLayout } from "@/components/admin/AdminPageLayout";
 import { AdminActionButton } from "@/components/admin/AdminActionButton";
 import { AdminMobileCard, AdminMobileCardList } from "@/components/admin/AdminMobileCardList";
-import {
-  AdminDataTable,
-  AdminTableCell,
-  AdminTableHead,
-  AdminTableHeaderCell,
-  AdminTableRow,
-} from "@/components/admin/AdminDataTable";
+import { UsersBulkTable, type UserTableRow } from "./UsersBulkTable";
+import { AdminEmptyState } from "@/components/admin/AdminEmptyState";
 
 type AdminUsersPageProps = {
   searchParams: Promise<{ q?: string; siralama?: string }>;
@@ -60,6 +54,15 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
   const adminCount = (users ?? []).filter((u) => u.rol === "admin").length;
   const ownerCount = (users ?? []).filter((u) => u.rol === "ilan_sahibi").length;
   const visitorCount = totalUsers - adminCount - ownerCount;
+  const duplicateNames = [...(users ?? []).reduce((map, user) => {
+    const key = user.ad_soyad?.trim().toLocaleLowerCase("tr");
+    if (key) map.set(key, (map.get(key) ?? 0) + 1);
+    return map;
+  }, new Map<string, number>())]
+    .filter(([, count]) => count > 1)
+    .map(([name]) => name);
+  const reservationCounts = Object.fromEntries(reservationCountMap);
+  const listingCounts = Object.fromEntries(listingCountMap);
 
   return (
     <AdminPageLayout
@@ -118,60 +121,16 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
           </AdminMobileCard>
         ))}
       </AdminMobileCardList>
-      <AdminDataTable>
-            <AdminTableHead>
-              <tr>
-                <AdminTableHeaderCell>Avatar</AdminTableHeaderCell>
-                <AdminTableHeaderCell>Ad</AdminTableHeaderCell>
-                <AdminTableHeaderCell>E-posta</AdminTableHeaderCell>
-                <AdminTableHeaderCell>Rol</AdminTableHeaderCell>
-                <AdminTableHeaderCell>Kayıt</AdminTableHeaderCell>
-                <AdminTableHeaderCell>Rez.</AdminTableHeaderCell>
-                <AdminTableHeaderCell>İlan</AdminTableHeaderCell>
-                <AdminTableHeaderCell>İşlem</AdminTableHeaderCell>
-              </tr>
-            </AdminTableHead>
-            <tbody>
-              {(users ?? []).map((user) => {
-                const initial = (user.ad_soyad?.[0] ?? user.email?.[0] ?? "?").toUpperCase();
-                return (
-                  <AdminTableRow key={user.id}>
-                    <AdminTableCell>
-                      <div
-                        className="flex h-9 w-9 items-center justify-center rounded-xl text-sm font-bold text-white"
-                        style={{ background: "linear-gradient(135deg, #0EA5E9, #22C55E)" }}
-                      >
-                        {initial}
-                      </div>
-                    </AdminTableCell>
-                    <AdminTableCell>{user.ad_soyad ?? "-"}</AdminTableCell>
-                    <AdminTableCell className="text-slate-500">{user.email}</AdminTableCell>
-                    <AdminTableCell>
-                      <span className={rolBadge(String(user.rol))}>{user.rol}</span>
-                    </AdminTableCell>
-                    <AdminTableCell className="text-slate-500">
-                      {String(user.olusturulma_tarihi).slice(0, 10)}
-                    </AdminTableCell>
-                    <AdminTableCell className="text-slate-500">{reservationCountMap.get(user.id) ?? 0}</AdminTableCell>
-                    <AdminTableCell className="text-slate-500">{listingCountMap.get(user.id) ?? 0}</AdminTableCell>
-                    <AdminTableCell>
-                      <form action={updateUserRole} className="flex items-center gap-2">
-                        <input type="hidden" name="id" value={user.id} />
-                        <AdminSelect name="rol" defaultValue={user.rol} className="w-32">
-                          <option value="ziyaretci">ziyaretci</option>
-                          <option value="ilan_sahibi">ilan_sahibi</option>
-                          <option value="admin">admin</option>
-                        </AdminSelect>
-                        <AdminActionButton type="submit" variant="success">
-                          ✓ Kaydet
-                        </AdminActionButton>
-                      </form>
-                    </AdminTableCell>
-                  </AdminTableRow>
-                );
-              })}
-            </tbody>
-      </AdminDataTable>
+      {(users ?? []).length ? (
+        <UsersBulkTable
+          users={(users ?? []) as UserTableRow[]}
+          reservationCountMap={reservationCounts}
+          listingCountMap={listingCounts}
+          duplicateNames={duplicateNames}
+        />
+      ) : (
+        <AdminEmptyState message="Henüz kayıt yok" actionHref="/kayit" actionLabel="İlk kullanıcıyı ekle →" />
+      )}
     </AdminPageLayout>
   );
 }

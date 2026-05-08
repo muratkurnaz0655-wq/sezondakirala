@@ -3,14 +3,15 @@
 import { useState, type ReactNode } from "react";
 import { X } from "lucide-react";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
-import { AdminTopbar, type AdminKullaniciOzeti } from "@/components/admin/AdminTopbar";
+import { AdminTopbar, type AdminKullaniciOzeti, type AdminNotification } from "@/components/admin/AdminTopbar";
 
 type Props = {
   kullanici: AdminKullaniciOzeti | null;
+  notifications?: AdminNotification[];
   children: ReactNode;
 };
 
-export function AdminPanelChrome({ kullanici, children }: Props) {
+export function AdminPanelChrome({ kullanici, notifications = [], children }: Props) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
@@ -42,7 +43,7 @@ export function AdminPanelChrome({ kullanici, children }: Props) {
       ) : null}
 
       <div className="ml-0 min-h-screen bg-slate-50 lg:ml-64">
-        <AdminTopbar kullanici={kullanici} onMenuClick={() => setMobileOpen(true)} />
+        <AdminTopbar kullanici={kullanici} notifications={notifications} onMenuClick={() => setMobileOpen(true)} />
         <main className="admin-main min-h-[calc(100vh-64px)] bg-slate-50 px-4 py-5 pb-12 sm:px-6 lg:px-8">{children}</main>
       </div>
     </div>

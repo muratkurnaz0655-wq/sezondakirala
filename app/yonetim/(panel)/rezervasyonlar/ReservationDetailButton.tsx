@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { normalizeReservationStatus, STATUS_MAP } from "@/lib/reservation-status";
-import { Check, Clipboard, CreditCard, Receipt, ShieldCheck, UserRound } from "lucide-react";
+import { Check, Clipboard, CreditCard, FileText, History, Phone, Receipt, ShieldCheck, UserRound } from "lucide-react";
 import { AdminActionButton } from "@/components/admin/AdminActionButton";
+import { ConfirmModal } from "@/components/admin/ConfirmModal";
+import { saveReservationAdminNote, updateReservationStatus } from "./actions";
 
 type Reservation = Record<string, unknown>;
 
@@ -20,6 +22,8 @@ const LABELS: Record<string, string> = {
   toplam_fiyat: "Toplam Tutar",
   durum: "Durum",
   odeme_yontemi: "Ödeme Yöntemi",
+  odeme_durumu: "Ödeme Durumu",
+  admin_notu: "Admin Notu",
   referans_no: "Referans No",
   olusturulma_tarihi: "Oluşturulma",
 };
@@ -46,6 +50,11 @@ export function ReservationDetailButton({ reservation }: { reservation: Reservat
   const [open, setOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"ozet" | "teknik">("ozet");
   const [copied, setCopied] = useState(false);
+  const [note, setNote] = useState(String(reservation.admin_notu ?? ""));
+  const [notice, setNotice] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [confirmCancel, setConfirmCancel] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const entries = Object.entries(reservation).filter(([k]) => !HIDDEN_KEYS.has(k));
   const normalizedStatus = normalizeReservationStatus(String(reservation.durum ?? "beklemede"));
   const statusStyle = STATUS_MAP[normalizedStatus];
@@ -63,6 +72,31 @@ export function ReservationDetailButton({ reservation }: { reservation: Reservat
     } catch {
       setCopied(false);
     }
+  }
+
+  function saveNote() {
+    setError(null);
+    startTransition(async () => {
+      const result = await saveReservationAdminNote(String(reservation.id), note);
+      if (!result.success) {
+        setError(result.error);
+        return;
+      }
+      setNotice("Not kaydedildi.");
+    });
+  }
+
+  function cancelReservation() {
+    setError(null);
+    startTransition(async () => {
+      const result = await updateReservationStatus(String(reservation.id), "iptal");
+      if (!result.success) {
+        setError(result.error);
+        return;
+      }
+      setNotice("Rezervasyon iptal edildi.");
+      setConfirmCancel(false);
+    });
   }
 
   return (
@@ -179,7 +213,15 @@ export function ReservationDetailButton({ reservation }: { reservation: Reservat
                     <div className="mt-2 space-y-1.5 text-sm">
                       <p className="text-slate-700">
                         <span className="font-medium text-slate-900">Kullanıcı:</span>{" "}
-                        {formatValue("kullanici_id", reservation.kullanici_id)}
+                        {formatValue("kullanici_adi", reservation.kullanici_adi ?? reservation.kullanici_id)}
+                      </p>
+                      <p className="text-slate-700">
+                        <span className="font-medium text-slate-900">E-posta:</span>{" "}
+                        {formatValue("kullanici_email", reservation.kullanici_email)}
+                      </p>
+                      <p className="text-slate-700">
+                        <span className="font-medium text-slate-900">Telefon:</span>{" "}
+                        {formatValue("kullanici_telefon", reservation.kullanici_telefon)}
                       </p>
                       <p className="text-slate-700">
                         <span className="font-medium text-slate-900">Misafir:</span>{" "}
@@ -195,7 +237,7 @@ export function ReservationDetailButton({ reservation }: { reservation: Reservat
                     <div className="mt-2 space-y-1.5 text-sm">
                       <p className="text-slate-700">
                         <span className="font-medium text-slate-900">İlan ID:</span>{" "}
-                        {formatValue("ilan_id", reservation.ilan_id)}
+                        {formatValue("ilan_baslik", reservation.ilan_baslik ?? reservation.ilan_id)}
                       </p>
                       <p className="text-slate-700">
                         <span className="font-medium text-slate-900">Paket ID:</span>{" "}
@@ -217,7 +259,56 @@ export function ReservationDetailButton({ reservation }: { reservation: Reservat
                         <span className="font-medium text-slate-900">Oluşturulma:</span>{" "}
                         {formatValue("olusturulma_tarihi", reservation.olusturulma_tarihi)}
                       </p>
+                      <p className="text-slate-700">
+                        <span className="font-medium text-slate-900">Ödeme durumu:</span>{" "}
+                        {formatValue("odeme_durumu", reservation.odeme_durumu ?? "beklemede")}
+                      </p>
                     </div>
+                  </div>
+                  <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm md:col-span-2">
+                    <p className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                      <Phone className="h-3.5 w-3.5 text-sky-500" />
+                      Misafir İletişim Bilgileri
+                    </p>
+                    <div className="grid gap-2 text-sm md:grid-cols-2">
+                      <p><span className="font-medium text-slate-900">E-posta:</span> {formatValue("kullanici_email", reservation.kullanici_email)}</p>
+                      <p><span className="font-medium text-slate-900">Telefon:</span> {formatValue("kullanici_telefon", reservation.kullanici_telefon)}</p>
+                    </div>
+                  </div>
+                  <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm md:col-span-2">
+                    <p className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                      <FileText className="h-3.5 w-3.5 text-amber-500" />
+                      Admin Notları
+                    </p>
+                    <textarea
+                      value={note}
+                      onChange={(event) => setNote(event.target.value)}
+                      rows={3}
+                      className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-800 outline-none focus:border-sky-400"
+                      placeholder="Rezervasyon için iç not ekleyin..."
+                    />
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                      <AdminActionButton type="button" variant="primary" disabled={isPending} onClick={saveNote}>
+                        Notu Kaydet
+                      </AdminActionButton>
+                      <AdminActionButton type="button" variant="danger" disabled={isPending || normalizedStatus === "iptal"} onClick={() => setConfirmCancel(true)}>
+                        İptal Et
+                      </AdminActionButton>
+                      {notice ? <span className="text-xs font-medium text-emerald-600">{notice}</span> : null}
+                      {error ? <span className="text-xs font-medium text-red-600">{error}</span> : null}
+                    </div>
+                  </div>
+                  <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm md:col-span-2">
+                    <p className="mb-3 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                      <History className="h-3.5 w-3.5 text-violet-500" />
+                      Rezervasyon Geçmişi
+                    </p>
+                    <ol className="space-y-2 text-sm text-slate-700">
+                      <li>Oluşturuldu: {formatValue("olusturulma_tarihi", reservation.olusturulma_tarihi)}</li>
+                      <li>Güncel durum: {statusStyle.label}</li>
+                      {normalizedStatus === "onaylandi" ? <li>Onaylandı: durum alanı onaylandı olarak güncellendi.</li> : null}
+                      {normalizedStatus === "iptal" ? <li>İptal edildi: durum alanı iptal olarak güncellendi.</li> : null}
+                    </ol>
                   </div>
                 </div>
               ) : (
@@ -259,6 +350,17 @@ export function ReservationDetailButton({ reservation }: { reservation: Reservat
           </div>
         </div>
       )}
+      {confirmCancel ? (
+        <ConfirmModal
+          title="Rezervasyonu iptal etmek istediğinize emin misiniz?"
+          message="Bu işlem rezervasyonu iptal durumuna alır ve müsaitlik takvimini günceller."
+          confirmText="Evet, İptal Et"
+          confirmColor="red"
+          pending={isPending}
+          onCancel={() => setConfirmCancel(false)}
+          onConfirm={cancelReservation}
+        />
+      ) : null}
     </>
   );
 }

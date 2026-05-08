@@ -19,6 +19,9 @@ import {
 import { ReservationStatusSelect } from "./ReservationStatusSelect";
 import { ReservationDetailButton } from "./ReservationDetailButton";
 import { normalizeReservationStatus, STATUS_MAP } from "@/lib/reservation-status";
+import { ReservationExportButton } from "./ReservationExportButton";
+import { ReservationsCalendarView } from "./ReservationsCalendarView";
+import { AdminEmptyState } from "@/components/admin/AdminEmptyState";
 
 type AdminReservationsProps = {
   searchParams: Promise<{
@@ -29,6 +32,7 @@ type AdminReservationsProps = {
     baslangic?: string;
     bitis?: string;
     siralama?: string;
+    gorunum?: string;
   }>;
 };
 
@@ -50,6 +54,7 @@ export default async function AdminReservationsPage({ searchParams }: AdminReser
   const params = await searchParams;
   const supabase = createAdminClient();
   const sortAsc = params.siralama === "eski";
+  const view = params.gorunum === "takvim" ? "takvim" : "liste";
 
   let query = supabase
     .from("rezervasyonlar")
@@ -120,6 +125,39 @@ export default async function AdminReservationsPage({ searchParams }: AdminReser
   const canceledCount = filteredReservations.filter((item) => normalizeReservationStatus(String(item.durum)) === "iptal").length;
   const filteredRevenue = filteredReservations.reduce((acc, item) => acc + Number(item.toplam_fiyat ?? 0), 0);
   const sortToggleQuery = toQueryString(params, { siralama: sortAsc ? "yeni" : "eski" });
+  const exportRows = filteredReservations.map((row) => {
+    const user = userDetailMap.get(row.kullanici_id);
+    const listingName = row.paket_id ? packageMap.get(row.paket_id)?.baslik : listingMap.get(row.ilan_id)?.baslik;
+    const nights = Math.max(
+      0,
+      Math.ceil(
+        (new Date(`${row.cikis_tarihi}T00:00:00`).getTime() -
+          new Date(`${row.giris_tarihi}T00:00:00`).getTime()) /
+          (1000 * 60 * 60 * 24),
+      ),
+    );
+    return {
+      referansNo: row.referans_no ?? row.id,
+      kullaniciAdi: user?.adSoyad ?? "-",
+      email: user?.email ?? "-",
+      ilanAdi: listingName ?? "-",
+      girisTarihi: row.giris_tarihi,
+      cikisTarihi: row.cikis_tarihi,
+      geceSayisi: nights,
+      misafirSayisi: Number(row.misafir_sayisi ?? 0),
+      tutar: Number(row.toplam_fiyat ?? 0),
+      durum: STATUS_MAP[normalizeReservationStatus(String(row.durum))]?.label ?? String(row.durum),
+      olusturulmaTarihi: row.olusturulma_tarihi ? new Date(String(row.olusturulma_tarihi)).toLocaleString("tr-TR") : "-",
+    };
+  });
+  const calendarRows = filteredReservations.map((row) => ({
+    id: row.id,
+    ilanAdi: row.paket_id ? packageMap.get(row.paket_id)?.baslik ?? "Paket" : listingMap.get(row.ilan_id)?.baslik ?? "İlan",
+    kullaniciAdi: userMap.get(row.kullanici_id) ?? "-",
+    girisTarihi: row.giris_tarihi,
+    cikisTarihi: row.cikis_tarihi,
+    durum: String(row.durum),
+  }));
   const quickFilterLinks = [
     { label: "Bugün Oluşan", query: toQueryString(params, { tarih: new Date().toISOString().slice(0, 10) }) },
     { label: "Beklemede", query: toQueryString(params, { durum: "beklemede" }) },
@@ -209,7 +247,8 @@ export default async function AdminReservationsPage({ searchParams }: AdminReser
           </AdminActionButton>
         </div>
       </AdminFilterBar>
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap gap-2">
         {quickFilterLinks.map((item) => (
           <Link
             key={item.label}
@@ -219,11 +258,33 @@ export default async function AdminReservationsPage({ searchParams }: AdminReser
             {item.label}
           </Link>
         ))}
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Link
+            href={`/yonetim/rezervasyonlar?${toQueryString(params, { gorunum: "liste" })}`}
+            className={`rounded-lg border px-3 py-2 text-sm font-semibold ${view === "liste" ? "border-blue-200 bg-blue-50 text-blue-700" : "border-slate-200 bg-white text-slate-600"}`}
+          >
+            Liste
+          </Link>
+          <Link
+            href={`/yonetim/rezervasyonlar?${toQueryString(params, { gorunum: "takvim" })}`}
+            className={`rounded-lg border px-3 py-2 text-sm font-semibold ${view === "takvim" ? "border-blue-200 bg-blue-50 text-blue-700" : "border-slate-200 bg-white text-slate-600"}`}
+          >
+            Takvim
+          </Link>
+          <ReservationExportButton rows={exportRows} />
+        </div>
       </div>
       <p className="text-sm text-slate-600">
         {totalReservations} rezervasyon listeleniyor.
       </p>
 
+      {filteredReservations.length === 0 ? (
+        <AdminEmptyState message="Henüz kayıt yok" actionHref="/konaklama" actionLabel="İlk rezervasyon için ilana git →" />
+      ) : view === "takvim" ? (
+        <ReservationsCalendarView reservations={calendarRows} />
+      ) : (
+        <>
       <AdminMobileCardList>
         {filteredReservations.map((row) => (
           <AdminMobileCard key={row.id}>
@@ -235,7 +296,13 @@ export default async function AdminReservationsPage({ searchParams }: AdminReser
             <p className="mt-2 text-sm font-semibold text-[#0e9aa7]">{formatCurrency(row.toplam_fiyat)}</p>
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <ReservationStatusSelect reservationId={row.id} initialStatus={normalizeReservationStatus(String(row.durum))} />
-              <ReservationDetailButton reservation={row as Record<string, unknown>} />
+              <ReservationDetailButton reservation={{
+                ...(row as Record<string, unknown>),
+                kullanici_adi: userMap.get(row.kullanici_id) ?? "-",
+                kullanici_email: userDetailMap.get(row.kullanici_id)?.email ?? "-",
+                kullanici_telefon: userDetailMap.get(row.kullanici_id)?.telefon ?? "-",
+                ilan_baslik: row.paket_id ? packageMap.get(row.paket_id)?.baslik ?? "Paket" : listingMap.get(row.ilan_id)?.baslik ?? "-",
+              }} />
             </div>
           </AdminMobileCard>
         ))}
@@ -343,13 +410,21 @@ export default async function AdminReservationsPage({ searchParams }: AdminReser
                         reservationId={row.id}
                         initialStatus={normalizeReservationStatus(String(row.durum))}
                       />
-                      <ReservationDetailButton reservation={row as Record<string, unknown>} />
+                      <ReservationDetailButton reservation={{
+                        ...(row as Record<string, unknown>),
+                        kullanici_adi: userMap.get(row.kullanici_id) ?? "-",
+                        kullanici_email: userDetailMap.get(row.kullanici_id)?.email ?? "-",
+                        kullanici_telefon: userDetailMap.get(row.kullanici_id)?.telefon ?? "-",
+                        ilan_baslik: row.paket_id ? packageMap.get(row.paket_id)?.baslik ?? "Paket" : listingMap.get(row.ilan_id)?.baslik ?? "-",
+                      }} />
                     </div>
                   </AdminTableCell>
                 </AdminTableRow>
               ))}
             </tbody>
       </AdminDataTable>
+        </>
+      )}
     </AdminPageLayout>
   );
 }

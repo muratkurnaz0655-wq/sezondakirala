@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { updateReservationByAdmin } from "@/app/actions/admin";
+import { updateReservationAdminNote, updateReservationByAdmin } from "@/app/actions/admin";
 import { normalizeReservationStatus } from "@/lib/reservation-status";
 
 export async function updateReservationStatus(
@@ -18,4 +18,13 @@ export async function updateReservationStatus(
   }
   revalidatePath("/yonetim/rezervasyonlar");
   return { success: true as const, status: normalizedStatus };
+}
+
+export async function saveReservationAdminNote(id: string, note: string) {
+  const result = await updateReservationAdminNote(id, note);
+  if (!result?.success) {
+    return { success: false as const, error: result?.error ?? "Not kaydedilemedi." };
+  }
+  revalidatePath("/yonetim/rezervasyonlar");
+  return { success: true as const };
 }

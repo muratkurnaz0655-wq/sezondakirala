@@ -24,7 +24,7 @@ export function normalizeReservationStatus(
 export const STATUS_MAP: Record<string, { label: string; color: string; bg: string }> = {
   beklemede: { label: "Beklemede", color: "text-amber-700", bg: "bg-amber-50 border-amber-200" },
   onaylandi: { label: "Onaylandı", color: "text-emerald-700", bg: "bg-emerald-50 border-emerald-200" },
-  iptal: { label: "İptal Edildi", color: "text-slate-600", bg: "bg-slate-100 border-slate-200" },
+  iptal: { label: "İptal", color: "text-red-700", bg: "bg-red-50 border-red-200" },
 };
 
 export const DEFAULT_STATUS_STYLE = {

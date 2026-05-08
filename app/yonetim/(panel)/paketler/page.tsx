@@ -1,7 +1,3 @@
-import {
-  deleteAdminPackage,
-  updateAdminPackageStatus,
-} from "@/app/actions/admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { formatCurrency } from "@/lib/utils/format";
 import { Plus } from "lucide-react";
@@ -20,6 +16,8 @@ import {
   AdminTableHeaderCell,
   AdminTableRow,
 } from "@/components/admin/AdminDataTable";
+import { PackageDeleteButton, PackageStatusToggle } from "./PackageRowActions";
+import { AdminEmptyState } from "@/components/admin/AdminEmptyState";
 
 type AdminPackagesPageProps = {
   searchParams?: Promise<{ durum?: string; q?: string }>;
@@ -199,16 +197,12 @@ export default async function AdminPackagesPage({ searchParams }: AdminPackagesP
                     )}
                   </AdminTableCell>
                   <AdminTableCell>
-                    <form action={updateAdminPackageStatus}>
-                      <input type="hidden" name="id" value={row.id} />
-                      <input type="hidden" name="aktif" value={row.aktif ? "false" : "true"} />
-                      <AdminActionButton
-                        type="submit"
-                        variant={row.aktif ? "danger" : "success"}
-                      >
-                        {row.aktif ? "Pasife Al" : "Aktif Et"}
-                      </AdminActionButton>
-                    </form>
+                    <div className="flex items-center gap-2">
+                      <span className={`rounded-full border px-2.5 py-0.5 text-xs font-medium ${row.aktif ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-slate-200 bg-slate-100 text-slate-600"}`}>
+                        {row.aktif ? "Aktif" : "Pasif"}
+                      </span>
+                      <PackageStatusToggle id={row.id} active={Boolean(row.aktif)} title={row.baslik} />
+                    </div>
                   </AdminTableCell>
                   <AdminTableCell>
                     <div className="flex items-center gap-2">
@@ -230,15 +224,7 @@ export default async function AdminPackagesPage({ searchParams }: AdminPackagesP
                       >
                         Müsaitlik Takvimi
                       </AdminActionButton>
-                      <form action={deleteAdminPackage}>
-                        <input type="hidden" name="id" value={row.id} />
-                        <AdminActionButton
-                          type="submit"
-                          variant="danger"
-                        >
-                          Sil
-                        </AdminActionButton>
-                      </form>
+                      <PackageDeleteButton id={row.id} title={row.baslik} />
                     </div>
                   </AdminTableCell>
                   </AdminTableRow>
@@ -247,9 +233,7 @@ export default async function AdminPackagesPage({ searchParams }: AdminPackagesP
             </tbody>
       </AdminDataTable>
       {filteredPackages.length === 0 ? (
-        <div className="hidden rounded-2xl border border-slate-200 bg-white px-5 py-8 text-sm text-slate-500 lg:block">
-          Bu filtrede gösterilecek paket bulunamadı.
-        </div>
+        <AdminEmptyState message="Henüz kayıt yok" actionHref="/yonetim/paketler/yeni" actionLabel="İlk paketi ekle →" className="hidden lg:block" />
       ) : null}
     </AdminPageLayout>
   );

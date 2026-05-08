@@ -4,6 +4,7 @@ import { useTransition, useState } from "react";
 import { deleteListing } from "./actions";
 import { EditListingModal } from "./EditListingModal";
 import { AdminActionButton } from "@/components/admin/AdminActionButton";
+import { ConfirmModal } from "@/components/admin/ConfirmModal";
 
 type Listing = {
   id: string;
@@ -18,6 +19,7 @@ type Listing = {
 
 export function ListingActions({ listing }: { listing: Listing }) {
   const [showEdit, setShowEdit] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   return (
@@ -49,17 +51,33 @@ export function ListingActions({ listing }: { listing: Listing }) {
       <AdminActionButton
         title="İlanı sil"
         disabled={isPending}
-        onClick={() =>
-          startTransition(async () => {
-            await deleteListing(listing.id);
-          })
-        }
+        onClick={() => setConfirmDelete(true)}
         variant="danger"
       >
         Sil
       </AdminActionButton>
 
       {showEdit && <EditListingModal listing={listing} onClose={() => setShowEdit(false)} />}
+      {confirmDelete ? (
+        <ConfirmModal
+          title="İlanı silmek istediğinize emin misiniz?"
+          message={
+            <>
+              Bu işlem geri alınamaz. <strong>{listing.baslik}</strong> kalıcı olarak silinecek.
+            </>
+          }
+          confirmText="Evet, Sil"
+          confirmColor="red"
+          pending={isPending}
+          onCancel={() => setConfirmDelete(false)}
+          onConfirm={() =>
+            startTransition(async () => {
+              await deleteListing(listing.id);
+              setConfirmDelete(false);
+            })
+          }
+        />
+      ) : null}
     </div>
   );
 }

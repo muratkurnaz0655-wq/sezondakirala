@@ -1,5 +1,4 @@
 import { createClient } from "@supabase/supabase-js";
-import { Globe } from "lucide-react";
 import {
   DEFAULT_COMMISSION_RATE,
   DEFAULT_TURSAB_NO,
@@ -9,7 +8,7 @@ import {
 } from "@/lib/constants";
 import { AdminStatsRow } from "@/components/admin/AdminStatsRow";
 import { AdminPageLayout } from "@/components/admin/AdminPageLayout";
-import { AyarlarForm } from "./AyarlarForm";
+import { AyarlarTabs } from "./AyarlarTabs";
 
 type AyarlarRow = {
   id?: string;
@@ -28,15 +27,24 @@ export default async function AdminSettingsPage() {
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
 
   let ayarlar: AyarlarRow | null = null;
+  let logs: { id: string; tarih: string; kullanici: string; islem: string; etkilenen_kayit: string | null }[] = [];
   if (url && serviceKey) {
     const supabase = createClient(url, serviceKey);
-    const { data } = await supabase
+    const [{ data }, { data: logRows }] = await Promise.all([
+      supabase
       .from("ayarlar")
       .select("*")
       .order("olusturulma_tarihi", { ascending: false })
       .limit(1)
-      .maybeSingle();
+      .maybeSingle(),
+      supabase
+        .from("admin_islem_loglari")
+        .select("id,tarih,kullanici,islem,etkilenen_kayit")
+        .order("tarih", { ascending: false })
+        .limit(50),
+    ]);
     ayarlar = (data as AyarlarRow | null) ?? null;
+    logs = (logRows ?? []) as typeof logs;
   }
 
   const k = ayarlar?.komisyon_orani;
@@ -72,13 +80,7 @@ export default async function AdminSettingsPage() {
           },
         ]}
       />
-      <section className="w-full max-w-3xl rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="mb-5 flex items-center gap-2 border-b border-slate-100 pb-4 text-base font-semibold text-slate-800">
-          <Globe className="h-4 w-4 text-blue-600" />
-          Genel Ayarlar
-        </div>
-        <AyarlarForm mevcutAyarlar={mevcutAyarlar} />
-      </section>
+      <AyarlarTabs mevcutAyarlar={mevcutAyarlar} logs={logs} />
     </AdminPageLayout>
   );
 }
