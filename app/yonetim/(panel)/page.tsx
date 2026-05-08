@@ -5,6 +5,7 @@ import { SonRezervasyonlar } from "@/components/admin/SonRezervasyonlar";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { AdminStatsRow } from "@/components/admin/AdminStatsRow";
 import { AdminPageLayout } from "@/components/admin/AdminPageLayout";
+import { AdminActionButton } from "@/components/admin/AdminActionButton";
 
 export default async function AdminDashboard() {
   const supabase = createAdminClient();
@@ -28,13 +29,10 @@ export default async function AdminDashboard() {
       title="Yönetim Paneli"
       description="Platformın genel metriklerini ve son hareketleri izleyin."
       actions={
-        <Link
-          href="/yonetim/ilanlar"
-          className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-lg shadow-[#0e9aa7]/25 transition-all duration-200 hover:scale-[1.02] hover:bg-blue-700 active:scale-[0.98]"
-        >
+        <AdminActionButton href="/yonetim/ilanlar" variant="primary" size="md">
           <Plus className="h-4 w-4" />
           Yeni İlan
-        </Link>
+        </AdminActionButton>
       }
     >
       <AdminStatsRow

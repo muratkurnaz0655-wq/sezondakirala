@@ -39,7 +39,7 @@ export function AdminTopbar({
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-slate-200 bg-white px-4 shadow-sm sm:px-6 lg:px-8">
-      <div>
+      <div className="flex min-w-0 items-center">
         <button
           type="button"
           aria-label="Menüyü aç"
@@ -48,13 +48,13 @@ export function AdminTopbar({
         >
           <Menu className="h-5 w-5" />
         </button>
-        <h1 className="text-xl font-semibold text-slate-800" id="admin-page-title">
+        <h1 className="truncate text-lg font-semibold text-slate-800 sm:text-xl" id="admin-page-title">
           {baslik}
         </h1>
       </div>
 
       <div className="flex items-center gap-3">
-        <AdminSupportButton />
+        <AdminSupportButton compact />
         <button
           type="button"
           aria-label="Bildirimler"
