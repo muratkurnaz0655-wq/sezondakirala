@@ -79,6 +79,19 @@ export function SiteHeaderClient({ siteName }: SiteHeaderClientProps) {
   >([]);
   const [authLoading, setAuthLoading] = useState(() => Boolean(isSupabaseEnvConfigured()));
   const seenNotificationIdsRef = useRef<Set<string>>(new Set());
+
+  const isVisibleForCurrentUser = (
+    item: {
+      hedef_kullanici_id?: string | null;
+      entity_tip?: string | null;
+      tip?: string | null;
+    },
+    currentUserId: string,
+  ) => {
+    if (item.hedef_kullanici_id === currentUserId) return true;
+    // Broadcast notifications: no explicit target and no entity linkage.
+    return !item.hedef_kullanici_id && !item.entity_tip;
+  };
   useEffect(() => {
     if (!isSupabaseEnvConfigured()) {
       return;
@@ -137,14 +150,10 @@ export function SiteHeaderClient({ siteName }: SiteHeaderClientProps) {
         supabase.from("bildirimler").select("*", { count: "exact", head: true }).eq("okundu", false),
       ]);
       if (!mounted) return;
-      const rows = ((rowsResult.data as typeof notifications) ?? []).filter((item) => {
-        // Show only:
-        // - targeted notifications for the current user
-        // - admin broadcasts (tip=duyuru, no target user)
-        if (item.hedef_kullanici_id === user.id) return true;
-        return !item.hedef_kullanici_id && item.tip === "duyuru";
-      });
-      const unreadCount = rows.filter((item) => !item.okundu).length || countResult.count || 0;
+      const rows = ((rowsResult.data as typeof notifications) ?? []).filter((item) =>
+        isVisibleForCurrentUser(item, user.id),
+      );
+      const unreadCount = rows.filter((item) => !item.okundu).length;
       setNotifications(rows);
       setNotificationCount(unreadCount);
 

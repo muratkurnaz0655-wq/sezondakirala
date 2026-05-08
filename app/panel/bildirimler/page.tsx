@@ -39,7 +39,8 @@ export default async function PanelNotificationsPage() {
 
   const visibleNotifications = (notifications ?? []).filter((item) => {
     if (item.hedef_kullanici_id === user.id) return true;
-    return !item.hedef_kullanici_id && item.tip === "duyuru";
+    // Broadcast notifications: no explicit target and no entity linkage.
+    return !item.hedef_kullanici_id && !item.entity_tip;
   });
 
   return (
