@@ -23,6 +23,7 @@ export type ListingTableRow = {
   sahip_id: string;
   gunluk_fiyat: number;
   aktif: boolean;
+  onay_durumu?: "yayinda" | "onay_bekliyor" | "reddedildi" | null;
   slug?: string | null;
   olusturulma_tarihi: string;
   ilan_medyalari?: { id: string; url: string; sira: number }[] | null;
@@ -118,8 +119,24 @@ export function ListingsBulkTable({ listings }: { listings: ListingTableRow[] })
                   <span className="text-xs text-slate-500"> /gece</span>
                 </AdminTableCell>
                 <AdminTableCell>
-                  <span className={`rounded-full border px-2.5 py-0.5 text-xs font-medium ${row.aktif ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-slate-200 bg-slate-100 text-slate-600"}`}>
-                    {row.aktif ? "Yayında" : "Pasif"}
+                  <span
+                    className={`rounded-full border px-2.5 py-0.5 text-xs font-medium ${
+                      row.onay_durumu === "yayinda"
+                        ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                        : row.onay_durumu === "onay_bekliyor"
+                          ? "border-amber-200 bg-amber-50 text-amber-700"
+                          : row.onay_durumu === "reddedildi"
+                            ? "border-red-200 bg-red-50 text-red-700"
+                            : "border-slate-200 bg-slate-100 text-slate-600"
+                    }`}
+                  >
+                    {row.onay_durumu === "yayinda"
+                      ? "Yayında"
+                      : row.onay_durumu === "onay_bekliyor"
+                        ? "Onay Bekliyor"
+                        : row.onay_durumu === "reddedildi"
+                          ? "Reddedildi"
+                          : "Taslak"}
                   </span>
                 </AdminTableCell>
                 <AdminTableCell className="text-right">

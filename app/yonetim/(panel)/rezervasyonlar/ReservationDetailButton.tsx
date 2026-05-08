@@ -56,7 +56,7 @@ export function ReservationDetailButton({ reservation }: { reservation: Reservat
   const [confirmCancel, setConfirmCancel] = useState(false);
   const [isPending, startTransition] = useTransition();
   const entries = Object.entries(reservation).filter(([k]) => !HIDDEN_KEYS.has(k));
-  const normalizedStatus = normalizeReservationStatus(String(reservation.durum ?? "beklemede"));
+  const normalizedStatus = normalizeReservationStatus(String(reservation.durum ?? "pending"));
   const statusStyle = STATUS_MAP[normalizedStatus];
   const technicalPayload = JSON.stringify(
     Object.fromEntries(entries.map(([key, value]) => [key, value ?? null])),
@@ -89,7 +89,7 @@ export function ReservationDetailButton({ reservation }: { reservation: Reservat
   function cancelReservation() {
     setError(null);
     startTransition(async () => {
-      const result = await updateReservationStatus(String(reservation.id), "iptal");
+      const result = await updateReservationStatus(String(reservation.id), "cancelled");
       if (!result.success) {
         setError(result.error);
         return;
@@ -291,7 +291,7 @@ export function ReservationDetailButton({ reservation }: { reservation: Reservat
                       <AdminActionButton type="button" variant="primary" disabled={isPending} onClick={saveNote}>
                         Notu Kaydet
                       </AdminActionButton>
-                      <AdminActionButton type="button" variant="danger" disabled={isPending || normalizedStatus === "iptal"} onClick={() => setConfirmCancel(true)}>
+                      <AdminActionButton type="button" variant="danger" disabled={isPending || normalizedStatus === "cancelled"} onClick={() => setConfirmCancel(true)}>
                         İptal Et
                       </AdminActionButton>
                       {notice ? <span className="text-xs font-medium text-emerald-600">{notice}</span> : null}
@@ -306,8 +306,8 @@ export function ReservationDetailButton({ reservation }: { reservation: Reservat
                     <ol className="space-y-2 text-sm text-slate-700">
                       <li>Oluşturuldu: {formatValue("olusturulma_tarihi", reservation.olusturulma_tarihi)}</li>
                       <li>Güncel durum: {statusStyle.label}</li>
-                      {normalizedStatus === "onaylandi" ? <li>Onaylandı: durum alanı onaylandı olarak güncellendi.</li> : null}
-                      {normalizedStatus === "iptal" ? <li>İptal edildi: durum alanı iptal olarak güncellendi.</li> : null}
+                      {normalizedStatus === "approved" ? <li>Onaylandı: durum alanı onaylandı olarak güncellendi.</li> : null}
+                      {normalizedStatus === "cancelled" ? <li>İptal edildi: durum alanı iptal olarak güncellendi.</li> : null}
                     </ol>
                   </div>
                 </div>

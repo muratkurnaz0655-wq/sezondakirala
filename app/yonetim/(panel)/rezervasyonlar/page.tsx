@@ -120,9 +120,9 @@ export default async function AdminReservationsPage({ searchParams }: AdminReser
     return haystack.includes(searchTerm);
   });
   const totalReservations = filteredReservations.length;
-  const pendingCount = filteredReservations.filter((item) => normalizeReservationStatus(String(item.durum)) === "beklemede").length;
-  const approvedCount = filteredReservations.filter((item) => normalizeReservationStatus(String(item.durum)) === "onaylandi").length;
-  const canceledCount = filteredReservations.filter((item) => normalizeReservationStatus(String(item.durum)) === "iptal").length;
+  const pendingCount = filteredReservations.filter((item) => normalizeReservationStatus(String(item.durum)) === "pending").length;
+  const approvedCount = filteredReservations.filter((item) => normalizeReservationStatus(String(item.durum)) === "approved").length;
+  const canceledCount = filteredReservations.filter((item) => normalizeReservationStatus(String(item.durum)) === "cancelled").length;
   const filteredRevenue = filteredReservations.reduce((acc, item) => acc + Number(item.toplam_fiyat ?? 0), 0);
   const sortToggleQuery = toQueryString(params, { siralama: sortAsc ? "yeni" : "eski" });
   const exportRows = filteredReservations.map((row) => {
@@ -160,8 +160,8 @@ export default async function AdminReservationsPage({ searchParams }: AdminReser
   }));
   const quickFilterLinks = [
     { label: "Bugün Oluşan", query: toQueryString(params, { tarih: new Date().toISOString().slice(0, 10) }) },
-    { label: "Beklemede", query: toQueryString(params, { durum: "beklemede" }) },
-    { label: "Onaylananlar", query: toQueryString(params, { durum: "onaylandi" }) },
+    { label: "Beklemede", query: toQueryString(params, { durum: "pending" }) },
+    { label: "Onaylananlar", query: toQueryString(params, { durum: "approved" }) },
     { label: "Paket Rezervasyonları", query: toQueryString(params, { q: "paket" }) },
   ];
 
@@ -191,9 +191,9 @@ export default async function AdminReservationsPage({ searchParams }: AdminReser
         <AdminFormField label="Durum">
           <AdminSelect name="durum" defaultValue={params.durum ?? ""}>
             <option value="">Tüm durumlar</option>
-            <option value="beklemede">Beklemede</option>
-            <option value="onaylandi">Onaylandi</option>
-            <option value="iptal">Iptal</option>
+            <option value="pending">Beklemede</option>
+            <option value="approved">Onaylandı</option>
+            <option value="cancelled">İptal</option>
           </AdminSelect>
         </AdminFormField>
         <AdminFormField label="Tek tarih">

@@ -3,8 +3,6 @@
 import {
   Bar,
   BarChart,
-  Line,
-  LineChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -12,11 +10,11 @@ import {
 } from "recharts";
 
 type MonthlyRevenueData = { month: string; revenue: number };
-type DailyReservationData = { day: string; count: number };
+type MonthlySummary = { approved: number; pending: number; cancelled: number };
 
 type AdminDashboardChartsProps = {
   monthlyRevenueData: MonthlyRevenueData[];
-  dailyReservationData: DailyReservationData[];
+  summary: MonthlySummary;
 };
 
 const currencyFormatter = new Intl.NumberFormat("en-US", {
@@ -25,7 +23,7 @@ const currencyFormatter = new Intl.NumberFormat("en-US", {
 
 export function AdminDashboardCharts({
   monthlyRevenueData,
-  dailyReservationData,
+  summary,
 }: AdminDashboardChartsProps) {
   return (
     <div className="grid gap-4 lg:grid-cols-2">
@@ -42,18 +40,13 @@ export function AdminDashboardCharts({
           </BarChart>
         </ResponsiveContainer>
       </section>
-      <section className="h-80 rounded-2xl border border-slate-200 bg-white p-4">
-        <h2 className="mb-3 text-sm font-semibold text-slate-900">
-          Son 30 Gün Rezervasyon Sayısı
-        </h2>
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={dailyReservationData}>
-            <XAxis dataKey="day" minTickGap={18} />
-            <YAxis allowDecimals={false} />
-            <Tooltip />
-            <Line type="monotone" dataKey="count" name="Rezervasyon" stroke="#22c55e" strokeWidth={3} dot={false} />
-          </LineChart>
-        </ResponsiveContainer>
+      <section className="rounded-2xl border border-slate-200 bg-white p-4">
+        <h2 className="mb-3 text-sm font-semibold text-slate-900">Bu Ay Durum Özeti</h2>
+        <div className="grid gap-3 sm:grid-cols-3">
+          <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">Onaylandı: {summary.approved}</div>
+          <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-700">Beklemede: {summary.pending}</div>
+          <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">İptal: {summary.cancelled}</div>
+        </div>
       </section>
     </div>
   );

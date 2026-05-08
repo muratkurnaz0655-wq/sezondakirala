@@ -46,8 +46,9 @@ export default async function AdminListingsPage({ searchParams }: AdminListingsP
     query = query.order("olusturulma_tarihi", { ascending: false });
   }
   query = query.order("id", { ascending: false });
-  if (durum === "bekleyen" || durum === "reddedildi") query = query.eq("aktif", false);
-  if (durum === "yayinda") query = query.eq("aktif", true);
+  if (durum === "onay_bekliyor" || durum === "yayinda" || durum === "reddedildi") {
+    query = query.eq("onay_durumu", durum);
+  }
   if (Number.isFinite(minFiyat)) query = query.gte("gunluk_fiyat", minFiyat);
   if (Number.isFinite(maxFiyat)) query = query.lte("gunluk_fiyat", maxFiyat);
   if (params.konum) query = query.eq("konum", params.konum);
@@ -162,7 +163,7 @@ export default async function AdminListingsPage({ searchParams }: AdminListingsP
         activeKey={durum || "tum_durumlar"}
         items={[
           { key: "tum_durumlar", label: "Tüm Durumlar", href: "/yonetim/ilanlar" },
-          { key: "bekleyen", label: "Onay Bekleyen", href: "/yonetim/ilanlar?durum=bekleyen" },
+          { key: "onay_bekliyor", label: "Onay Bekleyen", href: "/yonetim/ilanlar?durum=onay_bekliyor" },
           { key: "yayinda", label: "Yayında", href: "/yonetim/ilanlar?durum=yayinda" },
           { key: "reddedildi", label: "Reddedildi", href: "/yonetim/ilanlar?durum=reddedildi" },
         ]}

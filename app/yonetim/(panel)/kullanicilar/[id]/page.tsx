@@ -88,7 +88,7 @@ export default async function AdminUserDetailPage({ params }: PageProps) {
           </AdminTableHead>
           <tbody>
             {(reservations ?? []).map((reservation) => {
-              const status = STATUS_MAP[normalizeReservationStatus(String(reservation.durum))] ?? STATUS_MAP.beklemede;
+              const status = STATUS_MAP[normalizeReservationStatus(String(reservation.durum))] ?? STATUS_MAP.pending;
               return (
                 <AdminTableRow key={reservation.id}>
                   <AdminTableCell>{reservation.referans_no ?? reservation.id}</AdminTableCell>

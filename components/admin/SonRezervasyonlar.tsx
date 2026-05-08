@@ -11,8 +11,8 @@ function formatDate(value: unknown) {
 export async function SonRezervasyonlar() {
   const supabase = createAdminClient();
   const { data: rows } = await supabase
-    .from("rezervasyonlar")
-    .select("id,durum,giris_tarihi,cikis_tarihi,toplam_fiyat,kullanici_id,ilan_id,olusturulma_tarihi")
+    .from("dashboard_son_rezervasyonlar")
+    .select("*")
     .order("olusturulma_tarihi", { ascending: false })
     .limit(6);
 
@@ -20,32 +20,19 @@ export async function SonRezervasyonlar() {
     return <p className="text-sm text-slate-500">Henüz rezervasyon yok.</p>;
   }
 
-  const ilanIds = [...new Set(rows.map((r) => r.ilan_id).filter(Boolean))] as string[];
-  const userIds = [...new Set(rows.map((r) => r.kullanici_id).filter(Boolean))] as string[];
-
-  const [{ data: ilanlar }, { data: kullanicilar }] = await Promise.all([
-    ilanIds.length ? supabase.from("ilanlar").select("id,baslik").in("id", ilanIds) : { data: [] },
-    userIds.length ? supabase.from("kullanicilar").select("id,ad_soyad,email").in("id", userIds) : { data: [] },
-  ]);
-
-  const ilanMap = new Map((ilanlar ?? []).map((i) => [i.id, i.baslik ?? "İlan"]));
-  const userMap = new Map(
-    (kullanicilar ?? []).map((u) => [u.id, u.ad_soyad ?? u.email ?? "Kullanıcı"]),
-  );
-
   return (
     <ul className="space-y-1">
       {rows.map((r) => {
-        const status = STATUS_MAP[normalizeReservationStatus(String(r.durum))] ?? STATUS_MAP.beklemede;
+        const status = STATUS_MAP[normalizeReservationStatus(String(r.durum))] ?? STATUS_MAP.pending;
         return (
           <li
             key={r.id}
             className="flex items-center justify-between rounded-lg border-b border-slate-100 px-2 py-3 text-sm text-slate-700 transition-colors last:border-0 hover:bg-slate-50/50"
           >
             <div className="min-w-0 flex-1">
-              <div className="truncate font-medium text-slate-800">{ilanMap.get(r.ilan_id) ?? "İlan"}</div>
+              <div className="truncate font-medium text-slate-800">{String(r.ilan_baslik ?? r.paket_baslik ?? r.ilan_adi ?? "İlan")}</div>
               <div className="text-xs text-slate-500">
-                {userMap.get(r.kullanici_id) ?? "-"} · {formatDate(r.giris_tarihi)} → {formatDate(r.cikis_tarihi)}
+                {String(r.kullanici_adi ?? r.kullanici_ad_soyad ?? "-")} · {formatDate(r.giris_tarihi)} → {formatDate(r.cikis_tarihi)}
               </div>
             </div>
             <div className="flex shrink-0 flex-col items-end gap-1">

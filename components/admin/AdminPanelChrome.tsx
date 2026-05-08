@@ -8,10 +8,11 @@ import { AdminTopbar, type AdminKullaniciOzeti, type AdminNotification } from "@
 type Props = {
   kullanici: AdminKullaniciOzeti | null;
   notifications?: AdminNotification[];
+  unreadCount?: number;
   children: ReactNode;
 };
 
-export function AdminPanelChrome({ kullanici, notifications = [], children }: Props) {
+export function AdminPanelChrome({ kullanici, notifications = [], unreadCount = 0, children }: Props) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
@@ -43,7 +44,7 @@ export function AdminPanelChrome({ kullanici, notifications = [], children }: Pr
       ) : null}
 
       <div className="ml-0 min-h-screen bg-slate-50 lg:ml-64">
-        <AdminTopbar kullanici={kullanici} notifications={notifications} onMenuClick={() => setMobileOpen(true)} />
+        <AdminTopbar kullanici={kullanici} notifications={notifications} unreadCount={unreadCount} onMenuClick={() => setMobileOpen(true)} />
         <main className="admin-main min-h-[calc(100vh-64px)] bg-slate-50 px-4 py-5 pb-12 sm:px-6 lg:px-8">{children}</main>
       </div>
     </div>

@@ -42,9 +42,9 @@ export function ReservationStatusSelect({
           isPending ? "opacity-60" : ""
         }`}
       >
-        <option value="beklemede">Beklemede</option>
-        <option value="onaylandi">Onaylandi</option>
-        <option value="iptal">Iptal</option>
+        <option value="pending">Beklemede</option>
+        <option value="approved">Onaylandı</option>
+        <option value="cancelled">İptal</option>
       </select>
       {error ? <p className="text-xs text-red-600">{error}</p> : null}
     </div>

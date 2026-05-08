@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { Bell, ChevronDown, Menu } from "lucide-react";
 import { AdminSupportButton } from "@/components/admin/AdminSupportButton";
 import { useState } from "react";
+import { markAllNotificationsRead } from "@/app/actions/admin";
 
 export type AdminKullaniciOzeti = {
   ad_soyad: string | null;
@@ -37,10 +38,12 @@ export function AdminTopbar({
   kullanici,
   onMenuClick,
   notifications = [],
+  unreadCount = 0,
 }: {
   kullanici: AdminKullaniciOzeti | null;
   onMenuClick?: () => void;
   notifications?: AdminNotification[];
+  unreadCount?: number;
 }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -49,6 +52,7 @@ export function AdminTopbar({
   const harf = kullanici?.ad_soyad?.[0] ?? kullanici?.email?.[0] ?? "A";
   const ad = kullanici?.ad_soyad ?? kullanici?.email ?? "Admin";
   const unread = notifications.filter((item) => !readIds.includes(item.id));
+  const unreadBadgeCount = Math.max(unread.length, unreadCount);
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-slate-200 bg-white px-4 shadow-sm sm:px-6 lg:px-8">
@@ -76,7 +80,7 @@ export function AdminTopbar({
             className="relative rounded-xl p-2 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900"
           >
             <Bell className="h-5 w-5" />
-            {unread.length ? <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-red-500" /> : null}
+            {unreadBadgeCount ? <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-red-500" /> : null}
           </button>
           {open ? (
             <div className="absolute right-0 top-11 w-80 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl">
@@ -84,7 +88,10 @@ export function AdminTopbar({
                 <p className="text-sm font-semibold text-slate-900">Bildirimler</p>
                 <button
                   type="button"
-                  onClick={() => setReadIds(notifications.map((item) => item.id))}
+                  onClick={async () => {
+                    setReadIds(notifications.map((item) => item.id));
+                    await markAllNotificationsRead();
+                  }}
                   className="text-xs font-medium text-blue-600 hover:text-blue-700"
                 >
                   Tümünü okundu işaretle

@@ -38,9 +38,9 @@ function safeStorageFileName(name: string) {
 }
 
 function reservationStatusCandidates(durum: string): string[] {
-  if (durum === "onaylandi") return ["onaylandi", "approved"];
-  if (durum === "iptal") return ["iptal", "cancelled", "rejected"];
-  return ["beklemede", "pending", "onay_bekliyor", "odeme_bekleniyor"];
+  if (durum === "approved") return ["approved", "onaylandi"];
+  if (durum === "cancelled") return ["cancelled", "iptal", "rejected"];
+  return ["pending", "beklemede", "onay_bekliyor", "odeme_bekleniyor"];
 }
 
 async function syncReservationAvailability(
@@ -64,7 +64,7 @@ async function syncReservationAvailability(
   const dates = eachDateInRange(formatDate(start), formatDate(end));
   if (!dates.length) return;
 
-  if (durum === "onaylandi") {
+  if (durum === "approved") {
     await supabase.from("musaitlik").upsert(
       dates.map((tarih) => ({
         ilan_id: reservation.ilan_id,
@@ -77,7 +77,7 @@ async function syncReservationAvailability(
     return;
   }
 
-  if (durum === "iptal") {
+  if (durum === "cancelled") {
     await supabase
       .from("musaitlik")
       .delete()
@@ -89,12 +89,12 @@ async function syncReservationAvailability(
 type AdminClient = ReturnType<typeof createAdminClient>;
 
 async function assertAdmin(): Promise<
-  { ok: true; supabase: AdminClient } | { ok: false; error: string }
+  { ok: true; supabase: AdminClient; userId: string } | { ok: false; error: string }
 > {
   const auth = await requireAdminUser();
   if (!auth.ok) return { ok: false, error: auth.error };
 
-  return { ok: true, supabase: createAdminClient() };
+  return { ok: true, supabase: createAdminClient(), userId: auth.user.id };
 }
 
 export async function approveOrRejectListing(formData: FormData) {
@@ -105,7 +105,11 @@ export async function approveOrRejectListing(formData: FormData) {
   const aktif = String(formData.get("aktif") ?? "") === "true";
   const supabase = admin.supabase;
   await supabase.from("ilanlar").update({ aktif }).eq("id", id);
-  await recordAdminAction({ action: aktif ? "İlan yayına alındı" : "İlan pasife alındı", target: id });
+  await recordAdminAction({
+    islem: aktif ? "ilan_aktife_alindi" : "ilan_pasife_alindi",
+    entityTip: "ilan",
+    entityId: id,
+  });
   revalidatePath("/yonetim/ilanlar");
   revalidatePath("/");
   revalidatePath("/konaklama");
@@ -120,7 +124,7 @@ export async function deleteAnyListing(formData: FormData) {
   const id = String(formData.get("id") ?? "");
   const supabase = admin.supabase;
   await supabase.from("ilanlar").delete().eq("id", id);
-  await recordAdminAction({ action: "İlan silindi", target: id });
+  await recordAdminAction({ islem: "ilan_silindi", entityTip: "ilan", entityId: id });
   revalidatePath("/yonetim/ilanlar");
   revalidatePath("/");
   revalidatePath("/konaklama");
@@ -235,7 +239,11 @@ export async function updateAdminPackageStatus(formData: FormData) {
   const id = String(formData.get("id") ?? "");
   const aktif = String(formData.get("aktif") ?? "") === "true";
   await admin.supabase.from("paketler").update({ aktif }).eq("id", id);
-  await recordAdminAction({ action: aktif ? "Paket aktif edildi" : "Paket pasife alındı", target: id });
+  await recordAdminAction({
+    islem: aktif ? "paket_eklendi" : "paket_pasife_alindi",
+    entityTip: "paket",
+    entityId: id,
+  });
   revalidatePath("/yonetim/paketler");
 }
 
@@ -245,7 +253,7 @@ export async function deleteAdminPackage(formData: FormData) {
 
   const id = String(formData.get("id") ?? "");
   await admin.supabase.from("paketler").delete().eq("id", id);
-  await recordAdminAction({ action: "Paket silindi", target: id });
+  await recordAdminAction({ islem: "paket_silindi", entityTip: "paket", entityId: id });
   revalidatePath("/yonetim/paketler");
 }
 
@@ -257,7 +265,7 @@ export async function updateUserRole(formData: FormData) {
   const rol = String(formData.get("rol") ?? "ziyaretci");
   const supabase = admin.supabase;
   await supabase.from("kullanicilar").update({ rol }).eq("id", id);
-  await recordAdminAction({ action: `Kullanıcı rolü ${rol} olarak değiştirildi`, target: id });
+  await recordAdminAction({ islem: "kullanici_rol_degistirdi", entityTip: "kullanici", entityId: id });
   revalidatePath("/yonetim/kullanicilar");
 }
 
@@ -269,7 +277,12 @@ export async function updateUsersRoleBulk(ids: string[], role: string) {
 
   const { error } = await admin.supabase.from("kullanicilar").update({ rol: role }).in("id", cleanIds);
   if (error) return { success: false as const, error: error.message };
-  await recordAdminAction({ action: `Toplu rol değişimi: ${role}`, target: `${cleanIds.length} kullanıcı` });
+  await recordAdminAction({
+    islem: "kullanici_rol_degistirdi",
+    entityTip: "kullanici",
+    entityId: cleanIds.join(","),
+    detaylar: { role, adet: cleanIds.length },
+  });
   revalidatePath("/yonetim/kullanicilar");
   return { success: true as const };
 }
@@ -280,7 +293,12 @@ export async function updateUserAccountStatus(id: string, status: "aktif" | "don
 
   const { error } = await admin.supabase.from("kullanicilar").update({ hesap_durumu: status }).eq("id", id);
   if (error) return { success: false as const, error: error.message };
-  await recordAdminAction({ action: status === "aktif" ? "Kullanıcı hesabı aktif edildi" : "Kullanıcı hesabı donduruldu", target: id });
+  await recordAdminAction({
+    islem: "kullanici_rol_degistirdi",
+    entityTip: "kullanici",
+    entityId: id,
+    detaylar: { hesap_durumu: status },
+  });
   revalidatePath("/yonetim/kullanicilar");
   revalidatePath(`/yonetim/kullanicilar/${id}`);
   return { success: true as const };
@@ -292,7 +310,7 @@ export async function updateReservationByAdmin(formData: FormData) {
 
   const id = String(formData.get("id") ?? "").trim();
   if (!id) return { success: false as const, error: "Rezervasyon bulunamadı." };
-  const normalizedDurum = normalizeReservationStatus(String(formData.get("durum") ?? "beklemede"));
+  const normalizedDurum = normalizeReservationStatus(String(formData.get("durum") ?? "pending"));
   const supabase = admin.supabase;
   let appliedDurum: string | null = null;
 
@@ -318,7 +336,11 @@ export async function updateReservationByAdmin(formData: FormData) {
   } catch {
     return { success: false as const, error: "Durum güncellendi ancak müsaitlik eşitlemesi başarısız oldu." };
   }
-  await recordAdminAction({ action: `Rezervasyon durumu ${normalizeReservationStatus(appliedDurum)} olarak değiştirildi`, target: id });
+  await recordAdminAction({
+    islem: normalizeReservationStatus(appliedDurum) === "approved" ? "rezervasyon_onaylandi" : "rezervasyon_iptal",
+    entityTip: "rezervasyon",
+    entityId: id,
+  });
   revalidatePath("/yonetim/rezervasyonlar");
   return { success: true as const, durum: normalizeReservationStatus(appliedDurum) };
 }
@@ -327,9 +349,21 @@ export async function updateReservationAdminNote(id: string, note: string) {
   const admin = await assertAdmin();
   if (!admin.ok) return { success: false as const, error: admin.error };
 
-  const { error } = await admin.supabase.from("rezervasyonlar").update({ admin_notu: note }).eq("id", id);
+  const { error } = await admin.supabase
+    .from("rezervasyonlar")
+    .update({
+      admin_notu: note,
+      admin_notu_tarihi: new Date().toISOString(),
+      admin_notu_kullanici_id: admin.userId,
+    })
+    .eq("id", id);
   if (error) return { success: false as const, error: error.message };
-  await recordAdminAction({ action: "Rezervasyon notu güncellendi", target: id });
+  await recordAdminAction({
+    islem: "rezervasyon_onaylandi",
+    entityTip: "rezervasyon",
+    entityId: id,
+    detaylar: { admin_notu_guncellendi: true },
+  });
   revalidatePath("/yonetim/rezervasyonlar");
   return { success: true as const };
 }
@@ -414,5 +448,18 @@ export async function deleteSeasonPriceByAdmin(seasonPriceId: string, ilanId: st
 
   revalidatePath(`/yonetim/ilanlar/${ilanId}/takvim`);
   return { success: true };
+}
+
+export async function markAllNotificationsRead() {
+  const admin = await assertAdmin();
+  if (!admin.ok) return { success: false as const, error: admin.error };
+
+  const { error } = await admin.supabase
+    .from("bildirimler")
+    .update({ okundu: true, okundu_tarihi: new Date().toISOString() })
+    .eq("okundu", false);
+  if (error) return { success: false as const, error: error.message };
+  revalidatePath("/yonetim", "layout");
+  return { success: true as const };
 }
 

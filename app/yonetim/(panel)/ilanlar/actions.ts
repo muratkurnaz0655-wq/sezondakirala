@@ -143,7 +143,7 @@ export async function deleteListing(id: string) {
   const supabase = admin.supabase;
   const { error } = await supabase.from("ilanlar").delete().eq("id", id);
   if (error) throw new Error(error.message);
-  await recordAdminAction({ action: "İlan silindi", target: id });
+  await recordAdminAction({ islem: "ilan_silindi", entityTip: "ilan", entityId: id });
   revalidatePath("/yonetim/ilanlar");
 }
 
@@ -155,7 +155,12 @@ export async function bulkDeactivateListings(ids: string[]) {
 
   const { error } = await admin.supabase.from("ilanlar").update({ aktif: false }).in("id", cleanIds);
   if (error) return { success: false as const, error: error.message };
-  await recordAdminAction({ action: "Toplu ilan pasife alma", target: `${cleanIds.length} ilan` });
+  await recordAdminAction({
+    islem: "ilan_pasife_alindi",
+    entityTip: "ilan",
+    entityId: cleanIds.join(","),
+    detaylar: { adet: cleanIds.length },
+  });
   revalidatePath("/yonetim/ilanlar");
   return { success: true as const };
 }
@@ -168,7 +173,12 @@ export async function bulkDeleteListings(ids: string[]) {
 
   const { error } = await admin.supabase.from("ilanlar").delete().in("id", cleanIds);
   if (error) return { success: false as const, error: error.message };
-  await recordAdminAction({ action: "Toplu ilan silme", target: `${cleanIds.length} ilan` });
+  await recordAdminAction({
+    islem: "ilan_silindi",
+    entityTip: "ilan",
+    entityId: cleanIds.join(","),
+    detaylar: { adet: cleanIds.length },
+  });
   revalidatePath("/yonetim/ilanlar");
   return { success: true as const };
 }

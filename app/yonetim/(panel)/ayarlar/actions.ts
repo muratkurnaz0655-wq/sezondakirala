@@ -60,3 +60,25 @@ export async function ayarlariKaydet(formData: FormData): Promise<AyarlarKayitSo
   revalidatePath("/", "layout");
   return { basarili: true, mesaj: "Ayarlar başarıyla kaydedildi!" };
 }
+
+export async function bildirimTercihleriniKaydet(formData: FormData): Promise<AyarlarKayitSonuc> {
+  const admin = await requireAdminUser();
+  if (!admin.ok) return { basarili: false, mesaj: admin.error };
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+  if (!url || !serviceKey) return { basarili: false, mesaj: "Supabase ortam değişkenleri eksik." };
+  const supabase = createClient(url, serviceKey);
+
+  const id = String(formData.get("id") ?? "");
+  const payload = {
+    yeni_rezervasyonda_bildir: formData.get("yeni_rezervasyonda_bildir") === "on",
+    yeni_kullanicida_bildir: formData.get("yeni_kullanicida_bildir") === "on",
+    beklemede_24saat_bildir: formData.get("beklemede_24saat_bildir") === "on",
+    iptal_edildiginde_bildir: formData.get("iptal_edildiginde_bildir") === "on",
+    guncelleme_tarihi: new Date().toISOString(),
+  };
+  const { error } = await supabase.from("bildirim_tercihleri").update(payload).eq("id", id);
+  if (error) return { basarili: false, mesaj: error.message };
+  revalidatePath("/yonetim/ayarlar");
+  return { basarili: true, mesaj: "Bildirim tercihleri güncellendi." };
+}

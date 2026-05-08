@@ -27,24 +27,29 @@ export default async function AdminSettingsPage() {
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
 
   let ayarlar: AyarlarRow | null = null;
-  let logs: { id: string; tarih: string; kullanici: string; islem: string; etkilenen_kayit: string | null }[] = [];
+  let logs: { id: string; olusturulma_tarihi: string; kullanici_email: string | null; islem: string; entity_tip: string | null; entity_baslik: string | null }[] = [];
+  let preferences: {
+    id: string;
+    yeni_rezervasyonda_bildir: boolean;
+    yeni_kullanicida_bildir: boolean;
+    beklemede_24saat_bildir: boolean;
+    iptal_edildiginde_bildir: boolean;
+  } | null = null;
   if (url && serviceKey) {
     const supabase = createClient(url, serviceKey);
-    const [{ data }, { data: logRows }] = await Promise.all([
+    const [{ data }, { data: logRows }, { data: prefRow }] = await Promise.all([
       supabase
       .from("ayarlar")
       .select("*")
       .order("olusturulma_tarihi", { ascending: false })
       .limit(1)
       .maybeSingle(),
-      supabase
-        .from("admin_islem_loglari")
-        .select("id,tarih,kullanici,islem,etkilenen_kayit")
-        .order("tarih", { ascending: false })
-        .limit(50),
+      supabase.from("admin_loglar").select("*").order("olusturulma_tarihi", { ascending: false }).limit(100),
+      supabase.from("bildirim_tercihleri").select("*").limit(1).maybeSingle(),
     ]);
     ayarlar = (data as AyarlarRow | null) ?? null;
     logs = (logRows ?? []) as typeof logs;
+    preferences = (prefRow as typeof preferences) ?? null;
   }
 
   const k = ayarlar?.komisyon_orani;
@@ -80,7 +85,7 @@ export default async function AdminSettingsPage() {
           },
         ]}
       />
-      <AyarlarTabs mevcutAyarlar={mevcutAyarlar} logs={logs} />
+      <AyarlarTabs mevcutAyarlar={mevcutAyarlar} logs={logs} preferences={preferences} />
     </AdminPageLayout>
   );
 }
