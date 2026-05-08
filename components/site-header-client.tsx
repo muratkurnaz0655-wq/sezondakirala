@@ -150,6 +150,16 @@ export function SiteHeaderClient({ siteName }: SiteHeaderClientProps) {
     setNotificationCount(0);
   }
 
+  async function markNotificationRead(notificationId: string) {
+    if (!isSupabaseEnvConfigured()) return;
+    const supabase = createClient();
+    await supabase.rpc("mark_notification_read", { notification_id: notificationId });
+    setNotifications((prev) =>
+      prev.map((item) => (item.id === notificationId ? { ...item, okundu: true } : item)),
+    );
+    setNotificationCount((prev) => Math.max(0, prev - 1));
+  }
+
   return (
     <header className={`sticky top-0 z-50 w-full transition-all duration-300 ease-out ${headerShell}`}>
       <div className="relative flex min-h-[4.5rem] w-full items-center justify-between gap-3 px-4 md:min-h-[5.5rem] md:gap-4 md:px-6 lg:px-8">
@@ -207,11 +217,20 @@ export function SiteHeaderClient({ siteName }: SiteHeaderClientProps) {
                   </div>
                   <div className="max-h-80 overflow-auto">
                     {notifications.length ? notifications.map((item) => (
-                      <div key={item.id} className={`mb-1 rounded-xl border px-3 py-2 ${item.okundu ? "border-slate-100 bg-slate-50" : "border-blue-100 bg-blue-50"}`}>
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => {
+                          if (!item.okundu) {
+                            void markNotificationRead(item.id);
+                          }
+                        }}
+                        className={`mb-1 block w-full rounded-xl border px-3 py-2 text-left ${item.okundu ? "border-slate-100 bg-slate-50" : "border-blue-100 bg-blue-50"}`}
+                      >
                         <p className="text-sm font-semibold text-slate-800">{item.baslik ?? "Bildirim"}</p>
                         <p className="text-xs text-slate-600">{item.mesaj ?? ""}</p>
                         <p className="mt-1 text-[11px] text-slate-400">{new Date(item.olusturulma_tarihi).toLocaleString("tr-TR")}</p>
-                      </div>
+                      </button>
                     )) : (
                       <p className="px-3 py-6 text-center text-sm text-slate-500">Yeni bildirim yok</p>
                     )}

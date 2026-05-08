@@ -63,4 +63,24 @@ $$;
 revoke all on function public.mark_all_notifications_read() from public;
 grant execute on function public.mark_all_notifications_read() to authenticated;
 
+-- RPC: mark one notification as read.
+create or replace function public.mark_notification_read(notification_id uuid)
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  update public.bildirimler
+  set okundu = true,
+      okundu_tarihi = now()
+  where id = notification_id;
+
+  return true;
+end;
+$$;
+
+revoke all on function public.mark_notification_read(uuid) from public;
+grant execute on function public.mark_notification_read(uuid) to authenticated;
+
 commit;
