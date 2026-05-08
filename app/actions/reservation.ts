@@ -2,6 +2,7 @@
 
 import { Resend } from "resend";
 import { getPlatformSettings } from "@/lib/settings";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 type SendReservationConfirmationInput = {
@@ -95,7 +96,9 @@ export async function createReservation(input: CreateReservationInput) {
         .select("id")
         .single();
       if (!error && data?.id) {
-        await supabase.from("bildirimler").insert({
+        // Use service role so notification creation is not blocked by RLS.
+        const adminSupabase = createAdminClient();
+        await adminSupabase.from("bildirimler").insert({
           tip: "yeni_rezervasyon",
           baslik: "Rezervasyonunuz oluşturuldu",
           mesaj: `Rezervasyonunuz başarıyla alındı. Rezervasyon No: ${input.referansNo}`,
