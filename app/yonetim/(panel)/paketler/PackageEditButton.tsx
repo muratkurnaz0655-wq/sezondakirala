@@ -7,6 +7,7 @@ import {
   setPackageCoverMedia,
   updatePackage,
 } from "./actions";
+import { AdminActionButton } from "@/components/admin/AdminActionButton";
 
 type ListingItem = {
   id: string;
@@ -120,12 +121,12 @@ export function PackageEditButton({ pkg, listings }: { pkg: PackageRow; listings
 
   return (
     <>
-      <button
+      <AdminActionButton
         onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+        variant="secondary"
       >
         Düzenle
-      </button>
+      </AdminActionButton>
       {open && (
         <div
           onClick={() => setOpen(false)}
@@ -154,13 +155,13 @@ export function PackageEditButton({ pkg, listings }: { pkg: PackageRow; listings
                     Paket bilgilerini ve villa+tekne kombinasyonunu güncelle.
                   </p>
                 </div>
-                <button
-                  type="button"
+                <AdminActionButton
                   onClick={() => setOpen(false)}
-                  className="inline-flex h-9 items-center rounded-lg border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-50"
+                  variant="secondary"
+                  size="md"
                 >
                   Kapat
-                </button>
+                </AdminActionButton>
               </div>
             </div>
 
@@ -452,20 +453,21 @@ export function PackageEditButton({ pkg, listings }: { pkg: PackageRow; listings
 
             <div className="sticky bottom-0 border-t border-slate-200 bg-white px-6 py-4">
               <div className="flex justify-end gap-2">
-              <button
-                type="button"
+              <AdminActionButton
                 onClick={() => setOpen(false)}
-                className="h-9 rounded-lg border border-slate-300 px-3 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+                variant="secondary"
+                size="md"
               >
                 Vazgeç
-              </button>
-              <button
+              </AdminActionButton>
+              <AdminActionButton
                 type="submit"
                 disabled={isPending}
-                className="h-9 rounded-lg bg-blue-600 px-3 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:opacity-60"
+                variant="primary"
+                size="md"
               >
                 Kaydet
-              </button>
+              </AdminActionButton>
             </div>
             </div>
           </form>

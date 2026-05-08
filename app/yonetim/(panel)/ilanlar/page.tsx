@@ -6,6 +6,14 @@ import { ListingActions } from "./ListingActions";
 import { AdminStatsRow } from "@/components/admin/AdminStatsRow";
 import { AdminFilterBar } from "@/components/admin/AdminFilterBar";
 import { AdminPageLayout } from "@/components/admin/AdminPageLayout";
+import {
+  AdminDataTable,
+  AdminTableCell,
+  AdminTableHead,
+  AdminTableHeaderCell,
+  AdminTableRow,
+} from "@/components/admin/AdminDataTable";
+import { AdminActionButton } from "@/components/admin/AdminActionButton";
 
 type AdminListingsPageProps = {
   searchParams: Promise<{ durum?: string; filtre?: string; q?: string }>;
@@ -61,12 +69,13 @@ export default async function AdminListingsPage({ searchParams }: AdminListingsP
       title="İlanlar"
       description="Tüm ilanları durum, tip ve anahtar kelimeye göre yönetebilirsiniz."
       actions={
-        <Link
+        <AdminActionButton
           href="/yonetim/ilanlar/yeni"
-          className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
+          variant="primary"
+          size="md"
         >
           <Plus className="h-4 w-4" /> Yeni İlan Ekle
-        </Link>
+        </AdminActionButton>
       }
     >
       <AdminStatsRow
@@ -132,28 +141,16 @@ export default async function AdminListingsPage({ searchParams }: AdminListingsP
           );
         })}
       </div>
-      <div className="hidden w-full overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm lg:block">
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[900px] text-sm">
-            <thead className="border-b border-slate-200 bg-slate-50">
+      <AdminDataTable minWidthClass="min-w-[900px]">
+            <AdminTableHead>
               <tr>
-                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  İlan
-                </th>
-                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  Tip
-                </th>
-                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  Fiyat
-                </th>
-                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  Durum
-                </th>
-                <th className="px-5 py-3.5 text-right text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  İşlemler
-                </th>
+                <AdminTableHeaderCell>İlan</AdminTableHeaderCell>
+                <AdminTableHeaderCell>Tip</AdminTableHeaderCell>
+                <AdminTableHeaderCell>Fiyat</AdminTableHeaderCell>
+                <AdminTableHeaderCell>Durum</AdminTableHeaderCell>
+                <AdminTableHeaderCell align="right">İşlemler</AdminTableHeaderCell>
               </tr>
-            </thead>
+            </AdminTableHead>
             <tbody>
               {filteredListings.map((listing) => {
                 const row = listing as {
@@ -170,11 +167,8 @@ export default async function AdminListingsPage({ searchParams }: AdminListingsP
                 };
                 const url = ilkResim(row.ilan_medyalari);
                 return (
-                  <tr
-                    key={row.id}
-                    className="transition-colors hover:bg-slate-50/70"
-                  >
-                    <td className="border-b border-slate-100 px-5 py-4 text-sm text-slate-700">
+                  <AdminTableRow key={row.id}>
+                    <AdminTableCell>
                       <div className="flex items-center gap-3">
                         <div className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-xl bg-slate-100">
                           {url ? (
@@ -191,33 +185,31 @@ export default async function AdminListingsPage({ searchParams }: AdminListingsP
                           <p className="mt-0.5 text-xs text-slate-400">{row.konum}</p>
                         </div>
                       </div>
-                    </td>
-                    <td className="border-b border-slate-100 px-5 py-4 text-sm text-slate-700">
+                    </AdminTableCell>
+                    <AdminTableCell>
                       <span className="rounded-md bg-slate-100 px-2 py-1 text-xs font-medium capitalize text-slate-600">
                         {row.tip}
                       </span>
-                    </td>
-                    <td className="border-b border-slate-100 px-5 py-4 text-sm text-slate-700">
+                    </AdminTableCell>
+                    <AdminTableCell>
                       <span className="font-semibold text-slate-800">{formatCurrency(Number(row.gunluk_fiyat ?? 0))}</span>
                       <span className="text-xs text-slate-500"> /gece</span>
-                    </td>
-                    <td className="border-b border-slate-100 px-5 py-4 text-sm text-slate-700">
+                    </AdminTableCell>
+                    <AdminTableCell>
                       <span className={`rounded-full border px-2.5 py-0.5 text-xs font-medium ${row.aktif ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-slate-200 bg-slate-100 text-slate-600"}`}>
                         {row.aktif ? "Yayında" : "Pasif"}
                       </span>
-                    </td>
-                    <td className="border-b border-slate-100 px-5 py-4 text-right text-sm text-slate-700">
+                    </AdminTableCell>
+                    <AdminTableCell className="text-right">
                       <div className="flex items-center justify-end">
                         <ListingActions listing={row} />
                       </div>
-                    </td>
-                  </tr>
+                    </AdminTableCell>
+                  </AdminTableRow>
                 );
               })}
             </tbody>
-          </table>
-        </div>
-      </div>
+      </AdminDataTable>
     </AdminPageLayout>
   );
 }

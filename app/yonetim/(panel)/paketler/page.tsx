@@ -4,12 +4,19 @@ import {
 } from "@/app/actions/admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { formatCurrency } from "@/lib/utils/format";
-import Link from "next/link";
 import { Plus } from "lucide-react";
 import { PackageEditButton } from "./PackageEditButton";
 import { AdminStatsRow } from "@/components/admin/AdminStatsRow";
 import { AdminFilterBar } from "@/components/admin/AdminFilterBar";
 import { AdminPageLayout } from "@/components/admin/AdminPageLayout";
+import { AdminActionButton } from "@/components/admin/AdminActionButton";
+import {
+  AdminDataTable,
+  AdminTableCell,
+  AdminTableHead,
+  AdminTableHeaderCell,
+  AdminTableRow,
+} from "@/components/admin/AdminDataTable";
 
 type AdminPackagesPageProps = {
   searchParams?: Promise<{ durum?: string; q?: string }>;
@@ -77,12 +84,13 @@ export default async function AdminPackagesPage({ searchParams }: AdminPackagesP
       title="Paketler"
       description="Paket içeriklerini, durumlarını ve takvimlerini merkezi olarak yönetin."
       actions={
-        <Link
+        <AdminActionButton
           href="/yonetim/paketler/yeni"
-          className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
+          variant="primary"
+          size="md"
         >
           <Plus className="h-4 w-4" /> Yeni Paket Ekle
-        </Link>
+        </AdminActionButton>
       }
     >
       <AdminStatsRow
@@ -154,59 +162,38 @@ export default async function AdminPackagesPage({ searchParams }: AdminPackagesP
           </article>
         ))}
       </div>
-      <div className="hidden w-full overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm lg:block">
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[720px] text-sm">
-            <thead className="border-b border-slate-200 bg-slate-50">
+      <AdminDataTable minWidthClass="min-w-[720px]">
+            <AdminTableHead>
               <tr>
-                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  Başlık
-                </th>
-                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  Kategori
-                </th>
-                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  Fiyat
-                </th>
-                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  İlan
-                </th>
-                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  Kombinasyon
-                </th>
-                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  Görseller
-                </th>
-                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  Durum
-                </th>
-                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  İşlem
-                </th>
+                <AdminTableHeaderCell>Başlık</AdminTableHeaderCell>
+                <AdminTableHeaderCell>Kategori</AdminTableHeaderCell>
+                <AdminTableHeaderCell>Fiyat</AdminTableHeaderCell>
+                <AdminTableHeaderCell>İlan</AdminTableHeaderCell>
+                <AdminTableHeaderCell>Kombinasyon</AdminTableHeaderCell>
+                <AdminTableHeaderCell>Görseller</AdminTableHeaderCell>
+                <AdminTableHeaderCell>Durum</AdminTableHeaderCell>
+                <AdminTableHeaderCell>İşlem</AdminTableHeaderCell>
               </tr>
-            </thead>
+            </AdminTableHead>
             <tbody>
               {filteredPackages.map((row) => {
                 const ids = Array.isArray(row.ilan_idleri) ? row.ilan_idleri : [];
                 const villaCount = ids.filter((id: string) => listingTypeMap.get(id) === "villa").length;
                 const tekneCount = ids.filter((id: string) => listingTypeMap.get(id) === "tekne").length;
                 return (
-                  <tr
-                    key={row.id}
-                    className="border-b border-slate-100 transition-colors hover:bg-slate-50/70"
-                  >
-                  <td className="border-b border-slate-100 px-5 py-4 text-sm text-slate-700">{row.baslik}</td>
-                  <td className="border-b border-slate-100 px-5 py-4 text-sm text-slate-700">{row.kategori}</td>
-                  <td className="border-b border-slate-100 px-5 py-4 text-sm font-semibold text-slate-800">{formatCurrency(row.fiyat)}</td>
-                  <td className="border-b border-slate-100 px-5 py-4 text-sm text-slate-700">
+                  <AdminTableRow key={row.id}>
+                  <AdminTableCell>{row.baslik}</AdminTableCell>
+                  <AdminTableCell>{row.kategori}</AdminTableCell>
+                  <AdminTableCell className="font-semibold text-slate-800">{formatCurrency(row.fiyat)}</AdminTableCell>
+                  <AdminTableCell>
                     {ids.length}
-                  </td>
-                  <td className="border-b border-slate-100 px-5 py-4 text-sm text-slate-700">
+                  </AdminTableCell>
+                  <AdminTableCell>
                     <span className="inline-flex items-center gap-1 rounded-lg bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-600">
                       {villaCount} Villa + {tekneCount} Tekne
                     </span>
-                  </td>
-                  <td className="border-b border-slate-100 px-5 py-4 text-sm text-slate-700">
+                  </AdminTableCell>
+                  <AdminTableCell>
                     {row.gorsel_url ? (
                       <div className="h-8 w-8 overflow-hidden rounded-lg border border-slate-200 bg-slate-200">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -225,24 +212,20 @@ export default async function AdminPackagesPage({ searchParams }: AdminPackagesP
                           ))}
                       </div>
                     )}
-                  </td>
-                  <td className="border-b border-slate-100 px-5 py-4 text-sm text-slate-700">
+                  </AdminTableCell>
+                  <AdminTableCell>
                     <form action={updateAdminPackageStatus}>
                       <input type="hidden" name="id" value={row.id} />
                       <input type="hidden" name="aktif" value={row.aktif ? "false" : "true"} />
-                      <button
+                      <AdminActionButton
                         type="submit"
-                        className={`inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
-                          row.aktif
-                            ? "bg-amber-50 text-amber-700 hover:bg-amber-100"
-                            : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
-                        }`}
+                        variant={row.aktif ? "danger" : "success"}
                       >
                         {row.aktif ? "Pasife Al" : "Aktif Et"}
-                      </button>
+                      </AdminActionButton>
                     </form>
-                  </td>
-                  <td className="border-b border-slate-100 px-5 py-4 text-sm text-slate-700">
+                  </AdminTableCell>
+                  <AdminTableCell>
                     <div className="flex items-center gap-2">
                       <PackageEditButton
                         pkg={{
@@ -256,35 +239,33 @@ export default async function AdminPackagesPage({ searchParams }: AdminPackagesP
                           imageUrl: firstImageMap.get(listing.id) ?? null,
                         }))}
                       />
-                      <Link
+                      <AdminActionButton
                         href={`/yonetim/paketler/${row.id}/takvim`}
-                        className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+                        variant="secondary"
                       >
                         Müsaitlik Takvimi
-                      </Link>
+                      </AdminActionButton>
                       <form action={deleteAdminPackage}>
                         <input type="hidden" name="id" value={row.id} />
-                        <button
+                        <AdminActionButton
                           type="submit"
-                          className="inline-flex items-center gap-2 rounded-lg bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 transition-colors hover:bg-red-100"
+                          variant="danger"
                         >
                           Sil
-                        </button>
+                        </AdminActionButton>
                       </form>
                     </div>
-                  </td>
-                  </tr>
+                  </AdminTableCell>
+                  </AdminTableRow>
                 );
               })}
             </tbody>
-          </table>
-          {filteredPackages.length === 0 ? (
-            <div className="px-5 py-8 text-sm text-slate-500">
-              Bu filtrede gösterilecek paket bulunamadı.
-            </div>
-          ) : null}
+      </AdminDataTable>
+      {filteredPackages.length === 0 ? (
+        <div className="hidden rounded-2xl border border-slate-200 bg-white px-5 py-8 text-sm text-slate-500 lg:block">
+          Bu filtrede gösterilecek paket bulunamadı.
         </div>
-      </div>
+      ) : null}
     </AdminPageLayout>
   );
 }

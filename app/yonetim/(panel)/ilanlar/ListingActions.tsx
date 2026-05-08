@@ -1,9 +1,9 @@
 "use client";
 
 import { useTransition, useState } from "react";
-import Link from "next/link";
 import { deleteListing } from "./actions";
 import { EditListingModal } from "./EditListingModal";
+import { AdminActionButton } from "@/components/admin/AdminActionButton";
 
 type Listing = {
   id: string;
@@ -22,31 +22,31 @@ export function ListingActions({ listing }: { listing: Listing }) {
 
   return (
     <div className="flex flex-nowrap items-center gap-2">
-      <button
+      <AdminActionButton
         title="Bu ilanı düzenle"
         onClick={() => setShowEdit(true)}
-        className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+        variant="secondary"
       >
         Düzenle
-      </button>
+      </AdminActionButton>
 
-      <Link
+      <AdminActionButton
         title="Bu ilanın müsaitlik takvimi"
         href={`/yonetim/ilanlar/${listing.id}/takvim`}
-        className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+        variant="secondary"
       >
         Müsaitlik Takvimi
-      </Link>
+      </AdminActionButton>
 
-      <button
+      <AdminActionButton
         title="İlanı sitede görüntüle"
         onClick={() => window.open(`/${listing.tip === "tekne" ? "tekneler" : "konaklama"}/${listing.slug ?? listing.id}`, "_blank")}
-        className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+        variant="secondary"
       >
         İlana Git ↗
-      </button>
+      </AdminActionButton>
 
-      <button
+      <AdminActionButton
         title="İlanı sil"
         disabled={isPending}
         onClick={() =>
@@ -54,10 +54,10 @@ export function ListingActions({ listing }: { listing: Listing }) {
             await deleteListing(listing.id);
           })
         }
-        className="inline-flex items-center gap-2 rounded-lg bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 transition-colors hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
+        variant="danger"
       >
         Sil
-      </button>
+      </AdminActionButton>
 
       {showEdit && <EditListingModal listing={listing} onClose={() => setShowEdit(false)} />}
     </div>

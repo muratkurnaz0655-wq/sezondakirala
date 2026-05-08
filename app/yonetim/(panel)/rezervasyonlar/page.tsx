@@ -6,6 +6,14 @@ import Link from "next/link";
 import { AdminFilterBar } from "@/components/admin/AdminFilterBar";
 import { AdminStatsRow } from "@/components/admin/AdminStatsRow";
 import { AdminPageLayout } from "@/components/admin/AdminPageLayout";
+import { AdminActionButton } from "@/components/admin/AdminActionButton";
+import {
+  AdminDataTable,
+  AdminTableCell,
+  AdminTableHead,
+  AdminTableHeaderCell,
+  AdminTableRow,
+} from "@/components/admin/AdminDataTable";
 import { ReservationStatusSelect } from "./ReservationStatusSelect";
 import { ReservationDetailButton } from "./ReservationDetailButton";
 import { normalizeReservationStatus, STATUS_MAP } from "@/lib/reservation-status";
@@ -198,15 +206,17 @@ export default async function AdminReservationsPage({ searchParams }: AdminReser
           </select>
         </div>
         <div className="xl:col-span-6 flex flex-wrap gap-2">
-          <button type="submit" className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-700">
+          <AdminActionButton type="submit" variant="primary" size="md" className="w-full sm:w-auto">
             Filtrele
-          </button>
-          <a
+          </AdminActionButton>
+          <AdminActionButton
             href="/yonetim/rezervasyonlar"
-            className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+            variant="secondary"
+            size="md"
+            className="w-full sm:w-auto"
           >
             Filtreleri temizle
-          </a>
+          </AdminActionButton>
         </div>
       </AdminFilterBar>
       <div className="flex flex-wrap gap-2">
@@ -240,52 +250,31 @@ export default async function AdminReservationsPage({ searchParams }: AdminReser
           </article>
         ))}
       </div>
-      <div className="hidden w-full overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm lg:block">
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[1120px] text-sm">
-            <thead className="border-b border-slate-200 bg-slate-50">
+      <AdminDataTable minWidthClass="min-w-[1120px]">
+            <AdminTableHead>
               <tr>
-                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  Tarih
-                </th>
-                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
+                <AdminTableHeaderCell>Tarih</AdminTableHeaderCell>
+                <AdminTableHeaderCell>
                   <a
                     href={sortToggleQuery ? `/yonetim/rezervasyonlar?${sortToggleQuery}` : "/yonetim/rezervasyonlar"}
                     className="inline-flex items-center gap-1 hover:text-slate-700"
                   >
                     Oluşturulma {sortAsc ? "↑" : "↓"}
                   </a>
-                </th>
-                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  Ref No
-                </th>
-                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  Kullanıcı
-                </th>
-                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  İlan / Paket
-                </th>
-                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  Misafir
-                </th>
-                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  Tutar
-                </th>
-                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  Durum
-                </th>
-                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  İşlem
-                </th>
+                </AdminTableHeaderCell>
+                <AdminTableHeaderCell>Ref No</AdminTableHeaderCell>
+                <AdminTableHeaderCell>Kullanıcı</AdminTableHeaderCell>
+                <AdminTableHeaderCell>İlan / Paket</AdminTableHeaderCell>
+                <AdminTableHeaderCell>Misafir</AdminTableHeaderCell>
+                <AdminTableHeaderCell>Tutar</AdminTableHeaderCell>
+                <AdminTableHeaderCell>Durum</AdminTableHeaderCell>
+                <AdminTableHeaderCell>İşlem</AdminTableHeaderCell>
               </tr>
-            </thead>
+            </AdminTableHead>
             <tbody>
               {filteredReservations.map((row) => (
-                <tr
-                  key={row.id}
-                  className="border-b border-slate-100 transition-colors hover:bg-slate-50/70"
-                >
-                  <td className="whitespace-nowrap border-b border-slate-100 px-5 py-4 text-sm text-slate-700">
+                <AdminTableRow key={row.id}>
+                  <AdminTableCell className="whitespace-nowrap">
                     <p className="text-sm text-slate-700">
                       {format(new Date(`${row.giris_tarihi}T00:00:00`), "dd MMM", { locale: tr })} →{" "}
                       {format(new Date(`${row.cikis_tarihi}T00:00:00`), "dd MMM yyyy", { locale: tr })}
@@ -301,14 +290,14 @@ export default async function AdminReservationsPage({ searchParams }: AdminReser
                       )}{" "}
                       gece
                     </p>
-                  </td>
-                  <td className="whitespace-nowrap border-b border-slate-100 px-5 py-4 text-sm text-slate-700">
+                  </AdminTableCell>
+                  <AdminTableCell className="whitespace-nowrap">
                     {row.olusturulma_tarihi
                       ? format(new Date(String(row.olusturulma_tarihi)), "dd MMM yyyy HH:mm", { locale: tr })
                       : "-"}
-                  </td>
-                  <td className="border-b border-slate-100 px-5 py-4 font-mono text-xs text-slate-500">{row.referans_no ? `${row.referans_no.slice(0, 8)}...` : "-"}</td>
-                  <td className="border-b border-slate-100 px-5 py-4 text-sm text-slate-700">
+                  </AdminTableCell>
+                  <AdminTableCell className="font-mono text-xs text-slate-500">{row.referans_no ? `${row.referans_no.slice(0, 8)}...` : "-"}</AdminTableCell>
+                  <AdminTableCell>
                     <Link
                       href={`/yonetim/kullanicilar?q=${encodeURIComponent(userMap.get(row.kullanici_id) ?? row.kullanici_id)}`}
                       className="font-medium text-sky-700 hover:underline"
@@ -317,8 +306,8 @@ export default async function AdminReservationsPage({ searchParams }: AdminReser
                     </Link>
                     <p className="text-xs text-slate-500">{userDetailMap.get(row.kullanici_id)?.email ?? "-"}</p>
                     <p className="text-xs text-slate-400">{userDetailMap.get(row.kullanici_id)?.telefon ?? "-"}</p>
-                  </td>
-                  <td className="border-b border-slate-100 px-5 py-4 text-sm text-slate-700">
+                  </AdminTableCell>
+                  <AdminTableCell>
                     {row.paket_id
                       ? (
                         <div>
@@ -342,10 +331,10 @@ export default async function AdminReservationsPage({ searchParams }: AdminReser
                           <p className="text-xs text-slate-500">{listingMap.get(row.ilan_id)?.konum ?? "-"}</p>
                         </div>
                       )}
-                  </td>
-                  <td className="border-b border-slate-100 px-5 py-4 text-sm text-slate-500">{row.misafir_sayisi}</td>
-                  <td className="border-b border-slate-100 px-5 py-4 text-sm font-semibold text-slate-800">{formatCurrency(row.toplam_fiyat)}</td>
-                  <td className="border-b border-slate-100 px-5 py-4 text-sm text-slate-700">
+                  </AdminTableCell>
+                  <AdminTableCell className="text-slate-500">{row.misafir_sayisi}</AdminTableCell>
+                  <AdminTableCell className="font-semibold text-slate-800">{formatCurrency(row.toplam_fiyat)}</AdminTableCell>
+                  <AdminTableCell>
                     {(() => {
                       const normalized = normalizeReservationStatus(String(row.durum));
                       const status = STATUS_MAP[normalized];
@@ -357,8 +346,8 @@ export default async function AdminReservationsPage({ searchParams }: AdminReser
                         </span>
                       );
                     })()}
-                  </td>
-                  <td className="border-b border-slate-100 px-5 py-4 text-sm text-slate-700">
+                  </AdminTableCell>
+                  <AdminTableCell>
                     <div className="flex items-center gap-2">
                       <ReservationStatusSelect
                         reservationId={row.id}
@@ -366,13 +355,11 @@ export default async function AdminReservationsPage({ searchParams }: AdminReser
                       />
                       <ReservationDetailButton reservation={row as Record<string, unknown>} />
                     </div>
-                  </td>
-                </tr>
+                  </AdminTableCell>
+                </AdminTableRow>
               ))}
             </tbody>
-          </table>
-        </div>
-      </div>
+      </AdminDataTable>
     </AdminPageLayout>
   );
 }

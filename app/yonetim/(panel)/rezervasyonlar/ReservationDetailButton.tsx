@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { normalizeReservationStatus, STATUS_MAP } from "@/lib/reservation-status";
 import { Check, Clipboard, CreditCard, Receipt, ShieldCheck, UserRound } from "lucide-react";
+import { AdminActionButton } from "@/components/admin/AdminActionButton";
 
 type Reservation = Record<string, unknown>;
 
@@ -66,17 +67,16 @@ export function ReservationDetailButton({ reservation }: { reservation: Reservat
 
   return (
     <>
-      <button
-        type="button"
+      <AdminActionButton
         title="Rezervasyon detaylarini goruntule"
         onClick={() => {
           setActiveTab("ozet");
           setOpen(true);
         }}
-        className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-blue-700"
+        variant="primary"
       >
         Detay
-      </button>
+      </AdminActionButton>
 
       {open && (
         <div

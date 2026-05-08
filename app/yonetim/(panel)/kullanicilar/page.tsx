@@ -3,6 +3,14 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { AdminStatsRow } from "@/components/admin/AdminStatsRow";
 import { AdminFilterBar } from "@/components/admin/AdminFilterBar";
 import { AdminPageLayout } from "@/components/admin/AdminPageLayout";
+import { AdminActionButton } from "@/components/admin/AdminActionButton";
+import {
+  AdminDataTable,
+  AdminTableCell,
+  AdminTableHead,
+  AdminTableHeaderCell,
+  AdminTableRow,
+} from "@/components/admin/AdminDataTable";
 
 type AdminUsersPageProps = {
   searchParams: Promise<{ q?: string; siralama?: string }>;
@@ -87,12 +95,12 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
             <option value="eski">Eski → Yeni</option>
           </select>
         </div>
-        <button type="submit" className="inline-flex w-full sm:w-auto shrink-0 items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-700">
+        <AdminActionButton type="submit" variant="primary" size="md" className="w-full sm:w-auto shrink-0">
           Ara
-        </button>
-        <a href="/yonetim/kullanicilar" className="inline-flex w-full sm:w-auto shrink-0 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50">
+        </AdminActionButton>
+        <AdminActionButton href="/yonetim/kullanicilar" variant="secondary" size="md" className="w-full sm:w-auto shrink-0">
           Temizle
-        </a>
+        </AdminActionButton>
       </AdminFilterBar>
 
       {hasError ? (
@@ -110,64 +118,43 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
           </article>
         ))}
       </div>
-      <div className="hidden w-full overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm lg:block">
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[960px] text-sm">
-            <thead className="border-b border-slate-200 bg-slate-50">
+      <AdminDataTable>
+            <AdminTableHead>
               <tr>
-                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  Avatar
-                </th>
-                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  Ad
-                </th>
-                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  E-posta
-                </th>
-                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  Rol
-                </th>
-                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  Kayıt
-                </th>
-                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  Rez.
-                </th>
-                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  İlan
-                </th>
-                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  İşlem
-                </th>
+                <AdminTableHeaderCell>Avatar</AdminTableHeaderCell>
+                <AdminTableHeaderCell>Ad</AdminTableHeaderCell>
+                <AdminTableHeaderCell>E-posta</AdminTableHeaderCell>
+                <AdminTableHeaderCell>Rol</AdminTableHeaderCell>
+                <AdminTableHeaderCell>Kayıt</AdminTableHeaderCell>
+                <AdminTableHeaderCell>Rez.</AdminTableHeaderCell>
+                <AdminTableHeaderCell>İlan</AdminTableHeaderCell>
+                <AdminTableHeaderCell>İşlem</AdminTableHeaderCell>
               </tr>
-            </thead>
+            </AdminTableHead>
             <tbody>
               {(users ?? []).map((user) => {
                 const initial = (user.ad_soyad?.[0] ?? user.email?.[0] ?? "?").toUpperCase();
                 return (
-                  <tr
-                    key={user.id}
-                    className="border-b border-slate-100 transition-colors hover:bg-slate-50/70"
-                  >
-                    <td className="border-b border-slate-100 px-5 py-4 text-sm text-slate-700">
+                  <AdminTableRow key={user.id}>
+                    <AdminTableCell>
                       <div
                         className="flex h-9 w-9 items-center justify-center rounded-xl text-sm font-bold text-white"
                         style={{ background: "linear-gradient(135deg, #0EA5E9, #22C55E)" }}
                       >
                         {initial}
                       </div>
-                    </td>
-                    <td className="border-b border-slate-100 px-5 py-4 text-sm text-slate-700">{user.ad_soyad ?? "-"}</td>
-                    <td className="border-b border-slate-100 px-5 py-4 text-sm text-slate-500">{user.email}</td>
-                    <td className="border-b border-slate-100 px-5 py-4 text-sm text-slate-700">
+                    </AdminTableCell>
+                    <AdminTableCell>{user.ad_soyad ?? "-"}</AdminTableCell>
+                    <AdminTableCell className="text-slate-500">{user.email}</AdminTableCell>
+                    <AdminTableCell>
                       <span className={rolBadge(String(user.rol))}>{user.rol}</span>
-                    </td>
-                    <td className="border-b border-slate-100 px-5 py-4 text-sm text-slate-500">
+                    </AdminTableCell>
+                    <AdminTableCell className="text-slate-500">
                       {String(user.olusturulma_tarihi).slice(0, 10)}
-                    </td>
-                    <td className="border-b border-slate-100 px-5 py-4 text-sm text-slate-500">{reservationCountMap.get(user.id) ?? 0}</td>
-                    <td className="border-b border-slate-100 px-5 py-4 text-sm text-slate-500">{listingCountMap.get(user.id) ?? 0}</td>
-                    <td className="border-b border-slate-100 px-5 py-4 text-sm text-slate-700">
+                    </AdminTableCell>
+                    <AdminTableCell className="text-slate-500">{reservationCountMap.get(user.id) ?? 0}</AdminTableCell>
+                    <AdminTableCell className="text-slate-500">{listingCountMap.get(user.id) ?? 0}</AdminTableCell>
+                    <AdminTableCell>
                       <form action={updateUserRole} className="flex items-center gap-2">
                         <input type="hidden" name="id" value={user.id} />
                         <select name="rol" defaultValue={user.rol} className="w-32 cursor-pointer rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 transition-all focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20">
@@ -175,18 +162,16 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
                           <option value="ilan_sahibi">ilan_sahibi</option>
                           <option value="admin">admin</option>
                         </select>
-                        <button type="submit" className="inline-flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 transition-colors hover:bg-emerald-100">
+                        <AdminActionButton type="submit" variant="success">
                           ✓ Kaydet
-                        </button>
+                        </AdminActionButton>
                       </form>
-                    </td>
-                  </tr>
+                    </AdminTableCell>
+                  </AdminTableRow>
                 );
               })}
             </tbody>
-          </table>
-        </div>
-      </div>
+      </AdminDataTable>
     </AdminPageLayout>
   );
 }
