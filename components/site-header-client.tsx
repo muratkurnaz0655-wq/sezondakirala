@@ -241,10 +241,10 @@ export function SiteHeaderClient({ siteName }: SiteHeaderClientProps) {
 
   function notificationHref(item: (typeof notifications)[number]) {
     if (item.entity_tip === "rezervasyon" && item.entity_id) return `/panel/rezervasyonlar/${item.entity_id}`;
-    if (item.entity_tip === "rezervasyon") return "/panel/rezervasyonlar";
+    if (item.entity_tip === "rezervasyon") return "/panel/bildirimler";
     if (item.entity_tip === "ilan" && item.entity_id) return "/panel/ilanlarim";
     if (item.entity_tip === "kullanici" && item.entity_id) return "/panel/profilim";
-    return "/panel";
+    return "/panel/bildirimler";
   }
 
   async function resolveReservationHref(item: (typeof notifications)[number]) {
@@ -376,7 +376,7 @@ export function SiteHeaderClient({ siteName }: SiteHeaderClientProps) {
                   </div>
                   <div className="border-t border-slate-100 px-4 py-2.5 text-center">
                     <Link
-                      href="/panel"
+                      href="/panel/bildirimler"
                       className="text-xs font-medium text-slate-500 transition-colors hover:text-slate-700"
                       onClick={() => setNotificationOpen(false)}
                     >
