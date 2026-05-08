@@ -33,20 +33,25 @@ export default async function PanelNotificationsPage() {
 
   const { data: notifications } = await supabase
     .from("bildirimler")
-    .select("id, tip, baslik, mesaj, okundu, olusturulma_tarihi, entity_tip, entity_id")
+    .select("id, tip, baslik, mesaj, okundu, olusturulma_tarihi, hedef_kullanici_id, entity_tip, entity_id")
     .order("olusturulma_tarihi", { ascending: false })
     .limit(100);
+
+  const visibleNotifications = (notifications ?? []).filter((item) => {
+    if (item.hedef_kullanici_id === user.id) return true;
+    return !item.hedef_kullanici_id && item.tip === "duyuru";
+  });
 
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-semibold text-slate-900">Bildirimlerim</h1>
-      {!notifications?.length ? (
+      {!visibleNotifications.length ? (
         <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center">
           <p className="text-sm text-slate-700">Henüz bildiriminiz yok.</p>
         </div>
       ) : (
         <div className="space-y-2">
-          {notifications.map((item) => {
+          {visibleNotifications.map((item) => {
             const href = hrefForNotification({
               entity_tip: item.entity_tip ?? null,
               entity_id: item.entity_id ? String(item.entity_id) : null,

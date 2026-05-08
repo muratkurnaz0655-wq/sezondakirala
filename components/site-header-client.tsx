@@ -138,10 +138,11 @@ export function SiteHeaderClient({ siteName }: SiteHeaderClientProps) {
       ]);
       if (!mounted) return;
       const rows = ((rowsResult.data as typeof notifications) ?? []).filter((item) => {
-        // Hide legacy/unscoped reservation notifications and notifications targeted to another user.
-        if (item.hedef_kullanici_id && item.hedef_kullanici_id !== user.id) return false;
-        if (item.tip === "yeni_rezervasyon" && !item.hedef_kullanici_id) return false;
-        return true;
+        // Show only:
+        // - targeted notifications for the current user
+        // - admin broadcasts (tip=duyuru, no target user)
+        if (item.hedef_kullanici_id === user.id) return true;
+        return !item.hedef_kullanici_id && item.tip === "duyuru";
       });
       const unreadCount = rows.filter((item) => !item.okundu).length || countResult.count || 0;
       setNotifications(rows);
