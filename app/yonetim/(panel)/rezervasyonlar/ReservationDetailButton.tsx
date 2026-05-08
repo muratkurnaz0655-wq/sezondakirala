@@ -73,7 +73,7 @@ export function ReservationDetailButton({ reservation }: { reservation: Reservat
           setActiveTab("ozet");
           setOpen(true);
         }}
-        className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 px-3 py-1.5 text-xs font-semibold text-white shadow-lg shadow-[#0e9aa7]/25 transition-all duration-200 hover:scale-[1.02] hover:from-sky-600 hover:to-blue-700 active:scale-[0.98]"
+        className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-blue-700"
       >
         Detay
       </button>

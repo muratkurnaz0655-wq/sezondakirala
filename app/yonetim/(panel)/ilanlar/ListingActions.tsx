@@ -25,7 +25,7 @@ export function ListingActions({ listing }: { listing: Listing }) {
       <button
         title="Bu ilanı düzenle"
         onClick={() => setShowEdit(true)}
-        className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-all duration-200 hover:bg-slate-50 hover:shadow-md active:scale-[0.98]"
+        className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50"
       >
         Düzenle
       </button>
@@ -33,7 +33,7 @@ export function ListingActions({ listing }: { listing: Listing }) {
       <Link
         title="Bu ilanın müsaitlik takvimi"
         href={`/yonetim/ilanlar/${listing.id}/takvim`}
-        className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-all duration-200 hover:bg-slate-50 hover:shadow-md active:scale-[0.98]"
+        className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50"
       >
         Müsaitlik Takvimi
       </Link>
@@ -41,7 +41,7 @@ export function ListingActions({ listing }: { listing: Listing }) {
       <button
         title="İlanı sitede görüntüle"
         onClick={() => window.open(`/${listing.tip === "tekne" ? "tekneler" : "konaklama"}/${listing.slug ?? listing.id}`, "_blank")}
-        className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-all duration-200 hover:bg-slate-50 hover:shadow-md active:scale-[0.98]"
+        className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50"
       >
         İlana Git ↗
       </button>
@@ -54,7 +54,7 @@ export function ListingActions({ listing }: { listing: Listing }) {
             await deleteListing(listing.id);
           })
         }
-        className="inline-flex items-center gap-2 rounded-lg bg-red-50 px-3 py-1.5 text-sm font-medium text-red-600 transition-all duration-200 hover:bg-red-100 hover:shadow-md active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+        className="inline-flex items-center gap-2 rounded-lg bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 transition-colors hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
       >
         Sil
       </button>

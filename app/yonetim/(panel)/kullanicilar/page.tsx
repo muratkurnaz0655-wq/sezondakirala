@@ -67,7 +67,7 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
 
       <AdminFilterBar className="mb-6 flex flex-col items-stretch gap-3 sm:flex-row sm:items-end" method="get">
         <div className="min-w-0 flex-1">
-          <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-400">Ara</label>
+          <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-500">Ara</label>
           <input
             name="q"
             type="search"
@@ -77,7 +77,7 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-400">Sıralama</label>
+          <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-500">Sıralama</label>
           <select
             name="siralama"
             defaultValue={params.siralama ?? "yeni"}
@@ -87,10 +87,10 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
             <option value="eski">Eski → Yeni</option>
           </select>
         </div>
-        <button type="submit" className="inline-flex w-full sm:w-auto shrink-0 items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-lg shadow-[#0e9aa7]/25 transition-all duration-200 hover:scale-[1.02] hover:bg-blue-700 active:scale-[0.98]">
+        <button type="submit" className="inline-flex w-full sm:w-auto shrink-0 items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-700">
           Ara
         </button>
-        <a href="/yonetim/kullanicilar" className="inline-flex w-full sm:w-auto shrink-0 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-all duration-200 hover:bg-slate-50 hover:shadow-md active:scale-[0.98]">
+        <a href="/yonetim/kullanicilar" className="inline-flex w-full sm:w-auto shrink-0 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50">
           Temizle
         </a>
       </AdminFilterBar>
@@ -115,28 +115,28 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
           <table className="w-full min-w-[960px] text-sm">
             <thead className="border-b border-slate-200 bg-slate-50">
               <tr>
-                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">
+                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
                   Avatar
                 </th>
-                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">
+                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
                   Ad
                 </th>
-                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">
+                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
                   E-posta
                 </th>
-                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">
+                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
                   Rol
                 </th>
-                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">
+                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
                   Kayıt
                 </th>
-                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">
+                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
                   Rez.
                 </th>
-                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">
+                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
                   İlan
                 </th>
-                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">
+                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
                   İşlem
                 </th>
               </tr>
@@ -175,7 +175,7 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
                           <option value="ilan_sahibi">ilan_sahibi</option>
                           <option value="admin">admin</option>
                         </select>
-                        <button type="submit" className="inline-flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-600 transition-all duration-200 hover:bg-emerald-100 hover:shadow-md active:scale-[0.98]">
+                        <button type="submit" className="inline-flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 transition-colors hover:bg-emerald-100">
                           ✓ Kaydet
                         </button>
                       </form>

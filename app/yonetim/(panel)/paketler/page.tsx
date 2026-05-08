@@ -79,7 +79,7 @@ export default async function AdminPackagesPage({ searchParams }: AdminPackagesP
       actions={
         <Link
           href="/yonetim/paketler/yeni"
-          className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-lg shadow-[#0e9aa7]/25 transition-all duration-200 hover:scale-[1.02] hover:bg-blue-700 active:scale-[0.98]"
+          className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
         >
           <Plus className="h-4 w-4" /> Yeni Paket Ekle
         </Link>
@@ -159,28 +159,28 @@ export default async function AdminPackagesPage({ searchParams }: AdminPackagesP
           <table className="w-full min-w-[720px] text-sm">
             <thead className="border-b border-slate-200 bg-slate-50">
               <tr>
-                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">
+                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
                   Başlık
                 </th>
-                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">
+                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
                   Kategori
                 </th>
-                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">
+                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
                   Fiyat
                 </th>
-                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">
+                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
                   İlan
                 </th>
-                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">
+                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
                   Kombinasyon
                 </th>
-                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">
+                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
                   Görseller
                 </th>
-                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">
+                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
                   Durum
                 </th>
-                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">
+                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
                   İşlem
                 </th>
               </tr>
@@ -232,10 +232,10 @@ export default async function AdminPackagesPage({ searchParams }: AdminPackagesP
                       <input type="hidden" name="aktif" value={row.aktif ? "false" : "true"} />
                       <button
                         type="submit"
-                        className={`inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium transition-all duration-200 hover:shadow-md active:scale-[0.98] ${
+                        className={`inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
                           row.aktif
-                            ? "bg-amber-50 text-amber-600 hover:bg-amber-100"
-                            : "bg-emerald-50 text-emerald-600 hover:bg-emerald-100"
+                            ? "bg-amber-50 text-amber-700 hover:bg-amber-100"
+                            : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
                         }`}
                       >
                         {row.aktif ? "Pasife Al" : "Aktif Et"}
@@ -258,7 +258,7 @@ export default async function AdminPackagesPage({ searchParams }: AdminPackagesP
                       />
                       <Link
                         href={`/yonetim/paketler/${row.id}/takvim`}
-                        className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-all duration-200 hover:bg-slate-50 hover:shadow-md active:scale-[0.98]"
+                        className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50"
                       >
                         Müsaitlik Takvimi
                       </Link>
@@ -266,7 +266,7 @@ export default async function AdminPackagesPage({ searchParams }: AdminPackagesP
                         <input type="hidden" name="id" value={row.id} />
                         <button
                           type="submit"
-                          className="inline-flex items-center gap-2 rounded-lg bg-red-50 px-3 py-1.5 text-sm font-medium text-red-600 transition-all duration-200 hover:bg-red-100 hover:shadow-md active:scale-[0.98]"
+                          className="inline-flex items-center gap-2 rounded-lg bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 transition-colors hover:bg-red-100"
                         >
                           Sil
                         </button>

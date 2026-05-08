@@ -63,7 +63,7 @@ export default async function AdminListingsPage({ searchParams }: AdminListingsP
       actions={
         <Link
           href="/yonetim/ilanlar/yeni"
-          className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-lg shadow-[#0e9aa7]/25 transition-all duration-200 hover:scale-[1.02] hover:bg-blue-700 active:scale-[0.98]"
+          className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
         >
           <Plus className="h-4 w-4" /> Yeni İlan Ekle
         </Link>
@@ -137,19 +137,19 @@ export default async function AdminListingsPage({ searchParams }: AdminListingsP
           <table className="w-full min-w-[900px] text-sm">
             <thead className="border-b border-slate-200 bg-slate-50">
               <tr>
-                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">
+                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
                   İlan
                 </th>
-                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">
+                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
                   Tip
                 </th>
-                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">
+                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
                   Fiyat
                 </th>
-                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">
+                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
                   Durum
                 </th>
-                <th className="px-5 py-3.5 text-right text-xs font-semibold uppercase tracking-wider text-slate-400">
+                <th className="px-5 py-3.5 text-right text-xs font-semibold uppercase tracking-wider text-slate-500">
                   İşlemler
                 </th>
               </tr>

@@ -122,7 +122,7 @@ export function PackageEditButton({ pkg, listings }: { pkg: PackageRow; listings
     <>
       <button
         onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-all duration-200 hover:bg-slate-50 hover:shadow-md active:scale-[0.98]"
+        className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50"
       >
         Düzenle
       </button>
@@ -157,7 +157,7 @@ export function PackageEditButton({ pkg, listings }: { pkg: PackageRow; listings
                 <button
                   type="button"
                   onClick={() => setOpen(false)}
-                  className="inline-flex h-9 items-center rounded-lg border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-600 transition-all duration-200 hover:bg-slate-50 hover:shadow-md active:scale-[0.98]"
+                  className="inline-flex h-9 items-center rounded-lg border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-50"
                 >
                   Kapat
                 </button>
@@ -455,14 +455,14 @@ export function PackageEditButton({ pkg, listings }: { pkg: PackageRow; listings
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                className="h-9 rounded-lg border border-slate-300 px-3 text-sm font-medium text-slate-700 transition-all duration-200 hover:bg-slate-50 hover:shadow-md active:scale-[0.98]"
+                className="h-9 rounded-lg border border-slate-300 px-3 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
               >
                 Vazgeç
               </button>
               <button
                 type="submit"
                 disabled={isPending}
-                className="h-9 rounded-lg bg-sky-500 px-3 text-sm font-semibold text-white shadow-lg shadow-[#0e9aa7]/25 transition-all duration-200 hover:scale-[1.02] hover:bg-sky-600 active:scale-[0.98] disabled:opacity-60"
+                className="h-9 rounded-lg bg-blue-600 px-3 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:opacity-60"
               >
                 Kaydet
               </button>
