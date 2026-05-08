@@ -66,7 +66,8 @@ export async function ListingDetailPage({ tip, slug, selectedDates }: ListingDet
     fallbackCikis > fallbackGiris ? fallbackCikis : addDaysToIso(fallbackGiris, 1);
 
   const urlGece = nightsFromUrl(safeGiris, safeCikis);
-  const urlToplamBasit = urlGece > 0 ? urlGece * (detail.listing.gunluk_fiyat ?? 0) : 0;
+  const temizlikUcreti = detail.listing.temizlik_ucreti ?? 0;
+  const urlToplamBasit = urlGece > 0 ? urlGece * (detail.listing.gunluk_fiyat ?? 0) + temizlikUcreti : 0;
   const similarDateQuery =
     safeGiris && safeCikis
       ? {
@@ -294,6 +295,11 @@ export async function ListingDetailPage({ tip, slug, selectedDates }: ListingDet
                 <div className="mt-1 text-xs text-slate-600">
                   {urlGece > 0 ? `${urlGece} gece (ozet, gecelik × gece)` : "Tarihleri kontrol edin"}
                 </div>
+                {urlGece > 0 && temizlikUcreti > 0 ? (
+                  <div className="mt-1 text-xs text-slate-500">
+                    Temizlik ücreti dahil: {formatCurrency(temizlikUcreti)}
+                  </div>
+                ) : null}
                 {urlGece > 0 ? (
                   <div className="mt-2 text-lg font-bold text-slate-900">{formatCurrency(urlToplamBasit)}</div>
                 ) : null}
@@ -341,6 +347,7 @@ export async function ListingDetailPage({ tip, slug, selectedDates }: ListingDet
             sectionId="fiyat-takvim"
             bugunIso={bugunIso}
             gunlukFiyat={detail.listing.gunluk_fiyat ?? 0}
+            temizlikUcreti={temizlikUcreti}
             kapasite={detail.listing.kapasite ?? 1}
             availability={detail.availability}
             seasonPrices={detail.seasonPrices}

@@ -39,6 +39,7 @@ type PriceCalculatorProps = {
   initialGiris?: string;
   initialCikis?: string;
   sectionId?: string;
+  temizlikUcreti?: number;
 };
 
 function toDate(value: string) {
@@ -112,6 +113,7 @@ export function PriceCalculator({
   initialGiris,
   initialCikis,
   sectionId,
+  temizlikUcreti = 0,
 }: PriceCalculatorProps) {
   const [selectedRange, setSelectedRange] = useState<DateRange | undefined>(() =>
     initialRangeFromYmd(initialGiris, initialCikis),
@@ -208,9 +210,9 @@ export function PriceCalculator({
       dayCount,
       nightsTotal,
       average,
-      total: nightsTotal,
+      total: nightsTotal + temizlikUcreti,
     };
-  }, [availability, gunlukFiyat, seasonPrices, selectedRange]);
+  }, [availability, gunlukFiyat, seasonPrices, selectedRange, temizlikUcreti]);
 
   const perPerson =
     pricing.total > 0 && kapasite > 0 ? Math.round(pricing.total / kapasite) : 0;
@@ -271,6 +273,12 @@ export function PriceCalculator({
             </span>
             <span>{formatCurrency(pricing.nightsTotal)}</span>
           </div>
+          {temizlikUcreti > 0 ? (
+            <div className="mt-2 flex justify-between text-sm text-slate-700">
+              <span>Temizlik ücreti</span>
+              <span>{formatCurrency(temizlikUcreti)}</span>
+            </div>
+          ) : null}
           <hr className="my-3 border-slate-200" />
           <div className="flex justify-between text-lg font-semibold text-slate-900">
             <span>Toplam</span>
