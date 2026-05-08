@@ -23,11 +23,6 @@ export default async function AdminGirisPage() {
     }
   }
 
-  const admin = await requireAdminUser();
-  if (admin.ok) {
-    redirect("/yonetim");
-  }
-
   return (
     <div
       className="relative flex min-h-[100dvh] items-center justify-center overflow-hidden"

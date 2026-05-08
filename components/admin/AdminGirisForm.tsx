@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AlertCircle, Eye, EyeOff, Lock } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -11,7 +11,34 @@ export function AdminGirisForm() {
   const [goster, setGoster] = useState(false);
   const [hata, setHata] = useState("");
   const [yukleniyor, setYukleniyor] = useState(false);
+  const [oturumYenileniyor, setOturumYenileniyor] = useState(true);
   const router = useRouter();
+
+  useEffect(() => {
+    let cancelled = false;
+    const renewAdminCookie = async () => {
+      try {
+        const res = await fetch("/api/admin/giris", {
+          method: "POST",
+          credentials: "include",
+          cache: "no-store",
+        });
+        if (!cancelled && res.ok) {
+          router.replace("/yonetim");
+          router.refresh();
+          return;
+        }
+      } catch {
+        // no-op: normal login form gösterilecek
+      } finally {
+        if (!cancelled) setOturumYenileniyor(false);
+      }
+    };
+    void renewAdminCookie();
+    return () => {
+      cancelled = true;
+    };
+  }, [router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -111,14 +138,14 @@ export function AdminGirisForm() {
 
       <button
         type="submit"
-        disabled={yukleniyor || !sifre || !email}
+        disabled={yukleniyor || oturumYenileniyor || !sifre || !email}
         className="w-full rounded-xl py-3.5 text-sm font-semibold text-white shadow-lg shadow-[#0e9aa7]/25 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
         style={{
           background: "linear-gradient(135deg, #0ea5e9, #22c55e)",
           boxShadow: "0 4px 20px rgba(14,165,233,0.25)",
         }}
       >
-        {yukleniyor ? "Giriş yapılıyor..." : "Giriş Yap"}
+        {oturumYenileniyor ? "Oturum kontrol ediliyor..." : yukleniyor ? "Giriş yapılıyor..." : "Giriş Yap"}
       </button>
     </form>
   );
