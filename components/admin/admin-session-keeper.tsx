@@ -3,8 +3,6 @@
 import { useEffect, useRef } from "react";
 
 const PING_INTERVAL_MS = 5 * 60 * 1000;
-const STALE_THRESHOLD_MS = 6 * 60 * 60 * 1000;
-const RELOAD_COOLDOWN_MS = 5 * 60 * 1000;
 
 function now() {
   return Date.now();
@@ -21,17 +19,6 @@ function getStorageNumber(key: string) {
 function setStorageNumber(key: string, value: number) {
   if (typeof window === "undefined") return;
   window.localStorage.setItem(key, String(value));
-}
-
-function shouldReload() {
-  if (typeof window === "undefined") return false;
-  const lastReload = Number(window.sessionStorage.getItem("admin_last_reload_at") ?? 0);
-  return now() - lastReload > RELOAD_COOLDOWN_MS;
-}
-
-function markReload() {
-  if (typeof window === "undefined") return;
-  window.sessionStorage.setItem("admin_last_reload_at", String(now()));
 }
 
 export function AdminSessionKeeper() {
@@ -55,10 +42,8 @@ export function AdminSessionKeeper() {
           window.location.href = "/yonetim/giris?reason=session";
         }
       } catch {
-        if (shouldReload()) {
-          markReload();
-          window.location.reload();
-        }
+        // Ağ veya geçici webview sorunlarında otomatik reload döngüsüne girmemek için
+        // burada sessizce bırakıp bir sonraki periyotta tekrar deneriz.
       } finally {
         window.clearTimeout(timeout);
       }
@@ -73,15 +58,9 @@ export function AdminSessionKeeper() {
           cache: "no-store",
           signal: controller.signal,
         });
-        if (!response.ok && shouldReload()) {
-          markReload();
-          window.location.reload();
-        }
+        if (!response.ok) return;
       } catch {
-        if (shouldReload()) {
-          markReload();
-          window.location.reload();
-        }
+        return;
       } finally {
         window.clearTimeout(timeout);
       }
@@ -91,14 +70,6 @@ export function AdminSessionKeeper() {
       if (isCheckingRef.current) return;
       isCheckingRef.current = true;
       try {
-        const lastActivity = getStorageNumber("admin_last_activity_at");
-        const isStale = lastActivity != null && now() - lastActivity > STALE_THRESHOLD_MS;
-        if (isStale && shouldReload()) {
-          markReload();
-          window.location.reload();
-          return;
-        }
-
         await pingHealth();
         await pingAdminSession();
         touchActivity();
