@@ -19,7 +19,7 @@ export type SiteHeaderClientProps = {
 
 function HeaderSkeleton({ siteName }: { siteName: string }) {
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-slate-100 bg-white/95 shadow-sm backdrop-blur-md">
+    <header className="sticky top-0 z-50 w-full border-b border-cyan-100/70 bg-gradient-to-r from-emerald-50/90 via-cyan-50/90 to-sky-50/90 shadow-sm backdrop-blur-md">
       <div className="relative mx-auto flex min-h-16 w-full max-w-6xl animate-pulse items-center justify-between px-4 md:min-h-[5.25rem] md:px-5">
         <div className="h-8 w-36 rounded-lg bg-slate-100 md:h-9 md:w-40" />
         <div className="hidden gap-6 md:flex">
@@ -183,8 +183,8 @@ export function SiteHeaderClient({ siteName }: SiteHeaderClientProps) {
 
   const _solidBar = scrolled || !isHome || reduce;
   const headerShell = _solidBar
-    ? "border-b border-slate-100 bg-white/95 shadow-sm backdrop-blur-md"
-    : "border-b border-slate-100 bg-white/95 shadow-sm backdrop-blur-md";
+    ? "border-b border-cyan-100/70 bg-gradient-to-r from-emerald-50/95 via-cyan-50/95 to-sky-50/95 shadow-sm backdrop-blur-md"
+    : "border-b border-cyan-100/60 bg-gradient-to-r from-emerald-50/85 via-cyan-50/85 to-sky-50/85 shadow-sm backdrop-blur-md";
 
   const navLinkBase = "font-medium text-slate-600 transition-colors duration-200 hover:text-[#0e9aa7]";
   const girisClass = "text-slate-600 transition-colors duration-200 hover:text-slate-900";
@@ -237,6 +237,7 @@ export function SiteHeaderClient({ siteName }: SiteHeaderClientProps) {
   };
 
   function notificationHref(item: (typeof notifications)[number]) {
+    if (item.entity_tip === "rezervasyon" && item.entity_id) return `/panel/rezervasyonlar/${item.entity_id}`;
     if (item.entity_tip === "rezervasyon") return "/panel/rezervasyonlar";
     if (item.entity_tip === "ilan" && item.entity_id) return "/panel/ilanlarim";
     if (item.entity_tip === "kullanici" && item.entity_id) return "/panel/profilim";
