@@ -290,7 +290,7 @@ export default async function AdminReservationsPage({ searchParams }: AdminReser
           <AdminMobileCard key={row.id}>
             <p className="text-sm font-semibold text-slate-800">{row.referans_no ?? row.id}</p>
             <p className="mt-1 text-xs text-slate-500">
-              {format(new Date(`${row.giris_tarihi}T00:00:00`), "dd MMM", { locale: tr })} - {format(new Date(`${row.cikis_tarihi}T00:00:00`), "dd MMM yyyy", { locale: tr })}
+              {format(new Date(`${row.giris_tarihi}T00:00:00`), "dd.MM.yyyy", { locale: tr })} - {format(new Date(`${row.cikis_tarihi}T00:00:00`), "dd.MM.yyyy", { locale: tr })}
             </p>
             <p className="mt-1 text-xs text-slate-600">{userMap.get(row.kullanici_id) ?? "-"}</p>
             <p className="mt-2 text-sm font-semibold text-[#0e9aa7]">{formatCurrency(row.toplam_fiyat)}</p>
@@ -333,8 +333,8 @@ export default async function AdminReservationsPage({ searchParams }: AdminReser
                 <AdminTableRow key={row.id}>
                   <AdminTableCell className="whitespace-nowrap">
                     <p className="text-sm text-slate-700">
-                      {format(new Date(`${row.giris_tarihi}T00:00:00`), "dd MMM", { locale: tr })} →{" "}
-                      {format(new Date(`${row.cikis_tarihi}T00:00:00`), "dd MMM yyyy", { locale: tr })}
+                      {format(new Date(`${row.giris_tarihi}T00:00:00`), "dd.MM.yyyy", { locale: tr })} →{" "}
+                      {format(new Date(`${row.cikis_tarihi}T00:00:00`), "dd.MM.yyyy", { locale: tr })}
                     </p>
                     <p className="text-xs text-slate-500">
                       {Math.max(
@@ -350,7 +350,7 @@ export default async function AdminReservationsPage({ searchParams }: AdminReser
                   </AdminTableCell>
                   <AdminTableCell className="whitespace-nowrap">
                     {row.olusturulma_tarihi
-                      ? format(new Date(String(row.olusturulma_tarihi)), "dd MMM yyyy HH:mm", { locale: tr })
+                      ? format(new Date(String(row.olusturulma_tarihi)), "dd.MM.yyyy HH:mm", { locale: tr })
                       : "-"}
                   </AdminTableCell>
                   <AdminTableCell className="font-mono text-xs text-slate-500">{row.referans_no ? `${row.referans_no.slice(0, 8)}...` : "-"}</AdminTableCell>

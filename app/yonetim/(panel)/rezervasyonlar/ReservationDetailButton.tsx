@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { normalizeReservationStatus, STATUS_MAP } from "@/lib/reservation-status";
+import { normalizeReservationStatus, STATUS_MAP, type ReservationStatusValue } from "@/lib/reservation-status";
 import { Check, Clipboard, CreditCard, FileText, History, Phone, Receipt, ShieldCheck, UserRound } from "lucide-react";
 import { AdminActionButton } from "@/components/admin/AdminActionButton";
 import { ConfirmModal } from "@/components/admin/ConfirmModal";
@@ -51,6 +51,7 @@ export function ReservationDetailButton({ reservation }: { reservation: Reservat
   const [activeTab, setActiveTab] = useState<"ozet" | "teknik">("ozet");
   const [copied, setCopied] = useState(false);
   const [note, setNote] = useState(String(reservation.admin_notu ?? ""));
+  const [selectedStatus, setSelectedStatus] = useState(normalizeReservationStatus(String(reservation.durum ?? "pending")));
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [confirmCancel, setConfirmCancel] = useState(false);
@@ -96,6 +97,18 @@ export function ReservationDetailButton({ reservation }: { reservation: Reservat
       }
       setNotice("Rezervasyon iptal edildi.");
       setConfirmCancel(false);
+    });
+  }
+
+  function saveStatus() {
+    setError(null);
+    startTransition(async () => {
+      const result = await updateReservationStatus(String(reservation.id), selectedStatus);
+      if (!result.success) {
+        setError(result.error);
+        return;
+      }
+      setNotice("Durum güncellendi.");
     });
   }
 
@@ -273,6 +286,27 @@ export function ReservationDetailButton({ reservation }: { reservation: Reservat
                     <div className="grid gap-2 text-sm md:grid-cols-2">
                       <p><span className="font-medium text-slate-900">E-posta:</span> {formatValue("kullanici_email", reservation.kullanici_email)}</p>
                       <p><span className="font-medium text-slate-900">Telefon:</span> {formatValue("kullanici_telefon", reservation.kullanici_telefon)}</p>
+                    </div>
+                  </div>
+                  <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm md:col-span-2">
+                    <p className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                      <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
+                      Durum Yönetimi
+                    </p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <select
+                        value={selectedStatus}
+                        onChange={(event) => setSelectedStatus(event.target.value as ReservationStatusValue)}
+                        className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none focus:border-sky-400"
+                        disabled={isPending}
+                      >
+                        <option value="pending">Beklemede</option>
+                        <option value="approved">Onaylandı</option>
+                        <option value="cancelled">İptal</option>
+                      </select>
+                      <AdminActionButton type="button" variant="primary" disabled={isPending} onClick={saveStatus}>
+                        Durumu Kaydet
+                      </AdminActionButton>
                     </div>
                   </div>
                   <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm md:col-span-2">
