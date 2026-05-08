@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useReducedMotion } from "framer-motion";
 import type { User } from "@supabase/supabase-js";
 import { Bell } from "lucide-react";
@@ -70,6 +70,7 @@ export function SiteHeaderClient({ siteName }: SiteHeaderClientProps) {
     olusturulma_tarihi: string;
   } | null>(null);
   const [authLoading, setAuthLoading] = useState(() => Boolean(isSupabaseEnvConfigured()));
+  const seenNotificationIdsRef = useRef<Set<string>>(new Set());
   useEffect(() => {
     if (!isSupabaseEnvConfigured()) {
       return;
@@ -113,53 +114,56 @@ export function SiteHeaderClient({ siteName }: SiteHeaderClientProps) {
   }, [user?.id]);
 
   useEffect(() => {
-    if (!isSupabaseEnvConfigured() || !user?.id) return;
-    const supabase = createClient();
-    const channel = supabase
-      .channel(`user-notifications-${user.id}`)
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "bildirimler" },
-        (payload) => {
-          const row = payload.new as {
-            id: string;
-            baslik: string | null;
-            mesaj: string | null;
-            okundu: boolean;
-            olusturulma_tarihi: string;
-          };
-          setNotifications((prev) => [row, ...prev].slice(0, 20));
-          if (!row.okundu) {
-            setNotificationCount((prev) => prev + 1);
-            toast.success("! Yeni bildiriminiz var", {
-              description: row.baslik ?? "Detay için zil ikonuna tıklayın.",
-              position: "top-right",
-              duration: 4500,
-            });
-          }
-        },
-      )
-      .subscribe();
-
-    return () => {
-      void supabase.removeChannel(channel);
-    };
-  }, [user?.id]);
-
-  useEffect(() => {
     if (!user?.id || !isSupabaseEnvConfigured()) {
       setNotifications([]);
       setNotificationCount(0);
+      seenNotificationIdsRef.current = new Set();
       return;
     }
+    let mounted = true;
     const supabase = createClient();
-    Promise.all([
-      supabase.from("bildirimler").select("*").order("olusturulma_tarihi", { ascending: false }).limit(20),
-      supabase.from("bildirimler").select("*", { count: "exact", head: true }).eq("okundu", false),
-    ]).then(([rowsResult, countResult]) => {
-      setNotifications((rowsResult.data as typeof notifications) ?? []);
-      setNotificationCount(countResult.count ?? 0);
-    });
+
+    const syncNotifications = async (showToastForNew: boolean) => {
+      const [rowsResult, countResult] = await Promise.all([
+        supabase.from("bildirimler").select("*").order("olusturulma_tarihi", { ascending: false }).limit(20),
+        supabase.from("bildirimler").select("*", { count: "exact", head: true }).eq("okundu", false),
+      ]);
+      if (!mounted) return;
+      const rows = (rowsResult.data as typeof notifications) ?? [];
+      const unreadCount = countResult.count ?? 0;
+      setNotifications(rows);
+      setNotificationCount(unreadCount);
+
+      const previous = seenNotificationIdsRef.current;
+      const current = new Set(rows.map((item) => item.id));
+      if (showToastForNew) {
+        const newlyArrived = rows.filter((item) => !previous.has(item.id) && !item.okundu);
+        newlyArrived.slice(0, 2).forEach((item) => {
+          toast.success("! Yeni bildiriminiz var", {
+            description: item.baslik ?? "Detay için zil ikonuna tıklayın.",
+            position: "top-right",
+            duration: 2000,
+            style: {
+              background: "#dcfce7",
+              border: "1px solid #86efac",
+              color: "#166534",
+            },
+          });
+        });
+      }
+      seenNotificationIdsRef.current = current;
+    };
+
+    void syncNotifications(false);
+
+    const intervalId = setInterval(() => {
+      void syncNotifications(true);
+    }, 5000);
+
+    return () => {
+      mounted = false;
+      clearInterval(intervalId);
+    };
   }, [user?.id]);
 
   useEffect(() => {
