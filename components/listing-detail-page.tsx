@@ -85,6 +85,19 @@ function getFeatureIcon(label: string) {
   return CheckCircle2;
 }
 
+function toTurkishTitleCase(label: string) {
+  return label
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((word) => {
+      const lower = word.toLocaleLowerCase("tr-TR");
+      const [first, ...rest] = Array.from(lower);
+      if (!first) return "";
+      return first.toLocaleUpperCase("tr-TR") + rest.join("");
+    })
+    .join(" ");
+}
+
 export async function ListingDetailPage({ tip, slug, selectedDates }: ListingDetailPageProps) {
   const [detail, settings] = await Promise.all([
     getListingBySlug(tip, slug),
@@ -218,7 +231,8 @@ export async function ListingDetailPage({ tip, slug, selectedDates }: ListingDet
               <div className="mb-5 mt-2 grid grid-cols-2 gap-3 md:grid-cols-3">
                 {etiketler.map((oz) => {
                   const ozDef = OZELLIKLER.find((item) => item.value === oz);
-                  const label = ozDef?.label ?? fixTurkishDisplay(oz.replaceAll("_", " "));
+                  const rawLabel = ozDef?.label ?? fixTurkishDisplay(oz.replaceAll("_", " "));
+                  const label = toTurkishTitleCase(fixTurkishDisplay(rawLabel));
                   const Icon = getFeatureIcon(label);
                   return (
                     <div key={oz} className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-4">
