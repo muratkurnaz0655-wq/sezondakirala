@@ -12,10 +12,10 @@ export async function cancelReservation(id: string) {
 
   await supabase
     .from("rezervasyonlar")
-    .update({ durum: "iptal" })
+    .update({ durum: "cancelled" })
     .eq("id", id)
     .eq("kullanici_id", user.id)
-    .eq("durum", "beklemede");
+    .eq("durum", "pending");
 
   revalidatePath("/panel/rezervasyonlar");
   revalidatePath(`/panel/rezervasyonlar/${id}`);

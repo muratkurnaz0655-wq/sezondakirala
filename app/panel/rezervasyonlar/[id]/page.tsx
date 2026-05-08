@@ -104,7 +104,7 @@ export default async function PanelRezervasyonDetay({
           Referans:{" "}
           <span className="font-mono font-semibold text-gray-700">{rez.referans_no}</span>
         </div>
-        {normalizedStatus === "beklemede" ? (
+        {normalizedStatus === "pending" ? (
           <CancelButton reservationId={rez.id} />
         ) : null}
       </div>

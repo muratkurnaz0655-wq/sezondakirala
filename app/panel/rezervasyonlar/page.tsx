@@ -53,7 +53,7 @@ export default async function PanelReservationsPage() {
     const supabaseAction = await createClient();
     await supabaseAction
       .from("rezervasyonlar")
-      .update({ durum: "iptal" })
+      .update({ durum: "cancelled" })
       .eq("id", id)
       .eq("kullanici_id", userId);
   }
@@ -91,11 +91,11 @@ export default async function PanelReservationsPage() {
                 >
                   <div
                     className={`absolute bottom-0 left-0 top-0 w-1 rounded-l-2xl ${
-                      normalizeReservationStatus(String(rez.durum)) === "onaylandi"
+                      normalizeReservationStatus(String(rez.durum)) === "approved"
                         ? "bg-emerald-400"
-                        : normalizeReservationStatus(String(rez.durum)) === "beklemede"
+                        : normalizeReservationStatus(String(rez.durum)) === "pending"
                           ? "bg-amber-400"
-                          : normalizeReservationStatus(String(rez.durum)) === "reddedildi"
+                          : normalizeReservationStatus(String(rez.durum)) === "cancelled"
                             ? "bg-red-400"
                             : "bg-slate-300"
                     }`}
@@ -159,7 +159,7 @@ export default async function PanelReservationsPage() {
                     </div>
                   </div>
                 </Link>
-                {normalizeReservationStatus(String(rez.durum)) === "beklemede" ? (
+                {normalizeReservationStatus(String(rez.durum)) === "pending" ? (
                   <form
                     action={cancelReservation}
                     className="flex shrink-0 flex-col justify-center"
