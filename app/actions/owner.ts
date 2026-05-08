@@ -300,7 +300,7 @@ export async function updateReservationStatus(formData: FormData) {
   const access = await requireOwnerReservationAccess(id);
   if (!access.ok) throw new Error(access.error);
   const supabase = access.supabase;
-  const durum = normalizeReservationStatus(String(formData.get("durum") ?? "beklemede"));
+  const durum = normalizeReservationStatus(String(formData.get("durum") ?? "pending"));
   await supabase.from("rezervasyonlar").update({ durum }).eq("id", id);
   const { data: reservation } = await supabase
     .from("rezervasyonlar")
@@ -315,7 +315,7 @@ export async function updateReservationStatus(formData: FormData) {
 
     if (end >= start) {
       const dates = eachDateInRange(formatDate(start), formatDate(end));
-      if (durum === "onaylandi") {
+      if (durum === "approved") {
         await supabase.from("musaitlik").upsert(
           dates.map((tarih) => ({
             ilan_id: reservation.ilan_id,
@@ -326,7 +326,7 @@ export async function updateReservationStatus(formData: FormData) {
           { onConflict: "ilan_id,tarih" },
         );
       }
-      if (durum === "iptal") {
+      if (durum === "cancelled") {
         await supabase
           .from("musaitlik")
           .delete()
