@@ -22,11 +22,30 @@ export default async function AdminPanelSegmentLayout({ children }: { children: 
     redirect("/yonetim/giris");
   }
   const supabase = createAdminClient();
-  const [{ count: unreadCount }, { data: notificationRows }] = await Promise.all([
-    supabase.from("bildirimler").select("*", { count: "exact", head: true }).eq("okundu", false),
-    supabase.from("bildirimler").select("*").order("olusturulma_tarihi", { ascending: false }).limit(20),
-  ]);
-  const notifications = (notificationRows ?? []).map((row) => ({
+  const { data: notificationRows } = await supabase
+    .from("bildirimler")
+    .select("*")
+    .order("olusturulma_tarihi", { ascending: false })
+    .limit(50);
+
+  const reservationNotificationIds = [...new Set(
+    (notificationRows ?? [])
+      .filter((row) => row.entity_tip === "rezervasyon" && row.entity_id)
+      .map((row) => String(row.entity_id)),
+  )];
+  const { data: reservationRows } = reservationNotificationIds.length
+    ? await supabase.from("rezervasyonlar").select("id,durum").in("id", reservationNotificationIds)
+    : { data: [] as { id: string; durum: string }[] };
+  const reservationStatusMap = new Map((reservationRows ?? []).map((row) => [row.id, String(row.durum)]));
+
+  const filteredRows = (notificationRows ?? []).filter((row) => {
+    if (row.entity_tip !== "rezervasyon") return true;
+    const status = reservationStatusMap.get(String(row.entity_id ?? ""));
+    // Only keep pending reservation notifications in admin bell.
+    return status === "pending" || status === "beklemede";
+  });
+
+  const notifications = filteredRows.slice(0, 20).map((row) => ({
     id: row.id,
     label: `${row.baslik ?? "Bildirim"}: ${row.mesaj ?? ""}`.trim(),
     href:
@@ -39,11 +58,12 @@ export default async function AdminPanelSegmentLayout({ children }: { children: 
             : "/yonetim",
     tone: row.okundu ? "info" as const : row.tip === "hata" ? "danger" as const : row.tip === "uyari" ? "warning" as const : "info" as const,
   }));
+  const unreadCount = filteredRows.filter((row) => !row.okundu).length;
 
   return (
     <>
       <AdminSessionKeeper />
-      <AdminPanelChrome kullanici={panelKullaniciOzeti} notifications={notifications} unreadCount={unreadCount ?? 0}>{children}</AdminPanelChrome>
+      <AdminPanelChrome kullanici={panelKullaniciOzeti} notifications={notifications} unreadCount={unreadCount}>{children}</AdminPanelChrome>
     </>
   );
 }
