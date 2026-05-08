@@ -296,13 +296,7 @@ export default async function AdminReservationsPage({ searchParams }: AdminReser
             <p className="mt-2 text-sm font-semibold text-[#0e9aa7]">{formatCurrency(row.toplam_fiyat)}</p>
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <ReservationStatusSelect reservationId={row.id} initialStatus={normalizeReservationStatus(String(row.durum))} />
-              <ReservationDetailButton reservation={{
-                ...(row as Record<string, unknown>),
-                kullanici_adi: userMap.get(row.kullanici_id) ?? "-",
-                kullanici_email: userDetailMap.get(row.kullanici_id)?.email ?? "-",
-                kullanici_telefon: userDetailMap.get(row.kullanici_id)?.telefon ?? "-",
-                ilan_baslik: row.paket_id ? packageMap.get(row.paket_id)?.baslik ?? "Paket" : listingMap.get(row.ilan_id)?.baslik ?? "-",
-              }} />
+              <ReservationDetailButton reservationId={row.id} />
             </div>
           </AdminMobileCard>
         ))}
@@ -410,13 +404,7 @@ export default async function AdminReservationsPage({ searchParams }: AdminReser
                         reservationId={row.id}
                         initialStatus={normalizeReservationStatus(String(row.durum))}
                       />
-                      <ReservationDetailButton reservation={{
-                        ...(row as Record<string, unknown>),
-                        kullanici_adi: userMap.get(row.kullanici_id) ?? "-",
-                        kullanici_email: userDetailMap.get(row.kullanici_id)?.email ?? "-",
-                        kullanici_telefon: userDetailMap.get(row.kullanici_id)?.telefon ?? "-",
-                        ilan_baslik: row.paket_id ? packageMap.get(row.paket_id)?.baslik ?? "Paket" : listingMap.get(row.ilan_id)?.baslik ?? "-",
-                      }} />
+                      <ReservationDetailButton reservationId={row.id} />
                     </div>
                   </AdminTableCell>
                 </AdminTableRow>
