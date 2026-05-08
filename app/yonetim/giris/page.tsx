@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AdminGirisForm } from "@/components/admin/AdminGirisForm";
+import { AdminSupportButton } from "@/components/admin/AdminSupportButton";
 import { hasAdminCookieSession } from "@/lib/admin-session";
 import { requireAdminUser } from "@/lib/auth/guards";
 import { SITE_NAME } from "@/lib/constants";
@@ -73,6 +74,9 @@ export default async function AdminGirisPage() {
           }}
         >
           <AdminGirisForm />
+          <div className="mt-4 flex justify-center">
+            <AdminSupportButton compact />
+          </div>
         </div>
 
         <div className="mt-6 text-center">

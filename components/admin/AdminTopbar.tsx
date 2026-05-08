@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { Bell, ChevronDown } from "lucide-react";
+import { AdminSupportButton } from "@/components/admin/AdminSupportButton";
 
 export type AdminKullaniciOzeti = {
   ad_soyad: string | null;
@@ -39,6 +40,7 @@ export function AdminTopbar({ kullanici }: { kullanici: AdminKullaniciOzeti | nu
       </div>
 
       <div className="flex items-center gap-3">
+        <AdminSupportButton />
         <button
           type="button"
           aria-label="Bildirimler"
