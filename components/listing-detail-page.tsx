@@ -98,6 +98,13 @@ function toTurkishTitleCase(label: string) {
     .join(" ");
 }
 
+function stripEmoji(value: string) {
+  return value
+    .replace(/[\p{Extended_Pictographic}\uFE0F]/gu, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 export async function ListingDetailPage({ tip, slug, selectedDates }: ListingDetailPageProps) {
   const [detail, settings] = await Promise.all([
     getListingBySlug(tip, slug),
@@ -145,6 +152,10 @@ export async function ListingDetailPage({ tip, slug, selectedDates }: ListingDet
   const waLink = `https://wa.me/${waDigits}?text=${waMesaj}`;
   const bolgeAdi = fixTurkishDisplay(detail.listing.konum.split(",")[0]?.trim() || detail.listing.konum);
   const ozellikKaynak = detail.listing.ozellikler as unknown;
+  const ozellikNesnesi =
+    ozellikKaynak && typeof ozellikKaynak === "object" && !Array.isArray(ozellikKaynak)
+      ? (ozellikKaynak as Record<string, unknown>)
+      : null;
   const etiketler = Array.isArray(ozellikKaynak)
     ? ozellikKaynak.filter((x): x is string => typeof x === "string")
     : (ozellikKaynak && typeof ozellikKaynak === "object" && Array.isArray((ozellikKaynak as { etiketler?: unknown[] }).etiketler)
@@ -152,6 +163,34 @@ export async function ListingDetailPage({ tip, slug, selectedDates }: ListingDet
         : Object.entries((ozellikKaynak ?? {}) as Record<string, unknown>)
             .filter(([, value]) => value === true)
             .map(([key]) => key));
+
+  const featureDetails = new Map<string, string[]>();
+  const pushFeatureDetail = (feature: string, value: unknown) => {
+    if (value === null || value === undefined || value === "" || value === false) return;
+    const current = featureDetails.get(feature) ?? [];
+    current.push(fixTurkishDisplay(String(value)));
+    featureDetails.set(feature, current);
+  };
+
+  const konaklamaKurallari: Array<{ title: string; value: string }> = [];
+  const pushRule = (title: string, value: unknown) => {
+    if (value === null || value === undefined || value === "" || value === false) return;
+    konaklamaKurallari.push({ title, value: fixTurkishDisplay(String(value)) });
+  };
+
+  if (ozellikNesnesi) {
+    pushFeatureDetail("havuz", ozellikNesnesi.havuz_boyutu);
+    pushFeatureDetail("havuz", ozellikNesnesi.havuz_isitma);
+    pushFeatureDetail("wifi", ozellikNesnesi.internet);
+
+    pushRule("Giriş", ozellikNesnesi.giris);
+    pushRule("Çıkış", ozellikNesnesi.cikis);
+    pushRule("Minimum Kiralama", ozellikNesnesi.minimum_kiralama);
+  }
+
+  const featureOrder = [...etiketler];
+  if (featureDetails.has("havuz") && !featureOrder.includes("havuz")) featureOrder.push("havuz");
+  if (featureDetails.has("wifi") && !featureOrder.includes("wifi")) featureOrder.push("wifi");
   return (
     <div className="w-full space-y-8 overflow-x-hidden pb-24 xl:pb-0">
       <RecentListingsTracker
@@ -227,19 +266,25 @@ export async function ListingDetailPage({ tip, slug, selectedDates }: ListingDet
                 <span className="mt-0.5 block text-xs text-slate-500">Kişi</span>
               </div>
             </div>
-            {etiketler.length > 0 ? (
+            {featureOrder.length > 0 ? (
               <div className="mb-5 mt-2 grid grid-cols-2 gap-3 md:grid-cols-3">
-                {etiketler.map((oz) => {
+                {featureOrder.map((oz) => {
                   const ozDef = OZELLIKLER.find((item) => item.value === oz);
                   const rawLabel = ozDef?.label ?? fixTurkishDisplay(oz.replaceAll("_", " "));
-                  const label = toTurkishTitleCase(fixTurkishDisplay(rawLabel));
+                  const label = toTurkishTitleCase(stripEmoji(fixTurkishDisplay(rawLabel)));
+                  const detailText = featureDetails.get(oz)?.join(" · ");
                   const Icon = getFeatureIcon(label);
                   return (
-                    <div key={oz} className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-4">
+                    <div key={oz} className="rounded-xl border border-slate-200 bg-white p-4">
+                      <div className="flex items-center gap-3">
                       <span className="inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-[#0e9aa7]/10">
                         <Icon size={18} className="text-[#0e9aa7]" aria-hidden />
                       </span>
                       <span className="text-[13px] font-medium leading-snug text-slate-800 md:text-sm">{label}</span>
+                      </div>
+                      {detailText ? (
+                        <p className="mt-2 pl-12 text-xs leading-snug text-slate-500">{detailText}</p>
+                      ) : null}
                     </div>
                   );
                 })}
@@ -250,25 +295,19 @@ export async function ListingDetailPage({ tip, slug, selectedDates }: ListingDet
 
           {tip === "villa" ? (
             <>
-              <div className="mt-2 overflow-hidden rounded-2xl border border-slate-200">
-                <table className="w-full text-sm">
-                  <tbody>
-                    {[
-                      ["Havuz Boyutu", "8m × 4m özel havuz"],
-                      ["Havuz Isıtma", "Isıtmalı (Ekim-Nisan)"],
-                      ["İnternet", "Fiber WiFi — 50 Mbps"],
-                      ["Giriş", "14:00"],
-                      ["Çıkış", "12:00"],
-                      ["Minimum Kiralama", "3 Gece"],
-                    ].map(([key, val]) => (
-                      <tr key={String(key)} className="border-t border-gray-100 first:border-t-0">
-                        <td className="w-1/3 bg-gray-50 px-4 py-3 font-medium text-gray-500">{key}</td>
-                        <td className="px-4 py-3 text-gray-900">{val}</td>
-                      </tr>
+              {konaklamaKurallari.length > 0 ? (
+                <section className="mt-2 rounded-2xl border border-slate-200 bg-white p-4">
+                  <h3 className="text-sm font-semibold text-slate-900">Konaklama Kuralları</h3>
+                  <div className="mt-3 grid gap-2">
+                    {konaklamaKurallari.map((item) => (
+                      <div key={item.title} className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2 text-sm">
+                        <span className="text-slate-600">{item.title}</span>
+                        <span className="font-medium text-slate-900">{item.value}</span>
+                      </div>
                     ))}
-                  </tbody>
-                </table>
-              </div>
+                  </div>
+                </section>
+              ) : null}
             </>
           ) : null}
           <ListingMapSection label={fixTurkishDisplay(detail.listing.konum)} />
