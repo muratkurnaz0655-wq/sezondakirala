@@ -6,6 +6,7 @@ import { ListingActions } from "./ListingActions";
 import { AdminStatsRow } from "@/components/admin/AdminStatsRow";
 import { AdminFilterBar } from "@/components/admin/AdminFilterBar";
 import { AdminPageLayout } from "@/components/admin/AdminPageLayout";
+import { AdminMobileCard, AdminMobileCardList } from "@/components/admin/AdminMobileCardList";
 import {
   AdminDataTable,
   AdminTableCell,
@@ -126,21 +127,21 @@ export default async function AdminListingsPage({ searchParams }: AdminListingsP
         <Link href="/yonetim/ilanlar?durum=reddedildi" className={`px-4 py-1.5 text-sm font-medium transition-all ${durum === "reddedildi" ? "rounded-lg bg-white text-slate-800 shadow-sm" : "rounded-lg text-slate-500 hover:text-slate-700"}`}>Reddedildi</Link>
       </nav>
 
-      <div className="block space-y-3 lg:hidden">
+      <AdminMobileCardList>
         {filteredListings.map((listing) => {
           const row = listing as {
             id: string; baslik: string; konum: string; tip: string; gunluk_fiyat: number; aktif: boolean; ilan_medyalari?: { id: string; url: string; sira: number }[] | null;
           };
           return (
-            <article key={row.id} className="rounded-2xl border border-slate-200 bg-white p-4">
+            <AdminMobileCard key={row.id}>
               <p className="text-sm font-semibold text-slate-800">{row.baslik}</p>
               <p className="mt-1 text-xs text-slate-500">{row.konum}</p>
               <p className="mt-2 text-sm font-semibold text-[#0e9aa7]">{formatCurrency(Number(row.gunluk_fiyat ?? 0))}</p>
               <div className="mt-3"><ListingActions listing={row as never} /></div>
-            </article>
+            </AdminMobileCard>
           );
         })}
-      </div>
+      </AdminMobileCardList>
       <AdminDataTable minWidthClass="min-w-[900px]">
             <AdminTableHead>
               <tr>

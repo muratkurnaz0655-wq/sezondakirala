@@ -10,6 +10,7 @@ import { AdminStatsRow } from "@/components/admin/AdminStatsRow";
 import { AdminFilterBar } from "@/components/admin/AdminFilterBar";
 import { AdminPageLayout } from "@/components/admin/AdminPageLayout";
 import { AdminActionButton } from "@/components/admin/AdminActionButton";
+import { AdminMobileCard, AdminMobileCardList } from "@/components/admin/AdminMobileCardList";
 import {
   AdminDataTable,
   AdminTableCell,
@@ -142,9 +143,9 @@ export default async function AdminPackagesPage({ searchParams }: AdminPackagesP
         </div>
       ) : null}
 
-      <div className="block space-y-3 lg:hidden">
+      <AdminMobileCardList>
         {filteredPackages.map((row) => (
-          <article key={row.id} className="rounded-2xl border border-slate-200 bg-white p-4">
+          <AdminMobileCard key={row.id}>
             <p className="text-sm font-semibold text-slate-800">{row.baslik}</p>
             <p className="mt-1 text-xs text-slate-500">{row.kategori}</p>
             <p className="mt-2 text-sm font-semibold text-[#0e9aa7]">{formatCurrency(row.fiyat)}</p>
@@ -159,9 +160,9 @@ export default async function AdminPackagesPage({ searchParams }: AdminPackagesP
                 }))}
               />
             </div>
-          </article>
+          </AdminMobileCard>
         ))}
-      </div>
+      </AdminMobileCardList>
       <AdminDataTable minWidthClass="min-w-[720px]">
             <AdminTableHead>
               <tr>

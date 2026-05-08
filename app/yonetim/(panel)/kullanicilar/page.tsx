@@ -4,6 +4,7 @@ import { AdminStatsRow } from "@/components/admin/AdminStatsRow";
 import { AdminFilterBar } from "@/components/admin/AdminFilterBar";
 import { AdminPageLayout } from "@/components/admin/AdminPageLayout";
 import { AdminActionButton } from "@/components/admin/AdminActionButton";
+import { AdminMobileCard, AdminMobileCardList } from "@/components/admin/AdminMobileCardList";
 import {
   AdminDataTable,
   AdminTableCell,
@@ -109,15 +110,15 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
         </div>
       ) : null}
 
-      <div className="block space-y-3 lg:hidden">
+      <AdminMobileCardList>
         {(users ?? []).map((user) => (
-          <article key={user.id} className="rounded-2xl border border-slate-200 bg-white p-4">
+          <AdminMobileCard key={user.id}>
             <p className="text-sm font-semibold text-slate-800">{user.ad_soyad ?? "-"}</p>
             <p className="mt-1 text-xs text-slate-500">{user.email}</p>
             <div className="mt-2"><span className={rolBadge(String(user.rol))}>{user.rol}</span></div>
-          </article>
+          </AdminMobileCard>
         ))}
-      </div>
+      </AdminMobileCardList>
       <AdminDataTable>
             <AdminTableHead>
               <tr>

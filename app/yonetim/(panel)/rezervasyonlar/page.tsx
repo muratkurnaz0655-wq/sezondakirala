@@ -7,6 +7,7 @@ import { AdminFilterBar } from "@/components/admin/AdminFilterBar";
 import { AdminStatsRow } from "@/components/admin/AdminStatsRow";
 import { AdminPageLayout } from "@/components/admin/AdminPageLayout";
 import { AdminActionButton } from "@/components/admin/AdminActionButton";
+import { AdminMobileCard, AdminMobileCardList } from "@/components/admin/AdminMobileCardList";
 import {
   AdminDataTable,
   AdminTableCell,
@@ -234,9 +235,9 @@ export default async function AdminReservationsPage({ searchParams }: AdminReser
         {totalReservations} rezervasyon listeleniyor.
       </p>
 
-      <div className="block space-y-3 lg:hidden">
+      <AdminMobileCardList>
         {filteredReservations.map((row) => (
-          <article key={row.id} className="rounded-2xl border border-slate-200 bg-white p-4">
+          <AdminMobileCard key={row.id}>
             <p className="text-sm font-semibold text-slate-800">{row.referans_no ?? row.id}</p>
             <p className="mt-1 text-xs text-slate-500">
               {format(new Date(`${row.giris_tarihi}T00:00:00`), "dd MMM", { locale: tr })} - {format(new Date(`${row.cikis_tarihi}T00:00:00`), "dd MMM yyyy", { locale: tr })}
@@ -247,9 +248,9 @@ export default async function AdminReservationsPage({ searchParams }: AdminReser
               <ReservationStatusSelect reservationId={row.id} initialStatus={normalizeReservationStatus(String(row.durum))} />
               <ReservationDetailButton reservation={row as Record<string, unknown>} />
             </div>
-          </article>
+          </AdminMobileCard>
         ))}
-      </div>
+      </AdminMobileCardList>
       <AdminDataTable minWidthClass="min-w-[1120px]">
             <AdminTableHead>
               <tr>
