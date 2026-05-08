@@ -145,10 +145,7 @@ export function SiteHeaderClient({ siteName }: SiteHeaderClientProps) {
   async function markAllNotificationsRead() {
     if (!isSupabaseEnvConfigured()) return;
     const supabase = createClient();
-    await supabase
-      .from("bildirimler")
-      .update({ okundu: true, okundu_tarihi: new Date().toISOString() })
-      .eq("okundu", false);
+    await supabase.rpc("mark_all_notifications_read");
     setNotifications((prev) => prev.map((item) => ({ ...item, okundu: true })));
     setNotificationCount(0);
   }
