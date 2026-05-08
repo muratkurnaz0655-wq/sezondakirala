@@ -33,47 +33,39 @@ export default async function AdminListingsPage({ searchParams }: AdminListingsP
   const minFiyat = Number(params.min_fiyat ?? "");
   const maxFiyat = Number(params.max_fiyat ?? "");
   const supabase = createAdminClient();
-  const applyListingFilters = <T,>(query: T): T => {
-    let next = query as {
-      eq: (column: string, value: string) => typeof query;
-      gte: (column: string, value: number) => typeof query;
-      lte: (column: string, value: number) => typeof query;
-    };
+  const buildListingsQuery = (withMedia: boolean) => {
+    let query = withMedia
+      ? supabase
+          .from("ilanlar")
+          .select("id,baslik,konum,tip,sahip_id,gunluk_fiyat,aktif,onay_durumu,slug,olusturulma_tarihi,ilan_medyalari(id,url,sira)")
+      : supabase
+          .from("ilanlar")
+          .select("id,baslik,konum,tip,sahip_id,gunluk_fiyat,aktif,onay_durumu,slug,olusturulma_tarihi");
+
     if (durum === "onay_bekliyor" || durum === "yayinda" || durum === "reddedildi") {
-      next = next.eq("onay_durumu", durum);
+      query = query.eq("onay_durumu", durum);
     }
-    if (Number.isFinite(minFiyat)) next = next.gte("gunluk_fiyat", minFiyat);
-    if (Number.isFinite(maxFiyat)) next = next.lte("gunluk_fiyat", maxFiyat);
-    if (params.konum) next = next.eq("konum", params.konum);
-    if (params.sahip) next = next.eq("sahip_id", params.sahip);
-    return next as T;
-  };
+    if (Number.isFinite(minFiyat)) query = query.gte("gunluk_fiyat", minFiyat);
+    if (Number.isFinite(maxFiyat)) query = query.lte("gunluk_fiyat", maxFiyat);
+    if (params.konum) query = query.eq("konum", params.konum);
+    if (params.sahip) query = query.eq("sahip_id", params.sahip);
 
-  const applyListingSort = <T,>(query: T): T => {
-    let next = query as {
-      order: (column: string, options: { ascending: boolean }) => typeof query;
-    };
     if (params.siralama === "eski") {
-      next = next.order("olusturulma_tarihi", { ascending: true });
+      query = query.order("olusturulma_tarihi", { ascending: true });
     } else if (params.siralama === "fiyat_artan") {
-      next = next.order("gunluk_fiyat", { ascending: true });
+      query = query.order("gunluk_fiyat", { ascending: true });
     } else if (params.siralama === "fiyat_azalan") {
-      next = next.order("gunluk_fiyat", { ascending: false });
+      query = query.order("gunluk_fiyat", { ascending: false });
     } else {
-      next = next.order("olusturulma_tarihi", { ascending: false });
+      query = query.order("olusturulma_tarihi", { ascending: false });
     }
-    return next.order("id", { ascending: false }) as T;
+
+    return query.order("id", { ascending: false });
   };
 
-  let listingsResult = await applyListingSort(
-    applyListingFilters(
-      supabase.from("ilanlar").select("*, ilan_medyalari(id,url,sira)"),
-    ),
-  );
+  let listingsResult = await buildListingsQuery(true);
   if (listingsResult.error) {
-    listingsResult = await applyListingSort(
-      applyListingFilters(supabase.from("ilanlar").select("*")),
-    );
+    listingsResult = await buildListingsQuery(false);
   }
 
   const [{ data: listings }, { data: users }] = await Promise.all([
