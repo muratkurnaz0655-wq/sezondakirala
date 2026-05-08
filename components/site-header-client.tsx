@@ -247,12 +247,31 @@ export function SiteHeaderClient({ siteName }: SiteHeaderClientProps) {
     return "/panel";
   }
 
+  async function resolveReservationHref(item: (typeof notifications)[number]) {
+    if (item.entity_tip !== "rezervasyon") return null;
+    if (item.entity_id) return `/panel/rezervasyonlar/${item.entity_id}`;
+
+    const refMatch = (item.mesaj ?? "").match(/Rezervasyon No:\s*([A-Z0-9-]+)/i);
+    const referansNo = refMatch?.[1]?.trim();
+    if (!referansNo || !isSupabaseEnvConfigured()) return null;
+
+    const supabase = createClient();
+    const { data } = await supabase
+      .from("rezervasyonlar")
+      .select("id")
+      .eq("referans_no", referansNo)
+      .maybeSingle();
+    if (!data?.id) return null;
+    return `/panel/rezervasyonlar/${data.id}`;
+  }
+
   async function openNotificationDetail(item: (typeof notifications)[number]) {
     if (!item.okundu) {
       await markNotificationRead(item.id);
     }
     setNotificationOpen(false);
-    router.push(notificationHref(item));
+    const reservationHref = await resolveReservationHref(item);
+    router.push(reservationHref ?? notificationHref(item));
   }
 
   return (
