@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useReducedMotion } from "framer-motion";
 import type { User } from "@supabase/supabase-js";
+import { Bell } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { isSupabaseEnvConfigured } from "@/lib/supabase/env";
 import { MobileMenu } from "@/components/mobile-menu";
@@ -56,6 +57,11 @@ export function SiteHeaderClient({ siteName }: SiteHeaderClientProps) {
 
   const [user, setUser] = useState<User | null>(null);
   const [profil, setProfil] = useState<HeaderProfil>(null);
+  const [notificationOpen, setNotificationOpen] = useState(false);
+  const [notificationCount, setNotificationCount] = useState(0);
+  const [notifications, setNotifications] = useState<
+    { id: string; baslik: string | null; mesaj: string | null; okundu: boolean; olusturulma_tarihi: string }[]
+  >([]);
   const [authLoading, setAuthLoading] = useState(() => Boolean(isSupabaseEnvConfigured()));
   useEffect(() => {
     if (!isSupabaseEnvConfigured()) {
@@ -100,6 +106,22 @@ export function SiteHeaderClient({ siteName }: SiteHeaderClientProps) {
   }, [user?.id]);
 
   useEffect(() => {
+    if (!user?.id || !isSupabaseEnvConfigured()) {
+      setNotifications([]);
+      setNotificationCount(0);
+      return;
+    }
+    const supabase = createClient();
+    Promise.all([
+      supabase.from("bildirimler").select("*").order("olusturulma_tarihi", { ascending: false }).limit(20),
+      supabase.from("bildirimler").select("*", { count: "exact", head: true }).eq("okundu", false),
+    ]).then(([rowsResult, countResult]) => {
+      setNotifications((rowsResult.data as typeof notifications) ?? []);
+      setNotificationCount(countResult.count ?? 0);
+    });
+  }, [user?.id]);
+
+  useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 80);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -119,6 +141,17 @@ export function SiteHeaderClient({ siteName }: SiteHeaderClientProps) {
   const girisClass = "text-slate-600 transition-colors duration-200 hover:text-slate-900";
   const dropdownVariant = "solid";
   const loggedIn = user !== null;
+
+  async function markAllNotificationsRead() {
+    if (!isSupabaseEnvConfigured()) return;
+    const supabase = createClient();
+    await supabase
+      .from("bildirimler")
+      .update({ okundu: true, okundu_tarihi: new Date().toISOString() })
+      .eq("okundu", false);
+    setNotifications((prev) => prev.map((item) => ({ ...item, okundu: true })));
+    setNotificationCount(0);
+  }
 
   return (
     <header className={`sticky top-0 z-50 w-full transition-all duration-300 ease-out ${headerShell}`}>
@@ -150,13 +183,44 @@ export function SiteHeaderClient({ siteName }: SiteHeaderClientProps) {
             <>
               <button
                 type="button"
-                className={`hidden h-11 w-11 items-center justify-center rounded-full border text-base md:inline-flex ${
+                onClick={() => setNotificationOpen((current) => !current)}
+                className={`relative hidden h-11 w-11 items-center justify-center rounded-full border text-base md:inline-flex ${
                   "border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors"
                 }`}
                 aria-label="Bildirimler"
               >
-                🔔
+                <Bell className="h-5 w-5" />
+                {notificationCount > 0 ? (
+                  <span className="absolute -right-0.5 -top-0.5 rounded-full bg-red-500 px-1.5 text-[10px] font-bold text-white">
+                    {notificationCount > 9 ? "9+" : notificationCount}
+                  </span>
+                ) : null}
               </button>
+              {notificationOpen ? (
+                <div className="absolute right-20 top-[4.5rem] z-50 hidden w-80 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl md:block">
+                  <div className="mb-2 flex items-center justify-between px-2 py-1">
+                    <p className="text-sm font-semibold text-slate-800">Bildirimler</p>
+                    <button
+                      type="button"
+                      onClick={markAllNotificationsRead}
+                      className="text-xs font-medium text-blue-600 hover:text-blue-700"
+                    >
+                      Tümünü okundu yap
+                    </button>
+                  </div>
+                  <div className="max-h-80 overflow-auto">
+                    {notifications.length ? notifications.map((item) => (
+                      <div key={item.id} className={`mb-1 rounded-xl border px-3 py-2 ${item.okundu ? "border-slate-100 bg-slate-50" : "border-blue-100 bg-blue-50"}`}>
+                        <p className="text-sm font-semibold text-slate-800">{item.baslik ?? "Bildirim"}</p>
+                        <p className="text-xs text-slate-600">{item.mesaj ?? ""}</p>
+                        <p className="mt-1 text-[11px] text-slate-400">{new Date(item.olusturulma_tarihi).toLocaleString("tr-TR")}</p>
+                      </div>
+                    )) : (
+                      <p className="px-3 py-6 text-center text-sm text-slate-500">Yeni bildirim yok</p>
+                    )}
+                  </div>
+                </div>
+              ) : null}
               <div className="hidden md:block">
                 <UserDropdown user={user} profil={profil} variant={dropdownVariant} />
               </div>

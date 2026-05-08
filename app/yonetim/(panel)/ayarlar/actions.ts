@@ -3,6 +3,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
 import { requireAdminUser } from "@/lib/auth/guards";
+import { recordAdminAction } from "@/lib/admin-log";
 
 export type AyarlarKayitSonuc = { basarili: boolean; mesaj: string };
 
@@ -79,5 +80,37 @@ export async function bildirimTercihleriniKaydet(formData: FormData): Promise<vo
   };
   const { error } = await supabase.from("bildirim_tercihleri").update(payload).eq("id", id);
   if (error) throw new Error(error.message);
+  revalidatePath("/yonetim/ayarlar");
+}
+
+export async function topluBildirimGonder(formData: FormData): Promise<void> {
+  const admin = await requireAdminUser();
+  if (!admin.ok) throw new Error(admin.error);
+
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+  if (!url || !serviceKey) throw new Error("Supabase ortam değişkenleri eksik.");
+
+  const baslik = String(formData.get("baslik") ?? "").trim();
+  const mesaj = String(formData.get("mesaj") ?? "").trim();
+  if (!baslik || !mesaj) throw new Error("Başlık ve mesaj zorunludur.");
+
+  const supabase = createClient(url, serviceKey);
+  const { error } = await supabase.from("bildirimler").insert({
+    tip: "duyuru",
+    baslik,
+    mesaj,
+    entity_tip: null,
+    entity_id: null,
+    okundu: false,
+  });
+  if (error) throw new Error(error.message);
+
+  await recordAdminAction({
+    islem: "duyuru_gonderildi",
+    entityTip: "bildirim",
+    entityId: "genel",
+    entityBaslik: baslik,
+  });
   revalidatePath("/yonetim/ayarlar");
 }

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Bell, Globe, History } from "lucide-react";
 import { AdminActionButton } from "@/components/admin/AdminActionButton";
 import { AyarlarForm, type AyarlarFormMevcut } from "./AyarlarForm";
-import { bildirimTercihleriniKaydet } from "./actions";
+import { bildirimTercihleriniKaydet, topluBildirimGonder } from "./actions";
 
 type LogRow = {
   id: string;
@@ -90,27 +90,47 @@ export function AyarlarTabs({
       ) : null}
 
       {activeTab === "bildirim" ? (
-        <form action={bildirimTercihleriniKaydet} className="space-y-3">
-          <input type="hidden" name="id" value={localPreferences.id} />
-          {[
-            ["yeni_rezervasyonda_bildir", "Yeni rezervasyonda bildir"],
-            ["yeni_kullanicida_bildir", "Yeni kullanıcı kaydında bildir"],
-            ["beklemede_24saat_bildir", "24 saat beklemedeki rezervasyonlarda uyar"],
-            ["iptal_edildiginde_bildir", "İptal edildiğinde bildir"],
-          ].map(([key, label]) => (
-            <label key={key} className="flex items-center justify-between rounded-xl border border-slate-200 px-4 py-3 text-sm font-medium text-slate-700">
-              {label}
-              <input
-                name={key}
-                type="checkbox"
-                checked={localPreferences[key as keyof typeof localPreferences] as boolean}
-                onChange={(event) => setLocalPreferences((current) => ({ ...current, [key]: event.target.checked }))}
-                className="h-5 w-5 accent-blue-600"
-              />
-            </label>
-          ))}
-          <AdminActionButton type="submit" variant="primary">Kaydet</AdminActionButton>
-        </form>
+        <div className="space-y-6">
+          <form action={topluBildirimGonder} className="space-y-3 rounded-2xl border border-slate-200 p-4">
+            <h3 className="text-sm font-semibold text-slate-800">Tüm Kullanıcılara Duyuru Gönder</h3>
+            <input
+              name="baslik"
+              required
+              placeholder="Bildirim başlığı"
+              className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-700 outline-none focus:border-blue-500"
+            />
+            <textarea
+              name="mesaj"
+              required
+              rows={4}
+              placeholder="Kullanıcıların zilden göreceği duyuru mesajı..."
+              className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-700 outline-none focus:border-blue-500"
+            />
+            <AdminActionButton type="submit" variant="primary">Bildirim Gönder</AdminActionButton>
+          </form>
+
+          <form action={bildirimTercihleriniKaydet} className="space-y-3">
+            <input type="hidden" name="id" value={localPreferences.id} />
+            {[
+              ["yeni_rezervasyonda_bildir", "Yeni rezervasyonda bildir"],
+              ["yeni_kullanicida_bildir", "Yeni kullanıcı kaydında bildir"],
+              ["beklemede_24saat_bildir", "24 saat beklemedeki rezervasyonlarda uyar"],
+              ["iptal_edildiginde_bildir", "İptal edildiğinde bildir"],
+            ].map(([key, label]) => (
+              <label key={key} className="flex items-center justify-between rounded-xl border border-slate-200 px-4 py-3 text-sm font-medium text-slate-700">
+                {label}
+                <input
+                  name={key}
+                  type="checkbox"
+                  checked={localPreferences[key as keyof typeof localPreferences] as boolean}
+                  onChange={(event) => setLocalPreferences((current) => ({ ...current, [key]: event.target.checked }))}
+                  className="h-5 w-5 accent-blue-600"
+                />
+              </label>
+            ))}
+            <AdminActionButton type="submit" variant="primary">Tercihleri Kaydet</AdminActionButton>
+          </form>
+        </div>
       ) : null}
     </section>
   );

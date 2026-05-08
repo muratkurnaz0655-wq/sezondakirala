@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { formatCurrency } from "@/lib/utils/format";
 import { Plus } from "lucide-react";
 import { ListingActions } from "./ListingActions";
@@ -32,7 +32,7 @@ export default async function AdminListingsPage({ searchParams }: AdminListingsP
   const q = (params.q ?? "").trim().toLowerCase();
   const minFiyat = Number(params.min_fiyat ?? "");
   const maxFiyat = Number(params.max_fiyat ?? "");
-  const supabase = await createClient();
+  const supabase = createAdminClient();
   let query = supabase
     .from("ilanlar")
     .select("*, ilan_medyalari(id,url,sira)");
