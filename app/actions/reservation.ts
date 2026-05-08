@@ -104,6 +104,7 @@ export async function createReservation(input: CreateReservationInput) {
           mesaj: `Rezervasyonunuz başarıyla alındı. Rezervasyon No: ${input.referansNo}`,
           entity_tip: "rezervasyon",
           entity_id: data.id,
+          hedef_kullanici_id: user.id,
           okundu: false,
         });
         return { success: true as const, id: data.id };
