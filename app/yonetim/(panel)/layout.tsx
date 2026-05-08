@@ -50,11 +50,22 @@ export default async function AdminPanelSegmentLayout({ children }: { children: 
             : "/yonetim",
   }));
   const unreadCount = unreadResult.count ?? 0;
+  const { count: pendingReservationCount } = await supabase
+    .from("rezervasyonlar")
+    .select("*", { count: "exact", head: true })
+    .in("durum", ["pending", "beklemede", "onay_bekliyor", "odeme_bekleniyor"]);
 
   return (
     <>
       <AdminSessionKeeper />
-      <AdminPanelChrome kullanici={panelKullaniciOzeti} notifications={notifications} unreadCount={unreadCount}>{children}</AdminPanelChrome>
+      <AdminPanelChrome
+        kullanici={panelKullaniciOzeti}
+        notifications={notifications}
+        unreadCount={unreadCount}
+        pendingReservationCount={pendingReservationCount ?? 0}
+      >
+        {children}
+      </AdminPanelChrome>
     </>
   );
 }

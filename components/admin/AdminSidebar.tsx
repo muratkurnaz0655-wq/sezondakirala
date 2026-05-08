@@ -27,9 +27,10 @@ const menuItems = [
 type AdminSidebarProps = {
   onNavigate?: () => void;
   className?: string;
+  pendingReservationCount?: number;
 };
 
-export function AdminSidebar({ onNavigate, className = "" }: AdminSidebarProps) {
+export function AdminSidebar({ onNavigate, className = "", pendingReservationCount = 0 }: AdminSidebarProps) {
   const pathname = usePathname();
 
   const handleCikis = async () => {
@@ -72,9 +73,9 @@ export function AdminSidebar({ onNavigate, className = "" }: AdminSidebarProps) 
             >
               <Icon className="h-[18px] w-[18px] shrink-0" />
               <span className="flex-1">{label}</span>
-              {label === "Rezervasyonlar" ? (
+              {label === "Rezervasyonlar" && pendingReservationCount > 0 ? (
                 <span className="ml-auto flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500 px-1.5 text-xs font-bold text-white">
-                  6
+                  {pendingReservationCount > 99 ? "99+" : pendingReservationCount}
                 </span>
               ) : null}
             </Link>

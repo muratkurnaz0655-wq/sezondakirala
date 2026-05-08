@@ -9,16 +9,23 @@ type Props = {
   kullanici: AdminKullaniciOzeti | null;
   notifications?: AdminNotification[];
   unreadCount?: number;
+  pendingReservationCount?: number;
   children: ReactNode;
 };
 
-export function AdminPanelChrome({ kullanici, notifications = [], unreadCount = 0, children }: Props) {
+export function AdminPanelChrome({
+  kullanici,
+  notifications = [],
+  unreadCount = 0,
+  pendingReservationCount = 0,
+  children,
+}: Props) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
     <div className="admin-root min-h-screen w-full font-sans text-slate-800">
       <div className="fixed inset-y-0 left-0 z-40 hidden w-64 lg:block">
-        <AdminSidebar className="fixed left-0 top-0 z-40" />
+        <AdminSidebar className="fixed left-0 top-0 z-40" pendingReservationCount={pendingReservationCount} />
       </div>
 
       {mobileOpen ? (
@@ -30,7 +37,7 @@ export function AdminPanelChrome({ kullanici, notifications = [], unreadCount = 
             onClick={() => setMobileOpen(false)}
           />
           <div className="absolute left-0 top-0 bottom-0 w-64">
-            <AdminSidebar onNavigate={() => setMobileOpen(false)} className="h-full" />
+            <AdminSidebar onNavigate={() => setMobileOpen(false)} className="h-full" pendingReservationCount={pendingReservationCount} />
             <button
               type="button"
               aria-label="Menüyü kapat"
