@@ -38,9 +38,9 @@ export default async function PanelNotificationsPage() {
     .maybeSingle();
   const isAdmin = profil?.rol === "admin";
 
-  const { data: notifications } = await supabase
+  const { data: notifications, error: notificationsError } = await supabase
     .from("bildirimler")
-    .select("id, tip, baslik, mesaj, okundu, olusturulma_tarihi, hedef_kullanici_id, entity_tip, entity_id")
+    .select("*")
     .order("olusturulma_tarihi", { ascending: false })
     .limit(100);
 
@@ -86,7 +86,11 @@ export default async function PanelNotificationsPage() {
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-semibold text-slate-900">Bildirimlerim</h1>
-      {!visibleNotifications.length ? (
+      {notificationsError ? (
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-800">
+          Bildirimler yüklenirken bir sorun oluştu. Lütfen sayfayı yenileyin.
+        </div>
+      ) : !visibleNotifications.length ? (
         <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center">
           <p className="text-sm text-slate-700">Henüz bildiriminiz yok.</p>
         </div>
