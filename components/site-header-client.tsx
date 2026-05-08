@@ -2,11 +2,11 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useReducedMotion } from "framer-motion";
 import type { User } from "@supabase/supabase-js";
-import { Bell } from "lucide-react";
+import { Bell, CalendarDays, Home, UserPlus, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { isSupabaseEnvConfigured } from "@/lib/supabase/env";
@@ -52,6 +52,7 @@ function HeaderSkeleton({ siteName }: { siteName: string }) {
 
 export function SiteHeaderClient({ siteName }: SiteHeaderClientProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const isHome = pathname === "/";
   const [scrolled, setScrolled] = useState(false);
   const reduce = useReducedMotion();
@@ -61,14 +62,17 @@ export function SiteHeaderClient({ siteName }: SiteHeaderClientProps) {
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [notificationCount, setNotificationCount] = useState(0);
   const [notifications, setNotifications] = useState<
-    { id: string; baslik: string | null; mesaj: string | null; okundu: boolean; olusturulma_tarihi: string }[]
+    {
+      id: string;
+      tip: string | null;
+      baslik: string | null;
+      mesaj: string | null;
+      okundu: boolean;
+      olusturulma_tarihi: string;
+      entity_tip: string | null;
+      entity_id: string | null;
+    }[]
   >([]);
-  const [selectedNotification, setSelectedNotification] = useState<{
-    id: string;
-    baslik: string | null;
-    mesaj: string | null;
-    olusturulma_tarihi: string;
-  } | null>(null);
   const [authLoading, setAuthLoading] = useState(() => Boolean(isSupabaseEnvConfigured()));
   const seenNotificationIdsRef = useRef<Set<string>>(new Set());
   useEffect(() => {
@@ -205,22 +209,46 @@ export function SiteHeaderClient({ siteName }: SiteHeaderClientProps) {
     setNotificationCount((prev) => Math.max(0, prev - 1));
   }
 
-  async function openNotificationDetail(item: {
-    id: string;
-    baslik: string | null;
-    mesaj: string | null;
-    okundu: boolean;
-    olusturulma_tarihi: string;
-  }) {
-    setSelectedNotification({
-      id: item.id,
-      baslik: item.baslik,
-      mesaj: item.mesaj,
-      olusturulma_tarihi: item.olusturulma_tarihi,
-    });
+  const formatDate = (value: string) => {
+    const date = new Date(value);
+    const pad = (n: number) => String(n).padStart(2, "0");
+    return `${pad(date.getDate())}.${pad(date.getMonth() + 1)}.${date.getFullYear()} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+  };
+
+  const notificationTitle = (item: (typeof notifications)[number]) => {
+    if (item.tip === "yeni_rezervasyon") return "Yeni rezervasyon";
+    if (item.tip === "iptal_rezervasyon") return "Rezervasyon iptal edildi";
+    if (item.tip === "yeni_kullanici") return "Yeni kullanıcı kaydı";
+    if (item.tip === "yeni_ilan") return "Yeni ilan eklendi";
+    return item.baslik ?? "Bildirim";
+  };
+
+  const notificationIcon = (item: (typeof notifications)[number]) => {
+    if (item.tip === "yeni_rezervasyon") {
+      return { wrapper: "bg-blue-100 text-blue-700", Icon: CalendarDays };
+    }
+    if (item.tip === "yeni_kullanici") {
+      return { wrapper: "bg-emerald-100 text-emerald-700", Icon: UserPlus };
+    }
+    if (item.tip === "iptal_rezervasyon") {
+      return { wrapper: "bg-rose-100 text-rose-700", Icon: XCircle };
+    }
+    return { wrapper: "bg-amber-100 text-amber-700", Icon: Home };
+  };
+
+  function notificationHref(item: (typeof notifications)[number]) {
+    if (item.entity_tip === "rezervasyon" && item.entity_id) return `/panel/rezervasyonlar/${item.entity_id}`;
+    if (item.entity_tip === "ilan" && item.entity_id) return "/panel/ilanlarim";
+    if (item.entity_tip === "kullanici" && item.entity_id) return "/panel/profilim";
+    return "/panel";
+  }
+
+  async function openNotificationDetail(item: (typeof notifications)[number]) {
     if (!item.okundu) {
       await markNotificationRead(item.id);
     }
+    setNotificationOpen(false);
+    router.push(notificationHref(item));
   }
 
   return (
@@ -267,64 +295,73 @@ export function SiteHeaderClient({ siteName }: SiteHeaderClientProps) {
                 ) : null}
               </button>
               {notificationOpen ? (
-                <div className="absolute right-20 top-[4.5rem] z-50 hidden w-80 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl md:block">
-                  <div className="mb-2 flex items-center justify-between px-2 py-1">
-                    <p className="text-sm font-semibold text-slate-800">Bildirimler</p>
+                <div
+                  className="absolute right-20 top-[4.5rem] z-50 hidden w-[340px] overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-xl md:block"
+                  style={{ borderWidth: "0.5px" }}
+                >
+                  <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <Bell className="h-4 w-4 text-slate-500" />
+                      <p className="text-sm font-semibold text-slate-800">Bildirimler</p>
+                      {notificationCount > 0 ? (
+                        <span className="inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-semibold text-white">
+                          {notificationCount > 99 ? "99+" : notificationCount}
+                        </span>
+                      ) : null}
+                    </div>
                     <button
                       type="button"
                       onClick={markAllNotificationsRead}
-                      className="text-xs font-medium text-blue-600 hover:text-blue-700"
+                      className="text-[11px] font-medium text-slate-500 transition-colors hover:text-slate-700"
                     >
                       Tümünü okundu yap
                     </button>
                   </div>
-                  <div className="max-h-80 overflow-auto">
+                  <div className="max-h-96 overflow-auto p-2">
                     {notifications.length ? notifications.map((item) => (
                       <button
                         key={item.id}
                         type="button"
                         onClick={() => void openNotificationDetail(item)}
-                        className={`mb-1 block w-full rounded-xl border px-3 py-2 text-left ${item.okundu ? "border-slate-100 bg-slate-50" : "border-blue-100 bg-blue-50"}`}
+                        className={`flex w-full items-start gap-3 rounded-xl px-3 py-2.5 text-left transition-colors ${
+                          item.okundu ? "hover:bg-slate-50" : "bg-blue-50/70 hover:bg-blue-100/70"
+                        }`}
                       >
-                        <p className="text-sm font-semibold text-slate-800">{item.baslik ?? "Bildirim"}</p>
-                        <p className="text-xs text-slate-600">{item.mesaj ?? ""}</p>
-                        <p className="mt-1 text-[11px] text-slate-400">{new Date(item.olusturulma_tarihi).toLocaleString("tr-TR")}</p>
+                        {(() => {
+                          const { wrapper, Icon } = notificationIcon(item);
+                          return (
+                            <span className={`mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${wrapper}`}>
+                              <Icon className="h-4 w-4" />
+                            </span>
+                          );
+                        })()}
+                        <span className="min-w-0 flex-1">
+                          <span className="block text-[13px] font-medium text-slate-800">{notificationTitle(item)}</span>
+                          <span className="mt-0.5 block truncate text-xs text-slate-500">{item.mesaj ?? "-"}</span>
+                          <span className="mt-1 block text-[11px] text-slate-400">{formatDate(item.olusturulma_tarihi)}</span>
+                        </span>
+                        <span className="w-3 pt-1">
+                          {!item.okundu ? <span className="mt-1.5 inline-block h-2 w-2 rounded-full bg-blue-500" /> : null}
+                        </span>
                       </button>
                     )) : (
                       <p className="px-3 py-6 text-center text-sm text-slate-500">Yeni bildirim yok</p>
                     )}
+                  </div>
+                  <div className="border-t border-slate-100 px-4 py-2.5 text-center">
+                    <Link
+                      href="/panel"
+                      className="text-xs font-medium text-slate-500 transition-colors hover:text-slate-700"
+                      onClick={() => setNotificationOpen(false)}
+                    >
+                      Tüm bildirimleri gör -&gt;
+                    </Link>
                   </div>
                 </div>
               ) : null}
               <div className="hidden md:block">
                 <UserDropdown user={user} profil={profil} variant={dropdownVariant} />
               </div>
-              {selectedNotification ? (
-                <div
-                  className="fixed inset-0 z-[60] hidden bg-black/40 md:block"
-                  onClick={() => setSelectedNotification(null)}
-                >
-                  <div
-                    className="absolute right-8 top-24 w-[26rem] rounded-2xl border border-slate-200 bg-white p-4 shadow-2xl"
-                    onClick={(event) => event.stopPropagation()}
-                  >
-                    <p className="text-sm font-bold text-slate-900">{selectedNotification.baslik ?? "Bildirim"}</p>
-                    <p className="mt-2 whitespace-pre-wrap text-sm text-slate-700">{selectedNotification.mesaj ?? "-"}</p>
-                    <p className="mt-3 text-xs text-slate-400">
-                      {new Date(selectedNotification.olusturulma_tarihi).toLocaleString("tr-TR")}
-                    </p>
-                    <div className="mt-4 flex justify-end">
-                      <button
-                        type="button"
-                        className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
-                        onClick={() => setSelectedNotification(null)}
-                      >
-                        Kapat
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ) : null}
             </>
           ) : (
             <>
