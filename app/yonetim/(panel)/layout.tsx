@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminTopbar } from "@/components/admin/AdminTopbar";
+import { AdminSessionKeeper } from "@/components/admin/admin-session-keeper";
 import { hasAdminCookieSession } from "@/lib/admin-session";
 import { requireAdminUser } from "@/lib/auth/guards";
 
@@ -23,6 +24,7 @@ export default async function AdminPanelSegmentLayout({ children }: { children: 
 
   return (
     <div className="admin-root min-h-screen w-full font-sans text-slate-800">
+      <AdminSessionKeeper />
       <div className="fixed inset-y-0 left-0 z-40 hidden w-64 lg:block">
         <AdminSidebar />
       </div>
