@@ -4,6 +4,7 @@ import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 import Link from "next/link";
 import { AdminFilterBar } from "@/components/admin/AdminFilterBar";
+import { AdminFormField, AdminInput, AdminSelect } from "@/components/admin/AdminFormControls";
 import { AdminStatsRow } from "@/components/admin/AdminStatsRow";
 import { AdminPageLayout } from "@/components/admin/AdminPageLayout";
 import { AdminActionButton } from "@/components/admin/AdminActionButton";
@@ -142,70 +143,58 @@ export default async function AdminReservationsPage({ searchParams }: AdminReser
       />
 
       <AdminFilterBar className="mb-6 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-6">
-        <div className="xl:col-span-2">
-          <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Arama</label>
-          <input
+        <AdminFormField label="Arama" className="xl:col-span-2">
+          <AdminInput
             name="q"
             defaultValue={params.q ?? ""}
             placeholder="Referans no, ad soyad, e-posta..."
-            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-800 transition-all placeholder:text-slate-400 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
           />
-        </div>
-        <div>
-          <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Durum</label>
-          <select name="durum" defaultValue={params.durum ?? ""} className="w-full cursor-pointer rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 transition-all focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20">
+        </AdminFormField>
+        <AdminFormField label="Durum">
+          <AdminSelect name="durum" defaultValue={params.durum ?? ""}>
             <option value="">Tüm durumlar</option>
             <option value="beklemede">Beklemede</option>
             <option value="onaylandi">Onaylandi</option>
             <option value="iptal">Iptal</option>
-          </select>
-        </div>
-        <div>
-          <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Tek tarih</label>
-          <input
+          </AdminSelect>
+        </AdminFormField>
+        <AdminFormField label="Tek tarih">
+          <AdminInput
             name="tarih"
             type="date"
             defaultValue={params.tarih ?? ""}
-            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-800 transition-all placeholder:text-slate-400 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
           />
-        </div>
-        <div>
-          <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Giriş başlangıç</label>
-          <input
+        </AdminFormField>
+        <AdminFormField label="Giriş başlangıç">
+          <AdminInput
             name="baslangic"
             type="date"
             defaultValue={params.baslangic ?? ""}
-            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-800 transition-all focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
           />
-        </div>
-        <div>
-          <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Çıkış bitiş</label>
-          <input
+        </AdminFormField>
+        <AdminFormField label="Çıkış bitiş">
+          <AdminInput
             name="bitis"
             type="date"
             defaultValue={params.bitis ?? ""}
-            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-800 transition-all focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
           />
-        </div>
-        <div>
-          <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Tür</label>
-          <select name="tip" defaultValue={params.tip ?? ""} className="w-full cursor-pointer rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 transition-all focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20">
+        </AdminFormField>
+        <AdminFormField label="Tür">
+          <AdminSelect name="tip" defaultValue={params.tip ?? ""}>
             <option value="">Tüm türler</option>
             <option value="villa">Villa</option>
             <option value="tekne">Tekne</option>
-          </select>
-        </div>
-        <div>
-          <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Sıralama</label>
-          <select
+          </AdminSelect>
+        </AdminFormField>
+        <AdminFormField label="Sıralama">
+          <AdminSelect
             name="siralama"
             defaultValue={params.siralama ?? "yeni"}
-            className="w-full cursor-pointer rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 transition-all focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
           >
             <option value="yeni">Oluşturulma (Yeni → Eski)</option>
             <option value="eski">Oluşturulma (Eski → Yeni)</option>
-          </select>
-        </div>
+          </AdminSelect>
+        </AdminFormField>
         <div className="xl:col-span-6 flex flex-wrap gap-2">
           <AdminActionButton type="submit" variant="primary" size="md" className="w-full sm:w-auto">
             Filtrele
@@ -244,7 +233,7 @@ export default async function AdminReservationsPage({ searchParams }: AdminReser
             </p>
             <p className="mt-1 text-xs text-slate-600">{userMap.get(row.kullanici_id) ?? "-"}</p>
             <p className="mt-2 text-sm font-semibold text-[#0e9aa7]">{formatCurrency(row.toplam_fiyat)}</p>
-            <div className="mt-3 flex items-center gap-2">
+            <div className="mt-3 flex flex-wrap items-center gap-2">
               <ReservationStatusSelect reservationId={row.id} initialStatus={normalizeReservationStatus(String(row.durum))} />
               <ReservationDetailButton reservation={row as Record<string, unknown>} />
             </div>

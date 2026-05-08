@@ -2,6 +2,7 @@ import { updateUserRole } from "@/app/actions/admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { AdminStatsRow } from "@/components/admin/AdminStatsRow";
 import { AdminFilterBar } from "@/components/admin/AdminFilterBar";
+import { AdminFormField, AdminInput, AdminSelect } from "@/components/admin/AdminFormControls";
 import { AdminPageLayout } from "@/components/admin/AdminPageLayout";
 import { AdminActionButton } from "@/components/admin/AdminActionButton";
 import { AdminMobileCard, AdminMobileCardList } from "@/components/admin/AdminMobileCardList";
@@ -76,26 +77,24 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
 
       <AdminFilterBar className="mb-6 flex flex-col items-stretch gap-3 sm:flex-row sm:items-end" method="get">
         <div className="min-w-0 flex-1">
-          <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-500">Ara</label>
-          <input
-            name="q"
-            type="search"
-            defaultValue={q}
-            placeholder="E-posta veya ad soyad"
-            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-800 transition-all placeholder:text-slate-400 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-          />
+          <AdminFormField label="Ara">
+            <AdminInput
+              name="q"
+              type="search"
+              defaultValue={q}
+              placeholder="E-posta veya ad soyad"
+            />
+          </AdminFormField>
         </div>
-        <div>
-          <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-500">Sıralama</label>
-          <select
+        <AdminFormField label="Sıralama">
+          <AdminSelect
             name="siralama"
             defaultValue={params.siralama ?? "yeni"}
-            className="w-full cursor-pointer rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 transition-all focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
           >
             <option value="yeni">Yeni → Eski</option>
             <option value="eski">Eski → Yeni</option>
-          </select>
-        </div>
+          </AdminSelect>
+        </AdminFormField>
         <AdminActionButton type="submit" variant="primary" size="md" className="w-full sm:w-auto shrink-0">
           Ara
         </AdminActionButton>
@@ -158,11 +157,11 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
                     <AdminTableCell>
                       <form action={updateUserRole} className="flex items-center gap-2">
                         <input type="hidden" name="id" value={user.id} />
-                        <select name="rol" defaultValue={user.rol} className="w-32 cursor-pointer rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 transition-all focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20">
+                        <AdminSelect name="rol" defaultValue={user.rol} className="w-32">
                           <option value="ziyaretci">ziyaretci</option>
                           <option value="ilan_sahibi">ilan_sahibi</option>
                           <option value="admin">admin</option>
-                        </select>
+                        </AdminSelect>
                         <AdminActionButton type="submit" variant="success">
                           ✓ Kaydet
                         </AdminActionButton>

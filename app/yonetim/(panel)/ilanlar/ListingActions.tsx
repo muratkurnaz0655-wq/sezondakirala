@@ -21,7 +21,7 @@ export function ListingActions({ listing }: { listing: Listing }) {
   const [isPending, startTransition] = useTransition();
 
   return (
-    <div className="flex flex-nowrap items-center gap-2">
+    <div className="flex flex-wrap items-center gap-2 lg:flex-nowrap">
       <AdminActionButton
         title="Bu ilanı düzenle"
         onClick={() => setShowEdit(true)}

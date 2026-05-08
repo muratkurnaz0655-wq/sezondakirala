@@ -4,6 +4,7 @@ import { Home, Plus } from "lucide-react";
 import { ListingActions } from "./ListingActions";
 import { AdminStatsRow } from "@/components/admin/AdminStatsRow";
 import { AdminFilterBar } from "@/components/admin/AdminFilterBar";
+import { AdminFormField, AdminInput } from "@/components/admin/AdminFormControls";
 import { AdminPageLayout } from "@/components/admin/AdminPageLayout";
 import { AdminMobileCard, AdminMobileCardList } from "@/components/admin/AdminMobileCardList";
 import { AdminSegmentedTabs } from "@/components/admin/AdminSegmentedTabs";
@@ -88,13 +89,13 @@ export default async function AdminListingsPage({ searchParams }: AdminListingsP
         ]}
       />
       <AdminFilterBar>
-        <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Arama</label>
-        <input
-          name="q"
-          defaultValue={params.q ?? ""}
-          placeholder="İlan başlığı, konum, ilan ID, ilan sahibi..."
-          className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-800 transition-all placeholder:text-slate-400 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-        />
+        <AdminFormField label="Arama">
+          <AdminInput
+            name="q"
+            defaultValue={params.q ?? ""}
+            placeholder="İlan başlığı, konum, ilan ID, ilan sahibi..."
+          />
+        </AdminFormField>
       </AdminFilterBar>
       <p className="text-sm text-slate-500">{filteredListings.length} ilan</p>
 
