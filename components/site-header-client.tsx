@@ -87,10 +87,14 @@ export function SiteHeaderClient({ siteName }: SiteHeaderClientProps) {
       tip?: string | null;
     },
     currentUserId: string,
+    isAdmin: boolean,
   ) => {
     if (item.hedef_kullanici_id === currentUserId) return true;
-    // Broadcast notifications: no explicit target and no entity linkage.
-    return !item.hedef_kullanici_id && !item.entity_tip;
+    // Global announcements for everyone.
+    if (!item.hedef_kullanici_id && item.tip === "duyuru") return true;
+    // Untargeted operational notifications are admin-only.
+    if (isAdmin && !item.hedef_kullanici_id) return true;
+    return false;
   };
   useEffect(() => {
     if (!isSupabaseEnvConfigured()) {
@@ -151,7 +155,7 @@ export function SiteHeaderClient({ siteName }: SiteHeaderClientProps) {
       ]);
       if (!mounted) return;
       const rows = ((rowsResult.data as typeof notifications) ?? []).filter((item) =>
-        isVisibleForCurrentUser(item, user.id),
+        isVisibleForCurrentUser(item, user.id, profil?.rol === "admin"),
       );
       const unreadCount = rows.filter((item) => !item.okundu).length;
       setNotifications(rows);

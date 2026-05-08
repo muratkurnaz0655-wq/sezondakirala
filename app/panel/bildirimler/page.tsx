@@ -31,6 +31,13 @@ export default async function PanelNotificationsPage() {
 
   if (!user) redirect("/giris?redirect=/panel/bildirimler");
 
+  const { data: profil } = await supabase
+    .from("kullanicilar")
+    .select("rol")
+    .eq("id", user.id)
+    .maybeSingle();
+  const isAdmin = profil?.rol === "admin";
+
   const { data: notifications } = await supabase
     .from("bildirimler")
     .select("id, tip, baslik, mesaj, okundu, olusturulma_tarihi, hedef_kullanici_id, entity_tip, entity_id")
@@ -39,8 +46,8 @@ export default async function PanelNotificationsPage() {
 
   const visibleNotifications = (notifications ?? []).filter((item) => {
     if (item.hedef_kullanici_id === user.id) return true;
-    // Broadcast notifications: no explicit target and no entity linkage.
-    return !item.hedef_kullanici_id && !item.entity_tip;
+    if (!item.hedef_kullanici_id && item.tip === "duyuru") return true;
+    return isAdmin && !item.hedef_kullanici_id;
   });
 
   return (
