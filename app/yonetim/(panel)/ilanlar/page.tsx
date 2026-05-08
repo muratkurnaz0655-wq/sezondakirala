@@ -1,12 +1,12 @@
 import { createClient } from "@/lib/supabase/server";
 import { formatCurrency } from "@/lib/utils/format";
-import Link from "next/link";
 import { Home, Plus } from "lucide-react";
 import { ListingActions } from "./ListingActions";
 import { AdminStatsRow } from "@/components/admin/AdminStatsRow";
 import { AdminFilterBar } from "@/components/admin/AdminFilterBar";
 import { AdminPageLayout } from "@/components/admin/AdminPageLayout";
 import { AdminMobileCard, AdminMobileCardList } from "@/components/admin/AdminMobileCardList";
+import { AdminSegmentedTabs } from "@/components/admin/AdminSegmentedTabs";
 import {
   AdminDataTable,
   AdminTableCell,
@@ -98,34 +98,26 @@ export default async function AdminListingsPage({ searchParams }: AdminListingsP
       </AdminFilterBar>
       <p className="text-sm text-slate-500">{filteredListings.length} ilan</p>
 
-      <nav className="flex w-full gap-1 overflow-x-auto rounded-xl bg-slate-100 p-1">
-        {[
-          { key: "tumu", label: "Tümü" },
-          { key: "villa", label: "Villa" },
-          { key: "tekne", label: "Tekne" },
-          { key: "aktif", label: "Aktif" },
-          { key: "pasif", label: "Pasif" },
-        ].map((item) => (
-          <Link
-            key={item.key}
-            href={`/yonetim/ilanlar?filtre=${item.key}`}
-            className={`px-4 py-1.5 text-sm font-medium transition-all ${
-              filtre === item.key
-                ? "rounded-lg bg-white text-slate-800 shadow-sm"
-                : "rounded-lg text-slate-500 hover:text-slate-700"
-            }`}
-          >
-            {item.label}
-          </Link>
-        ))}
-      </nav>
+      <AdminSegmentedTabs
+        activeKey={filtre}
+        items={[
+          { key: "tumu", label: "Tümü", href: "/yonetim/ilanlar?filtre=tumu" },
+          { key: "villa", label: "Villa", href: "/yonetim/ilanlar?filtre=villa" },
+          { key: "tekne", label: "Tekne", href: "/yonetim/ilanlar?filtre=tekne" },
+          { key: "aktif", label: "Aktif", href: "/yonetim/ilanlar?filtre=aktif" },
+          { key: "pasif", label: "Pasif", href: "/yonetim/ilanlar?filtre=pasif" },
+        ]}
+      />
 
-      <nav className="flex w-full gap-1 overflow-x-auto rounded-xl bg-slate-100 p-1">
-        <Link href="/yonetim/ilanlar" className={`px-4 py-1.5 text-sm font-medium transition-all ${durum === "" ? "rounded-lg bg-white text-slate-800 shadow-sm" : "rounded-lg text-slate-500 hover:text-slate-700"}`}>Tüm Durumlar</Link>
-        <Link href="/yonetim/ilanlar?durum=bekleyen" className={`px-4 py-1.5 text-sm font-medium transition-all ${durum === "bekleyen" ? "rounded-lg bg-white text-slate-800 shadow-sm" : "rounded-lg text-slate-500 hover:text-slate-700"}`}>Onay Bekleyen</Link>
-        <Link href="/yonetim/ilanlar?durum=yayinda" className={`px-4 py-1.5 text-sm font-medium transition-all ${durum === "yayinda" ? "rounded-lg bg-white text-slate-800 shadow-sm" : "rounded-lg text-slate-500 hover:text-slate-700"}`}>Yayında</Link>
-        <Link href="/yonetim/ilanlar?durum=reddedildi" className={`px-4 py-1.5 text-sm font-medium transition-all ${durum === "reddedildi" ? "rounded-lg bg-white text-slate-800 shadow-sm" : "rounded-lg text-slate-500 hover:text-slate-700"}`}>Reddedildi</Link>
-      </nav>
+      <AdminSegmentedTabs
+        activeKey={durum || "tum_durumlar"}
+        items={[
+          { key: "tum_durumlar", label: "Tüm Durumlar", href: "/yonetim/ilanlar" },
+          { key: "bekleyen", label: "Onay Bekleyen", href: "/yonetim/ilanlar?durum=bekleyen" },
+          { key: "yayinda", label: "Yayında", href: "/yonetim/ilanlar?durum=yayinda" },
+          { key: "reddedildi", label: "Reddedildi", href: "/yonetim/ilanlar?durum=reddedildi" },
+        ]}
+      />
 
       <AdminMobileCardList>
         {filteredListings.map((listing) => {

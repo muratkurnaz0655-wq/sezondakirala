@@ -11,6 +11,7 @@ import { AdminFilterBar } from "@/components/admin/AdminFilterBar";
 import { AdminPageLayout } from "@/components/admin/AdminPageLayout";
 import { AdminActionButton } from "@/components/admin/AdminActionButton";
 import { AdminMobileCard, AdminMobileCardList } from "@/components/admin/AdminMobileCardList";
+import { AdminSegmentedTabs } from "@/components/admin/AdminSegmentedTabs";
 import {
   AdminDataTable,
   AdminTableCell,
@@ -110,32 +111,14 @@ export default async function AdminPackagesPage({ searchParams }: AdminPackagesP
           className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-800 transition-all placeholder:text-slate-400 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
         />
       </AdminFilterBar>
-      <div className="flex w-full gap-1 overflow-x-auto rounded-xl bg-slate-100 p-1">
-        <a
-          href="/yonetim/paketler"
-          className={`px-4 py-1.5 text-sm font-medium transition-all ${
-            durum === "tumu" ? "rounded-lg bg-white text-slate-800 shadow-sm" : "rounded-lg text-slate-500 hover:text-slate-700"
-          }`}
-        >
-          Tümü
-        </a>
-        <a
-          href="/yonetim/paketler?durum=aktif"
-          className={`px-4 py-1.5 text-sm font-medium transition-all ${
-            durum === "aktif" ? "rounded-lg bg-white text-slate-800 shadow-sm" : "rounded-lg text-slate-500 hover:text-slate-700"
-          }`}
-        >
-          Aktif Paketler
-        </a>
-        <a
-          href="/yonetim/paketler?durum=pasif"
-          className={`px-4 py-1.5 text-sm font-medium transition-all ${
-            durum === "pasif" ? "rounded-lg bg-white text-slate-800 shadow-sm" : "rounded-lg text-slate-500 hover:text-slate-700"
-          }`}
-        >
-          Pasif Paketler
-        </a>
-      </div>
+      <AdminSegmentedTabs
+        activeKey={durum}
+        items={[
+          { key: "tumu", label: "Tümü", href: "/yonetim/paketler" },
+          { key: "aktif", label: "Aktif Paketler", href: "/yonetim/paketler?durum=aktif" },
+          { key: "pasif", label: "Pasif Paketler", href: "/yonetim/paketler?durum=pasif" },
+        ]}
+      />
 
       {packagesResult.error ? (
         <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
