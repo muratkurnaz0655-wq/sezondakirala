@@ -37,3 +37,20 @@ Date: 2026-05-08
 
 - Code-level responsive audit across admin routes/components.
 - Production build validation with `npm run build`.
+
+## Device Test Matrix
+
+- iPhone SE (375x667): topbar single-line title, sidebar open/close, list card actions wrap.
+- iPhone 14 Pro Max (430x932): filter form spacing, segmented tabs horizontal scroll, modal close button reachability.
+- Galaxy S22 (360x780): reservation card buttons do not overflow, support modal textarea and action buttons remain visible.
+- iPad Mini (768x1024): transition boundary between mobile cards and desktop-like spacing feels stable.
+- 1366x768 laptop: desktop tables visible, no clipped columns, sticky topbar and sidebar alignment preserved.
+
+## Quick Manual Pass (Per Route)
+
+- `/yonetim`: stats cards wrap cleanly, quick links remain tappable.
+- `/yonetim/ilanlar`: both segmented tab groups scroll on narrow width, listing actions wrap in mobile cards.
+- `/yonetim/paketler`: package mobile cards render edit flow and keep modal usable on small viewport.
+- `/yonetim/kullanicilar`: search + sort controls stack without overlap, role select/save stays tappable.
+- `/yonetim/rezervasyonlar`: dense filter form remains usable, detail button and status control share row safely.
+- `/yonetim/ayarlar`: settings form fields remain single-column and readable on small devices.
