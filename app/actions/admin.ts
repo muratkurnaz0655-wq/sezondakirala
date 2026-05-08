@@ -463,3 +463,20 @@ export async function markAllNotificationsRead() {
   return { success: true as const };
 }
 
+export async function markNotificationRead(notificationId: string) {
+  const admin = await assertAdmin();
+  if (!admin.ok) return { success: false as const, error: admin.error };
+
+  const id = String(notificationId ?? "").trim();
+  if (!id) return { success: false as const, error: "Geçersiz bildirim." };
+
+  const { error } = await admin.supabase
+    .from("bildirimler")
+    .update({ okundu: true, okundu_tarihi: new Date().toISOString() })
+    .eq("id", id);
+  if (error) return { success: false as const, error: error.message };
+
+  revalidatePath("/yonetim", "layout");
+  return { success: true as const };
+}
+

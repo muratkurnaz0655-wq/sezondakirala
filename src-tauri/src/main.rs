@@ -3,6 +3,7 @@
 use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::path::PathBuf;
+use tauri::Manager;
 
 fn startup_log_path() -> Option<PathBuf> {
     let local_app_data = std::env::var_os("LOCALAPPDATA")?;
@@ -33,12 +34,32 @@ fn main() {
         ));
     }));
 
-    let run_result = tauri::Builder::default().run(tauri::generate_context!());
+    let run_result = tauri::Builder::default()
+        .setup(|app| {
+            if let Some(icon) = load_window_icon() {
+                for webview_window in app.webview_windows().values() {
+                    let _ = webview_window.set_icon(icon.clone());
+                }
+            }
+            Ok(())
+        })
+        .run(tauri::generate_context!());
     if let Err(err) = run_result {
         append_startup_log(&format!("[RUN_ERR] {} | error: {}", chrono_like_now(), err));
         eprintln!("Uygulama baslatma hatasi: {err}");
         std::process::exit(1);
     }
+}
+
+fn load_window_icon() -> Option<tauri::image::Image<'static>> {
+    let decoded = image::load_from_memory(include_bytes!("../icons/128x128.png")).ok()?;
+    let rgba = decoded.into_rgba8();
+    let (width, height) = rgba.dimensions();
+    Some(tauri::image::Image::new_owned(
+        rgba.into_raw(),
+        width,
+        height,
+    ))
 }
 
 fn chrono_like_now() -> String {

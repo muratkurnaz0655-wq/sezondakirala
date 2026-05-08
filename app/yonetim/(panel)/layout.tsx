@@ -22,32 +22,24 @@ export default async function AdminPanelSegmentLayout({ children }: { children: 
     redirect("/yonetim/giris");
   }
   const supabase = createAdminClient();
-  const { data: notificationRows } = await supabase
-    .from("bildirimler")
-    .select("*")
-    .order("olusturulma_tarihi", { ascending: false })
-    .limit(50);
+  const [{ data: notificationRows }, unreadResult] = await Promise.all([
+    supabase
+      .from("bildirimler")
+      .select("*")
+      .order("olusturulma_tarihi", { ascending: false })
+      .limit(20),
+    supabase.from("bildirimler").select("*", { count: "exact", head: true }).eq("okundu", false),
+  ]);
 
-  const reservationNotificationIds = [...new Set(
-    (notificationRows ?? [])
-      .filter((row) => row.entity_tip === "rezervasyon" && row.entity_id)
-      .map((row) => String(row.entity_id)),
-  )];
-  const { data: reservationRows } = reservationNotificationIds.length
-    ? await supabase.from("rezervasyonlar").select("id,durum").in("id", reservationNotificationIds)
-    : { data: [] as { id: string; durum: string }[] };
-  const reservationStatusMap = new Map((reservationRows ?? []).map((row) => [row.id, String(row.durum)]));
-
-  const filteredRows = (notificationRows ?? []).filter((row) => {
-    if (row.entity_tip !== "rezervasyon") return true;
-    const status = reservationStatusMap.get(String(row.entity_id ?? ""));
-    // Only keep pending reservation notifications in admin bell.
-    return status === "pending" || status === "beklemede";
-  });
-
-  const notifications = filteredRows.slice(0, 20).map((row) => ({
+  const notifications = (notificationRows ?? []).map((row) => ({
     id: row.id,
-    label: `${row.baslik ?? "Bildirim"}: ${row.mesaj ?? ""}`.trim(),
+    tip: row.tip ?? null,
+    baslik: row.baslik ?? null,
+    mesaj: row.mesaj ?? null,
+    olusturulma_tarihi: row.olusturulma_tarihi,
+    entity_tip: row.entity_tip ?? null,
+    entity_id: row.entity_id ? String(row.entity_id) : null,
+    okundu: Boolean(row.okundu),
     href:
       row.entity_tip === "rezervasyon"
         ? `/yonetim/rezervasyonlar/${row.entity_id}`
@@ -56,9 +48,8 @@ export default async function AdminPanelSegmentLayout({ children }: { children: 
           : row.entity_tip === "kullanici"
             ? `/yonetim/kullanicilar/${row.entity_id}`
             : "/yonetim",
-    tone: row.okundu ? "info" as const : row.tip === "hata" ? "danger" as const : row.tip === "uyari" ? "warning" as const : "info" as const,
   }));
-  const unreadCount = filteredRows.filter((row) => !row.okundu).length;
+  const unreadCount = unreadResult.count ?? 0;
 
   return (
     <>
