@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { useReducedMotion } from "framer-motion";
 import type { User } from "@supabase/supabase-js";
 import { Bell } from "lucide-react";
+import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { isSupabaseEnvConfigured } from "@/lib/supabase/env";
 import { MobileMenu } from "@/components/mobile-menu";
@@ -62,6 +63,12 @@ export function SiteHeaderClient({ siteName }: SiteHeaderClientProps) {
   const [notifications, setNotifications] = useState<
     { id: string; baslik: string | null; mesaj: string | null; okundu: boolean; olusturulma_tarihi: string }[]
   >([]);
+  const [selectedNotification, setSelectedNotification] = useState<{
+    id: string;
+    baslik: string | null;
+    mesaj: string | null;
+    olusturulma_tarihi: string;
+  } | null>(null);
   const [authLoading, setAuthLoading] = useState(() => Boolean(isSupabaseEnvConfigured()));
   useEffect(() => {
     if (!isSupabaseEnvConfigured()) {
@@ -102,6 +109,40 @@ export function SiteHeaderClient({ siteName }: SiteHeaderClientProps) {
       });
     return () => {
       cancelled = true;
+    };
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (!isSupabaseEnvConfigured() || !user?.id) return;
+    const supabase = createClient();
+    const channel = supabase
+      .channel(`user-notifications-${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "bildirimler" },
+        (payload) => {
+          const row = payload.new as {
+            id: string;
+            baslik: string | null;
+            mesaj: string | null;
+            okundu: boolean;
+            olusturulma_tarihi: string;
+          };
+          setNotifications((prev) => [row, ...prev].slice(0, 20));
+          if (!row.okundu) {
+            setNotificationCount((prev) => prev + 1);
+            toast.success("! Yeni bildiriminiz var", {
+              description: row.baslik ?? "Detay için zil ikonuna tıklayın.",
+              position: "top-right",
+              duration: 4500,
+            });
+          }
+        },
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(channel);
     };
   }, [user?.id]);
 
@@ -160,6 +201,24 @@ export function SiteHeaderClient({ siteName }: SiteHeaderClientProps) {
     setNotificationCount((prev) => Math.max(0, prev - 1));
   }
 
+  async function openNotificationDetail(item: {
+    id: string;
+    baslik: string | null;
+    mesaj: string | null;
+    okundu: boolean;
+    olusturulma_tarihi: string;
+  }) {
+    setSelectedNotification({
+      id: item.id,
+      baslik: item.baslik,
+      mesaj: item.mesaj,
+      olusturulma_tarihi: item.olusturulma_tarihi,
+    });
+    if (!item.okundu) {
+      await markNotificationRead(item.id);
+    }
+  }
+
   return (
     <header className={`sticky top-0 z-50 w-full transition-all duration-300 ease-out ${headerShell}`}>
       <div className="relative flex min-h-[4.5rem] w-full items-center justify-between gap-3 px-4 md:min-h-[5.5rem] md:gap-4 md:px-6 lg:px-8">
@@ -198,7 +257,7 @@ export function SiteHeaderClient({ siteName }: SiteHeaderClientProps) {
               >
                 <Bell className="h-5 w-5" />
                 {notificationCount > 0 ? (
-                  <span className="absolute -right-0.5 -top-0.5 rounded-full bg-red-500 px-1.5 text-[10px] font-bold text-white">
+                  <span className="absolute -right-1 -top-1 flex min-h-5 min-w-5 items-center justify-center rounded-full border border-white bg-red-600 px-1 text-[10px] font-bold text-white shadow">
                     {notificationCount > 9 ? "9+" : notificationCount}
                   </span>
                 ) : null}
@@ -220,11 +279,7 @@ export function SiteHeaderClient({ siteName }: SiteHeaderClientProps) {
                       <button
                         key={item.id}
                         type="button"
-                        onClick={() => {
-                          if (!item.okundu) {
-                            void markNotificationRead(item.id);
-                          }
-                        }}
+                        onClick={() => void openNotificationDetail(item)}
                         className={`mb-1 block w-full rounded-xl border px-3 py-2 text-left ${item.okundu ? "border-slate-100 bg-slate-50" : "border-blue-100 bg-blue-50"}`}
                       >
                         <p className="text-sm font-semibold text-slate-800">{item.baslik ?? "Bildirim"}</p>
@@ -240,6 +295,32 @@ export function SiteHeaderClient({ siteName }: SiteHeaderClientProps) {
               <div className="hidden md:block">
                 <UserDropdown user={user} profil={profil} variant={dropdownVariant} />
               </div>
+              {selectedNotification ? (
+                <div
+                  className="fixed inset-0 z-[60] hidden bg-black/40 md:block"
+                  onClick={() => setSelectedNotification(null)}
+                >
+                  <div
+                    className="absolute right-8 top-24 w-[26rem] rounded-2xl border border-slate-200 bg-white p-4 shadow-2xl"
+                    onClick={(event) => event.stopPropagation()}
+                  >
+                    <p className="text-sm font-bold text-slate-900">{selectedNotification.baslik ?? "Bildirim"}</p>
+                    <p className="mt-2 whitespace-pre-wrap text-sm text-slate-700">{selectedNotification.mesaj ?? "-"}</p>
+                    <p className="mt-3 text-xs text-slate-400">
+                      {new Date(selectedNotification.olusturulma_tarihi).toLocaleString("tr-TR")}
+                    </p>
+                    <div className="mt-4 flex justify-end">
+                      <button
+                        type="button"
+                        className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                        onClick={() => setSelectedNotification(null)}
+                      >
+                        Kapat
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ) : null}
             </>
           ) : (
             <>
