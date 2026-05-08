@@ -44,7 +44,21 @@ export default async function PanelNotificationsPage() {
     .order("olusturulma_tarihi", { ascending: false })
     .limit(100);
 
+  const legacyReservationRows = (notifications ?? []).filter(
+    (item) => !item.hedef_kullanici_id && item.entity_tip === "rezervasyon" && Boolean(item.entity_id),
+  );
+  const { data: ownedReservations } = legacyReservationRows.length
+    ? await supabase
+        .from("rezervasyonlar")
+        .select("id")
+        .in("id", legacyReservationRows.map((item) => String(item.entity_id)))
+    : { data: [] as { id: string }[] };
+  const ownedLegacyReservationIds = new Set((ownedReservations ?? []).map((item) => item.id));
+
   const visibleNotifications = (notifications ?? []).filter((item) => {
+    if (!item.hedef_kullanici_id && item.entity_tip === "rezervasyon" && item.entity_id) {
+      return ownedLegacyReservationIds.has(String(item.entity_id));
+    }
     if (item.hedef_kullanici_id === user.id) return true;
     if (!item.hedef_kullanici_id && item.tip === "duyuru") return true;
     return isAdmin && !item.hedef_kullanici_id;

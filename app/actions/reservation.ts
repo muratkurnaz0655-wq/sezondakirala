@@ -98,7 +98,7 @@ export async function createReservation(input: CreateReservationInput) {
       if (!error && data?.id) {
         // Use service role so notification creation is not blocked by RLS.
         const adminSupabase = createAdminClient();
-        await adminSupabase.from("bildirimler").insert({
+        const notificationPayload = {
           tip: "yeni_rezervasyon",
           baslik: "Rezervasyonunuz oluşturuldu",
           mesaj: `Rezervasyonunuz başarıyla alındı. Rezervasyon No: ${input.referansNo}`,
@@ -106,7 +106,19 @@ export async function createReservation(input: CreateReservationInput) {
           entity_id: data.id,
           hedef_kullanici_id: user.id,
           okundu: false,
-        });
+        };
+        const { error: notificationError } = await adminSupabase.from("bildirimler").insert(notificationPayload);
+        // Backward compatibility: environments without hedef_kullanici_id column.
+        if (notificationError) {
+          await adminSupabase.from("bildirimler").insert({
+            tip: notificationPayload.tip,
+            baslik: notificationPayload.baslik,
+            mesaj: notificationPayload.mesaj,
+            entity_tip: notificationPayload.entity_tip,
+            entity_id: notificationPayload.entity_id,
+            okundu: notificationPayload.okundu,
+          });
+        }
         return { success: true as const, id: data.id };
       }
     }

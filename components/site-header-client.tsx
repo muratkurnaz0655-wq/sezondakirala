@@ -154,9 +154,26 @@ export function SiteHeaderClient({ siteName }: SiteHeaderClientProps) {
         supabase.from("bildirimler").select("*", { count: "exact", head: true }).eq("okundu", false),
       ]);
       if (!mounted) return;
-      const rows = ((rowsResult.data as typeof notifications) ?? []).filter((item) =>
-        isVisibleForCurrentUser(item, user.id, profil?.rol === "admin"),
+      const allRows = (rowsResult.data as typeof notifications) ?? [];
+      const legacyReservationRows = allRows.filter(
+        (item) => !item.hedef_kullanici_id && item.entity_tip === "rezervasyon" && Boolean(item.entity_id),
       );
+
+      let ownedLegacyReservationIds = new Set<string>();
+      if (legacyReservationRows.length) {
+        const { data: ownedReservations } = await supabase
+          .from("rezervasyonlar")
+          .select("id")
+          .in("id", legacyReservationRows.map((item) => String(item.entity_id)));
+        ownedLegacyReservationIds = new Set((ownedReservations ?? []).map((item) => item.id));
+      }
+
+      const rows = allRows.filter((item) => {
+        if (!item.hedef_kullanici_id && item.entity_tip === "rezervasyon" && item.entity_id) {
+          return ownedLegacyReservationIds.has(String(item.entity_id));
+        }
+        return isVisibleForCurrentUser(item, user.id, profil?.rol === "admin");
+      });
       const unreadCount = rows.filter((item) => !item.okundu).length;
       setNotifications(rows);
       setNotificationCount(unreadCount);
