@@ -2,7 +2,22 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
-import { Check, CheckCircle2, ChevronRight, Phone, Star, X, XCircle } from "lucide-react";
+import {
+  Bath,
+  Bus,
+  Car,
+  CheckCircle2,
+  ChevronRight,
+  Monitor,
+  Mountain,
+  Phone,
+  Shirt,
+  Snowflake,
+  Sparkles,
+  Star,
+  Waves,
+  Wifi,
+} from "lucide-react";
 import { ListingCard } from "@/components/listing-card";
 import { ListingHeaderActions } from "@/components/listing-header-actions";
 import { ListingGallery } from "@/components/listing-gallery";
@@ -46,6 +61,28 @@ function addDaysToIso(baseIso: string, dayOffset: number) {
   const value = new Date(`${baseIso}T00:00:00`);
   value.setDate(value.getDate() + dayOffset);
   return value.toISOString().slice(0, 10);
+}
+
+function normalizeFeatureKey(value: string) {
+  return value
+    .toLocaleLowerCase("tr-TR")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
+function getFeatureIcon(label: string) {
+  const key = normalizeFeatureKey(label);
+  if (key.includes("tv") || key.includes("televizyon")) return Monitor;
+  if (key.includes("wifi") || key.includes("wi-fi") || key.includes("internet")) return Wifi;
+  if (key.includes("ozel havuz") || key.includes("havuz")) return Waves;
+  if (key.includes("klima")) return Snowflake;
+  if (key.includes("jakuzi")) return Bath;
+  if (key.includes("deniz manzarasi") || key.includes("manzara")) return Mountain;
+  if (key.includes("otopark") || key.includes("park")) return Car;
+  if (key.includes("havlu") || key.includes("carsaf")) return Shirt;
+  if (key.includes("hazirlik hizmeti") || key.includes("temizlik")) return Sparkles;
+  if (key.includes("transfer")) return Bus;
+  return CheckCircle2;
 }
 
 export async function ListingDetailPage({ tip, slug, selectedDates }: ListingDetailPageProps) {
@@ -178,17 +215,19 @@ export async function ListingDetailPage({ tip, slug, selectedDates }: ListingDet
               </div>
             </div>
             {etiketler.length > 0 ? (
-              <div className="mb-5 mt-2 flex flex-wrap gap-2">
+              <div className="mb-5 mt-2 grid grid-cols-2 gap-3 md:grid-cols-3">
                 {etiketler.map((oz) => {
                   const ozDef = OZELLIKLER.find((item) => item.value === oz);
-                  return ozDef ? (
-                    <span
-                      key={oz}
-                      className="inline-flex items-center gap-1.5 rounded-full border border-[#0e9aa7]/20 bg-[#f0fdfd] px-3 py-1.5 text-xs font-medium text-[#0e9aa7]"
-                    >
-                      {ozDef.label}
-                    </span>
-                  ) : null;
+                  const label = ozDef?.label ?? fixTurkishDisplay(oz.replaceAll("_", " "));
+                  const Icon = getFeatureIcon(label);
+                  return (
+                    <div key={oz} className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-4">
+                      <span className="inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-[#0e9aa7]/10">
+                        <Icon size={18} className="text-[#0e9aa7]" aria-hidden />
+                      </span>
+                      <span className="text-[13px] font-medium leading-snug text-slate-800 md:text-sm">{label}</span>
+                    </div>
+                  );
                 })}
               </div>
             ) : null}
@@ -197,37 +236,6 @@ export async function ListingDetailPage({ tip, slug, selectedDates }: ListingDet
 
           {tip === "villa" ? (
             <>
-              <div className="grid gap-6 md:grid-cols-2">
-                <div>
-                  <h4 className="mb-3 flex items-center gap-2 font-semibold text-green-700">
-                    <CheckCircle2 size={18} className="text-green-500" aria-hidden />
-                    Fiyata Dahil
-                  </h4>
-                  <ul className="space-y-2">
-                    {["Hazirlik hizmeti", "Havlu ve carsaf", "WiFi", "Otopark"].map((item) => (
-                      <li key={item} className="flex items-center gap-2 text-sm text-gray-700">
-                        <Check size={14} className="shrink-0 text-green-500" aria-hidden />
-                        {item}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-                <div>
-                  <h4 className="mb-3 flex items-center gap-2 font-semibold text-red-600">
-                    <XCircle size={18} className="text-red-500" aria-hidden />
-                    Fiyata Dahil Değil
-                  </h4>
-                  <ul className="space-y-2">
-                    {["Elektrik (sezon disi)", "Transfer", "Ek hazirlik"].map((item) => (
-                      <li key={item} className="flex items-center gap-2 text-sm text-gray-700">
-                        <X size={14} className="shrink-0 text-red-400" aria-hidden />
-                        {item}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-
               <div className="mt-2 overflow-hidden rounded-2xl border border-slate-200">
                 <table className="w-full text-sm">
                   <tbody>
