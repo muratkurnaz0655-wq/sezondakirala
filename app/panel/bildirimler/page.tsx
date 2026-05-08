@@ -54,6 +54,7 @@ export default async function PanelNotificationsPage() {
     ? await supabase
         .from("rezervasyonlar")
         .select("id")
+        .eq("kullanici_id", user.id)
         .in("id", legacyReservationRows.map((item) => String(item.entity_id)))
     : { data: [] as { id: string }[] };
   const ownedLegacyReservationIds = new Set((ownedReservations ?? []).map((item) => item.id));
@@ -65,7 +66,11 @@ export default async function PanelNotificationsPage() {
     })
     .filter((value): value is string => Boolean(value));
   const { data: ownedReservationsByRef } = reservationRefs.length
-    ? await supabase.from("rezervasyonlar").select("referans_no").in("referans_no", reservationRefs)
+    ? await supabase
+        .from("rezervasyonlar")
+        .select("referans_no")
+        .eq("kullanici_id", user.id)
+        .in("referans_no", reservationRefs)
     : { data: [] as { referans_no: string }[] };
   const ownedLegacyReservationRefs = new Set((ownedReservationsByRef ?? []).map((item) => item.referans_no));
 

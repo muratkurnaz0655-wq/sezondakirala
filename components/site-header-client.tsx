@@ -164,6 +164,7 @@ export function SiteHeaderClient({ siteName }: SiteHeaderClientProps) {
         const { data: ownedReservations } = await supabase
           .from("rezervasyonlar")
           .select("id")
+          .eq("kullanici_id", user.id)
           .in("id", legacyReservationRows.map((item) => String(item.entity_id)));
         ownedLegacyReservationIds = new Set((ownedReservations ?? []).map((item) => item.id));
       }
