@@ -332,7 +332,6 @@ export default function ListingsPage() {
                   baslik={listing.baslik}
                   konum={listing.konum ?? ""}
                   fiyat={listing.gunluk_fiyat}
-                  temizlikUcreti={listing.temizlik_ucreti}
                   tip="villa"
                   oda_sayisi={listing.yatak_odasi}
                   banyo_sayisi={listing.banyo}
