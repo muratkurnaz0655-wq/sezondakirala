@@ -33,29 +33,51 @@ export default async function AdminListingsPage({ searchParams }: AdminListingsP
   const minFiyat = Number(params.min_fiyat ?? "");
   const maxFiyat = Number(params.max_fiyat ?? "");
   const supabase = createAdminClient();
-  let query = supabase
-    .from("ilanlar")
-    .select("*, ilan_medyalari(id,url,sira)");
-  if (params.siralama === "eski") {
-    query = query.order("olusturulma_tarihi", { ascending: true });
-  } else if (params.siralama === "fiyat_artan") {
-    query = query.order("gunluk_fiyat", { ascending: true });
-  } else if (params.siralama === "fiyat_azalan") {
-    query = query.order("gunluk_fiyat", { ascending: false });
-  } else {
-    query = query.order("olusturulma_tarihi", { ascending: false });
+  const applyListingFilters = <T,>(query: T): T => {
+    let next = query as {
+      eq: (column: string, value: string) => typeof query;
+      gte: (column: string, value: number) => typeof query;
+      lte: (column: string, value: number) => typeof query;
+    };
+    if (durum === "onay_bekliyor" || durum === "yayinda" || durum === "reddedildi") {
+      next = next.eq("onay_durumu", durum);
+    }
+    if (Number.isFinite(minFiyat)) next = next.gte("gunluk_fiyat", minFiyat);
+    if (Number.isFinite(maxFiyat)) next = next.lte("gunluk_fiyat", maxFiyat);
+    if (params.konum) next = next.eq("konum", params.konum);
+    if (params.sahip) next = next.eq("sahip_id", params.sahip);
+    return next as T;
+  };
+
+  const applyListingSort = <T,>(query: T): T => {
+    let next = query as {
+      order: (column: string, options: { ascending: boolean }) => typeof query;
+    };
+    if (params.siralama === "eski") {
+      next = next.order("olusturulma_tarihi", { ascending: true });
+    } else if (params.siralama === "fiyat_artan") {
+      next = next.order("gunluk_fiyat", { ascending: true });
+    } else if (params.siralama === "fiyat_azalan") {
+      next = next.order("gunluk_fiyat", { ascending: false });
+    } else {
+      next = next.order("olusturulma_tarihi", { ascending: false });
+    }
+    return next.order("id", { ascending: false }) as T;
+  };
+
+  let listingsResult = await applyListingSort(
+    applyListingFilters(
+      supabase.from("ilanlar").select("*, ilan_medyalari(id,url,sira)"),
+    ),
+  );
+  if (listingsResult.error) {
+    listingsResult = await applyListingSort(
+      applyListingFilters(supabase.from("ilanlar").select("*")),
+    );
   }
-  query = query.order("id", { ascending: false });
-  if (durum === "onay_bekliyor" || durum === "yayinda" || durum === "reddedildi") {
-    query = query.eq("onay_durumu", durum);
-  }
-  if (Number.isFinite(minFiyat)) query = query.gte("gunluk_fiyat", minFiyat);
-  if (Number.isFinite(maxFiyat)) query = query.lte("gunluk_fiyat", maxFiyat);
-  if (params.konum) query = query.eq("konum", params.konum);
-  if (params.sahip) query = query.eq("sahip_id", params.sahip);
 
   const [{ data: listings }, { data: users }] = await Promise.all([
-    query,
+    Promise.resolve(listingsResult),
     supabase.from("kullanicilar").select("id,ad_soyad,email"),
   ]);
   const userMap = new Map(
@@ -168,6 +190,11 @@ export default async function AdminListingsPage({ searchParams }: AdminListingsP
           { key: "reddedildi", label: "Reddedildi", href: "/yonetim/ilanlar?durum=reddedildi" },
         ]}
       />
+      {listingsResult.error ? (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+          İlanlar listelenirken sorgu hatası oluştu: {listingsResult.error.message}
+        </div>
+      ) : null}
 
       <AdminMobileCardList>
         {filteredListings.map((listing) => {
