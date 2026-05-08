@@ -72,6 +72,7 @@ export function SiteHeaderClient({ siteName }: SiteHeaderClientProps) {
       mesaj: string | null;
       okundu: boolean;
       olusturulma_tarihi: string;
+      hedef_kullanici_id?: string | null;
       entity_tip: string | null;
       entity_id: string | null;
     }[]
@@ -136,8 +137,13 @@ export function SiteHeaderClient({ siteName }: SiteHeaderClientProps) {
         supabase.from("bildirimler").select("*", { count: "exact", head: true }).eq("okundu", false),
       ]);
       if (!mounted) return;
-      const rows = (rowsResult.data as typeof notifications) ?? [];
-      const unreadCount = countResult.count ?? 0;
+      const rows = ((rowsResult.data as typeof notifications) ?? []).filter((item) => {
+        // Hide legacy/unscoped reservation notifications and notifications targeted to another user.
+        if (item.hedef_kullanici_id && item.hedef_kullanici_id !== user.id) return false;
+        if (item.tip === "yeni_rezervasyon" && !item.hedef_kullanici_id) return false;
+        return true;
+      });
+      const unreadCount = rows.filter((item) => !item.okundu).length || countResult.count || 0;
       setNotifications(rows);
       setNotificationCount(unreadCount);
 
