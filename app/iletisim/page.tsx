@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getPlatformSettings } from "@/lib/settings";
 import { SITE_NAME, formatWhatsappTrDisplay, whatsappHref } from "@/lib/constants";
 import { ContactForm } from "@/components/contact-form";
+import { ContactMapEmbed } from "@/components/contact-map-embed";
 import { Clock3, Mail, MapPin, MessageCircle, Phone } from "lucide-react";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -32,8 +33,8 @@ export default async function IletisimPage() {
         <div className="grid gap-6 lg:grid-cols-2">
           <div className="space-y-6">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <a href={phoneHref} className="hover-lift-soft rounded-xl border border-slate-200 border-l-4 border-l-[#185FA5] bg-white p-4">
-                <Phone className="mb-2 h-6 w-6 text-[#185FA5]" />
+              <a href={phoneHref} className="hover-lift-soft rounded-xl border border-slate-200 border-l-4 border-l-[#1D9E75] bg-white p-4">
+                <Phone className="mb-2 h-6 w-6 text-[#1D9E75]" />
                 <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Telefon</p>
                 <p className="mt-1 text-base font-semibold text-slate-900">{formatWhatsappTrDisplay(settings.whatsappNumber)}</p>
               </a>
@@ -44,14 +45,14 @@ export default async function IletisimPage() {
               </Link>
               <a
                 href={`mailto:${settings.contactEmail}`}
-                className="hover-lift-soft rounded-xl border border-slate-200 border-l-4 border-l-[#f59e0b] bg-white p-4"
+                className="hover-lift-soft rounded-xl border border-slate-200 border-l-4 border-l-[#0F6E56] bg-white p-4"
               >
-                <Mail className="mb-2 h-6 w-6 text-[#f59e0b]" />
+                <Mail className="mb-2 h-6 w-6 text-[#0F6E56]" />
                 <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">E-posta</p>
                 <p className="mt-1 text-base font-semibold text-slate-900">{settings.contactEmail}</p>
               </a>
-              <div className="hover-lift-soft rounded-xl border border-slate-200 border-l-4 border-l-[#7c3aed] bg-white p-4">
-                <Clock3 className="mb-2 h-6 w-6 text-[#7c3aed]" />
+              <div className="hover-lift-soft rounded-xl border border-slate-200 border-l-4 border-l-[#1D9E75]/80 bg-white p-4">
+                <Clock3 className="mb-2 h-6 w-6 text-[#1D9E75]" />
                 <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Çalışma Saatleri</p>
                 <p className="mt-1 text-base font-semibold text-slate-900">Pzt-Cmt 09:00-18:00</p>
               </div>
@@ -59,20 +60,9 @@ export default async function IletisimPage() {
 
             <div>
               <h3 className="mb-3 text-lg font-semibold text-slate-900">Konumumuz</h3>
-              <div className="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
-                <iframe
-                  title="Fethiye harita"
-                  src="https://www.google.com/maps?q=Fethiye,+Mu%C4%9Fla,+T%C3%BCrkiye&output=embed"
-                  width="100%"
-                  height="280"
-                  style={{ border: 0 }}
-                  loading="lazy"
-                  referrerPolicy="no-referrer-when-downgrade"
-                  allowFullScreen
-                />
-              </div>
+              <ContactMapEmbed />
               <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-600">
-                <MapPin className="h-4 w-4 text-[#185FA5]" /> Fethiye, Muğla, Türkiye
+                <MapPin className="h-4 w-4 text-[#1D9E75]" /> Fethiye, Muğla, Türkiye
               </div>
             </div>
           </div>

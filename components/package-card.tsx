@@ -1,5 +1,8 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { useState } from "react";
 import { Clock, Package, Users } from "lucide-react";
 import type { Paket } from "@/types/supabase";
 import { formatCurrency } from "@/lib/utils/format";
@@ -44,6 +47,7 @@ function kategoriLabel(raw: string | null | undefined) {
 }
 
 export function PackageCard({ paket, variant = "default" }: PackageCardProps) {
+  const [kapakYuklendi, setKapakYuklendi] = useState(false);
   const isHome = variant === "home";
   const baslik = fixTurkishDisplay(paket.baslik);
   const aciklama = fixTurkishDisplay(paket.aciklama ?? "").trim();
@@ -58,14 +62,23 @@ export function PackageCard({ paket, variant = "default" }: PackageCardProps) {
       <article className="flex h-full w-full max-w-full flex-col overflow-hidden rounded-2xl border border-[#E2E8F0] bg-white">
         <div className="relative h-[200px] w-full shrink-0 overflow-hidden bg-[#F1F5F9]">
           {hasCustomImage ? (
-            <Image
-              src={kapak}
-              alt={baslik}
-              fill
-              loading="lazy"
-              className="object-cover"
-              sizes="(max-width: 768px) 100vw, 360px"
-            />
+            <>
+              {!kapakYuklendi ? (
+                <div
+                  className="absolute inset-0 animate-pulse bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200"
+                  aria-hidden
+                />
+              ) : null}
+              <Image
+                src={kapak}
+                alt={baslik}
+                fill
+                loading="lazy"
+                className={`object-cover transition-opacity duration-500 ${kapakYuklendi ? "opacity-100" : "opacity-0"}`}
+                sizes="(max-width: 768px) 100vw, 360px"
+                onLoadingComplete={() => setKapakYuklendi(true)}
+              />
+            </>
           ) : (
             <div className="flex h-full w-full items-center justify-center" aria-hidden>
               <Package className="h-14 w-14 text-slate-300" strokeWidth={1.25} />
@@ -99,7 +112,7 @@ export function PackageCard({ paket, variant = "default" }: PackageCardProps) {
 
           <Link
             href={`/paketler/${paket.slug}`}
-            className="mt-4 flex w-full items-center justify-center rounded-lg border-[1.5px] border-[#1D9E75] bg-white py-3 text-[15px] font-medium text-[#1D9E75] transition-colors duration-200 hover:bg-[#1D9E75] hover:text-white"
+            className="mt-4 flex w-full items-center justify-center rounded-lg bg-[#1D9E75] py-3 text-[15px] font-semibold text-white shadow-sm transition-colors duration-200 hover:bg-[#0F6E56]"
           >
             İncele
           </Link>
@@ -110,14 +123,23 @@ export function PackageCard({ paket, variant = "default" }: PackageCardProps) {
 
   return (
     <div className="group flex h-full min-h-0 flex-col overflow-hidden rounded-xl border border-slate-100 bg-white shadow-md transition-all duration-300 motion-safe:hover:-translate-y-1 motion-safe:hover:shadow-xl motion-safe:hover:shadow-slate-900/10">
-      <div className="relative h-[220px] w-full shrink-0 overflow-hidden rounded-t-xl">
+      <div className="relative h-[220px] w-full shrink-0 overflow-hidden rounded-t-xl bg-slate-200">
+        {!kapakYuklendi ? (
+          <div
+            className="absolute inset-0 z-[1] animate-pulse bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200"
+            aria-hidden
+          />
+        ) : null}
         <Image
           src={kapak}
           alt={baslik}
           fill
           loading="lazy"
-          className="object-cover transition-transform duration-500 motion-safe:group-hover:scale-105"
+          className={`object-cover transition-[opacity,transform] duration-500 motion-safe:group-hover:scale-105 ${
+            kapakYuklendi ? "opacity-100" : "opacity-0"
+          }`}
           sizes="(max-width: 768px) 100vw, 33vw"
+          onLoadingComplete={() => setKapakYuklendi(true)}
         />
         <span
           className={`absolute left-3 top-3 rounded-full border px-3 py-1 text-xs font-semibold shadow-sm backdrop-blur-[2px] ${badgeClassDefault}`}
@@ -148,7 +170,7 @@ export function PackageCard({ paket, variant = "default" }: PackageCardProps) {
         <div className="mt-auto pt-4">
           <Link
             href={`/paketler/${paket.slug}`}
-            className="flex w-full items-center justify-center rounded-xl border-2 border-[#1D9E75] bg-transparent py-3 text-sm font-semibold text-[#1D9E75] transition-all duration-200 hover:bg-[#1D9E75] hover:text-white"
+            className="flex w-full items-center justify-center rounded-xl bg-[#1D9E75] py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:bg-[#0F6E56]"
           >
             İncele
           </Link>

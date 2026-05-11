@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import {
   getHomeFeaturedPackages,
@@ -17,6 +16,7 @@ import { fixTurkishDisplay } from "@/lib/utils/turkish-display";
 import { getPlatformSettings } from "@/lib/settings";
 import { createClient } from "@/lib/supabase/server";
 import { ListingCard } from "@/components/listing-card";
+import { RegionShowcaseImage } from "@/components/region-showcase-image";
 import {
   Anchor,
   ArrowRight,
@@ -48,7 +48,7 @@ function withCoverImage(rows: ListingRow[]): Ilan[] {
 
 function yorumAvatarHarf(ad: string | null): string {
   const t = ad?.trim();
-  if (!t) return "M";
+  if (!t || t.length < 3) return "Ku";
   const parcalar = t.split(/\s+/).filter(Boolean);
   if (parcalar.length >= 2) {
     const a = parcalar[0][0];
@@ -56,6 +56,12 @@ function yorumAvatarHarf(ad: string | null): string {
     if (a && b) return (a + b).toUpperCase();
   }
   return t.slice(0, 2).toUpperCase();
+}
+
+function yorumMisafirAdi(ad: string | null | undefined): string {
+  const t = ad?.trim();
+  if (!t || t.length < 3) return "Kullanıcı";
+  return fixTurkishDisplay(t);
 }
 
 export default async function Home() {
@@ -179,7 +185,7 @@ export default async function Home() {
 
   return (
     <div className="flex w-full flex-col overflow-x-hidden">
-      <div className="hero-video-section relative overflow-visible border-b border-[#0e9aa7]/20 bg-gradient-to-r from-[#0e9aa7] to-[#06b6d4] py-2.5 text-sm font-medium text-white">
+      <div className="hero-video-section relative overflow-visible border-b border-[#0e9aa7]/20 bg-gradient-to-r from-[#0e9aa7] to-[#06b6d4] py-2.5 text-[14px] font-medium text-white">
         <div className="pointer-events-none absolute -left-16 top-1/2 h-24 w-24 -translate-y-1/2 rounded-full bg-[#22d3ee]/20 blur-2xl" />
         <div className="pointer-events-none absolute -right-20 top-1/2 h-28 w-28 -translate-y-1/2 rounded-full bg-[#0e9aa7]/30 blur-2xl" />
         <div className="flex w-full flex-col items-center justify-between gap-3 px-4 sm:flex-row sm:px-6 lg:px-8">
@@ -194,7 +200,7 @@ export default async function Home() {
           </div>
           <Link
             href="/konaklama"
-            className="shrink-0 rounded-full border border-[#22d3ee]/40 bg-[#22d3ee]/15 px-4 py-1 text-sm font-medium text-[#22d3ee] transition-all hover:bg-[#22d3ee]/25"
+            className="shrink-0 rounded-full border border-white/50 bg-white px-4 py-1.5 text-[14px] font-semibold text-[#0F6E56] shadow-md transition-all duration-200 hover:bg-emerald-50 hover:shadow-lg"
           >
             İncele →
           </Link>
@@ -225,57 +231,57 @@ export default async function Home() {
             </div>
 
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-              <div className="group relative overflow-hidden rounded-2xl border border-slate-100 bg-white p-7 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg after:absolute after:-right-8 after:-top-8 after:h-32 after:w-32 after:rounded-full after:bg-[#0e9aa7]/5 after:transition-transform after:duration-500 hover:after:scale-150">
-                <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[#0e9aa7] to-[#06b6d4] shadow-lg shadow-[#0e9aa7]/25">
+              <div className="group relative overflow-hidden rounded-2xl border border-slate-100 bg-white p-7 shadow-sm transition-all duration-300 motion-safe:hover:-translate-y-0.5 motion-safe:hover:scale-[1.01] motion-safe:hover:shadow-lg">
+                <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#1D9E75] shadow-lg shadow-[#1D9E75]/25">
                   <Lock className="h-6 w-6 text-white" strokeWidth={2} />
                 </div>
                 <h3 className="mb-2 text-lg font-bold text-slate-800">SSL Güvenli Ödeme</h3>
                 <p className="text-sm leading-relaxed text-slate-500">
                   256-bit SSL şifreleme ile tüm ödeme işlemleriniz tam güvence altında gerçekleşir.
                 </p>
-                <div className="mt-4 flex items-center gap-1.5 text-xs font-semibold text-[#0e9aa7]">
+                <div className="mt-4 flex items-center gap-1.5 text-xs font-semibold text-[#1D9E75]">
                   <CheckCircle className="h-3.5 w-3.5" />
                   Banka düzeyinde güvenlik
                 </div>
               </div>
 
-              <div className="group relative overflow-hidden rounded-2xl border border-slate-100 bg-white p-7 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg after:absolute after:-right-8 after:-top-8 after:h-32 after:w-32 after:rounded-full after:bg-[#0e9aa7]/5 after:transition-transform after:duration-500 hover:after:scale-150">
-                <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-500 shadow-lg shadow-emerald-500/25">
+              <div className="group relative overflow-hidden rounded-2xl border border-slate-100 bg-white p-7 shadow-sm transition-all duration-300 motion-safe:hover:-translate-y-0.5 motion-safe:hover:scale-[1.01] motion-safe:hover:shadow-lg">
+                <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#1D9E75] shadow-lg shadow-[#1D9E75]/25">
                   <BadgeCheck className="h-6 w-6 text-white" strokeWidth={2} />
                 </div>
                 <h3 className="mb-2 text-lg font-bold text-slate-800">Admin Onaylı İlanlar</h3>
                 <p className="text-sm leading-relaxed text-slate-500">
                   Yayına giren her ilan ekibimiz tarafından tek tek incelenir, doğrulanır ve onaylanır.
                 </p>
-                <div className="mt-4 flex items-center gap-1.5 text-xs font-semibold text-emerald-600">
+                <div className="mt-4 flex items-center gap-1.5 text-xs font-semibold text-[#1D9E75]">
                   <CheckCircle className="h-3.5 w-3.5" />
                   Sahte ilan sıfır tolerans
                 </div>
               </div>
 
-              <div className="group relative overflow-hidden rounded-2xl border border-slate-100 bg-white p-7 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg after:absolute after:-right-8 after:-top-8 after:h-32 after:w-32 after:rounded-full after:bg-[#0e9aa7]/5 after:transition-transform after:duration-500 hover:after:scale-150">
-                <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 shadow-lg shadow-blue-500/25">
+              <div className="group relative overflow-hidden rounded-2xl border border-slate-100 bg-white p-7 shadow-sm transition-all duration-300 motion-safe:hover:-translate-y-0.5 motion-safe:hover:scale-[1.01] motion-safe:hover:shadow-lg">
+                <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#1D9E75] shadow-lg shadow-[#1D9E75]/25">
                   <MessageCircle className="h-6 w-6 text-white" strokeWidth={2} />
                 </div>
                 <h3 className="mb-2 text-lg font-bold text-slate-800">7/24 Canlı Destek</h3>
                 <p className="text-sm leading-relaxed text-slate-500">
                   Rezervasyon öncesi, sırası ve sonrasında WhatsApp ve telefon ile her an yanınızdayız.
                 </p>
-                <div className="mt-4 flex items-center gap-1.5 text-xs font-semibold text-blue-600">
+                <div className="mt-4 flex items-center gap-1.5 text-xs font-semibold text-[#1D9E75]">
                   <CheckCircle className="h-3.5 w-3.5" />
                   Ortalama yanıt 10 dakika
                 </div>
               </div>
 
-              <div className="group relative overflow-hidden rounded-2xl border border-slate-100 bg-white p-7 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg after:absolute after:-right-8 after:-top-8 after:h-32 after:w-32 after:rounded-full after:bg-[#0e9aa7]/5 after:transition-transform after:duration-500 hover:after:scale-150">
-                <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-500 to-orange-500 shadow-lg shadow-amber-500/25">
+              <div className="group relative overflow-hidden rounded-2xl border border-slate-100 bg-white p-7 shadow-sm transition-all duration-300 motion-safe:hover:-translate-y-0.5 motion-safe:hover:scale-[1.01] motion-safe:hover:shadow-lg">
+                <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#1D9E75] shadow-lg shadow-[#1D9E75]/25">
                   <Award className="h-6 w-6 text-white" strokeWidth={2} />
                 </div>
                 <h3 className="mb-2 text-lg font-bold text-slate-800">TURSAB Lisanslı</h3>
                 <p className="text-sm leading-relaxed text-slate-500">
                   Türkiye Seyahat Acentaları Birliği onaylı lisanslı platform. Belge No: {settings.tursabNo}.
                 </p>
-                <div className="mt-4 flex items-center gap-1.5 text-xs font-semibold text-amber-600">
+                <div className="mt-4 flex items-center gap-1.5 text-xs font-semibold text-[#1D9E75]">
                   <CheckCircle className="h-3.5 w-3.5" />
                   Resmi devlet güvencesi
                 </div>
@@ -286,7 +292,7 @@ export default async function Home() {
       </section>
 
       <section className="-mx-4 bg-[#f0fdfd] py-10 sm:py-12 md:py-16 md:-mx-6 lg:-mx-8">
-        <MotionFadeIn className="mx-auto w-full max-w-[1200px] space-y-5 px-6" delay={0.05}>
+        <MotionFadeIn className="mx-auto w-full max-w-[1200px] space-y-5 px-6 sm:px-8" delay={0.05}>
           <div className="text-center">
             <h2 className="text-xl font-bold text-slate-900 sm:text-2xl md:text-3xl">Hazır Tatil Paketleri</h2>
             <p className="mt-1 text-base leading-relaxed text-slate-500">Konaklama + aktivite bir arada — örnek paketler</p>
@@ -373,7 +379,13 @@ export default async function Home() {
                 </div>
               ) : null}
             </div>
-            <div className="grid gap-6 md:grid-cols-3">
+            <div
+              className={`grid gap-6 ${
+                homeCommentSummary.comments.length === 1
+                  ? "mx-auto max-w-lg md:grid-cols-1"
+                  : "md:grid-cols-3"
+              }`}
+            >
               {homeCommentSummary.comments.map((item) => (
                 <article key={item.id} className="relative rounded-2xl border border-slate-100 bg-white p-6 shadow-sm transition-all duration-200 hover:shadow-md">
                   <div
@@ -395,12 +407,12 @@ export default async function Home() {
                     &ldquo;{fixTurkishDisplay(item.yorum)}&rdquo;
                   </p>
                   <div className="flex items-center gap-3 border-t border-slate-200 pt-4">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#0e9aa7] text-sm font-bold text-white">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#1D9E75] text-sm font-bold text-white">
                       {yorumAvatarHarf(item.misafir_ad)}
                     </div>
                     <div>
                       <div className="text-sm font-semibold text-slate-800">
-                        {fixTurkishDisplay(item.misafir_ad ?? "Kullanıcı")}
+                        {yorumMisafirAdi(item.misafir_ad)}
                       </div>
                       <div className="text-xs text-slate-500">
                         {item.ilan_baslik ? fixTurkishDisplay(item.ilan_baslik) : SITE_NAME}
@@ -426,7 +438,7 @@ export default async function Home() {
 
       <section className="-mx-4 bg-white py-16 text-slate-900 md:-mx-6 lg:-mx-8">
         <MotionFadeIn className="w-full" delay={0.3}>
-          <div className="mx-auto max-w-[1200px] overflow-hidden px-6">
+          <div className="mx-auto max-w-[1200px] px-6 sm:px-8">
             <div className="mb-10 text-center">
               <h2 className="mb-3 text-2xl font-semibold tracking-tight sm:text-3xl md:text-4xl">Fethiye&apos;yi Keşfedin</h2>
               <p className="mx-auto max-w-2xl text-base text-slate-600 sm:text-lg">
@@ -440,11 +452,9 @@ export default async function Home() {
                   href={`/konaklama?konum=${encodeURIComponent(bolge.slug)}`}
                   className="group relative min-h-0 w-full cursor-pointer overflow-hidden rounded-2xl h-[180px] md:h-[220px]"
                 >
-                  <Image
+                  <RegionShowcaseImage
                     src={bolge.gorsel}
                     alt={bolge.isim}
-                    fill
-                    className="object-cover transition-transform duration-[400ms] ease-out motion-safe:group-hover:scale-105"
                     sizes="(max-width: 768px) 50vw, 25vw"
                   />
                   <div
@@ -459,7 +469,7 @@ export default async function Home() {
                       {bolge.isim}
                     </p>
                     <p className="mt-0.5 text-[13px] text-white/[0.85]">{bolge.ilanSayisi} Villa</p>
-                    <div className="mt-2 translate-y-2 opacity-0 transition-all duration-[250ms] ease-in-out motion-safe:group-hover:translate-y-0 motion-safe:group-hover:opacity-100">
+                    <div className="mt-2 translate-y-2 opacity-0 transition-all duration-300 ease-in-out motion-safe:group-hover:translate-y-0 motion-safe:group-hover:opacity-100">
                       <span className="inline-flex rounded-full border border-white/40 bg-white/20 px-3.5 py-1.5 text-[13px] font-medium text-white backdrop-blur-[4px]">
                         Villalara Bak →
                       </span>

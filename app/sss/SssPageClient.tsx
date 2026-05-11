@@ -210,7 +210,11 @@ function FaqAccordionItem({
         onClick={onToggle}
         className="flex w-full cursor-pointer items-center gap-3 px-4 py-4 text-left sm:px-5 sm:py-5"
       >
-        <span className="min-w-0 flex-1 text-sm font-semibold leading-snug text-slate-900 sm:text-base">
+        <span
+          className={`min-w-0 flex-1 text-sm font-semibold leading-snug sm:text-base ${
+            open ? "text-slate-900" : "text-[#64748B]"
+          }`}
+        >
           {question}
         </span>
         <span
@@ -232,8 +236,7 @@ function FaqAccordionItem({
         className="overflow-hidden px-4 motion-reduce:transition-none sm:px-5"
         style={{
           maxHeight: open ? maxHeight : 0,
-          transition:
-            "max-height 0.38s cubic-bezier(0.4, 0, 0.2, 1)",
+          transition: "max-height 0.3s ease",
         }}
       >
         <div ref={innerRef}>
@@ -418,13 +421,13 @@ export function SssPageClient() {
               href={waLink}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center justify-center rounded-xl bg-white px-6 py-3.5 text-sm font-semibold text-slate-900 shadow-md transition hover:bg-slate-50"
+              className="inline-flex min-h-12 items-center justify-center rounded-xl bg-white px-6 py-3.5 text-sm font-semibold text-slate-900 shadow-md transition-all duration-200 hover:bg-emerald-50 hover:shadow-lg active:scale-[0.98]"
             >
               WhatsApp
             </a>
             <Link
               href="/iletisim"
-              className="inline-flex items-center justify-center rounded-xl border-2 border-white bg-transparent px-6 py-3.5 text-sm font-semibold text-white transition hover:bg-white/10"
+              className="inline-flex min-h-12 items-center justify-center rounded-xl border-2 border-white bg-transparent px-6 py-3.5 text-sm font-semibold text-white transition-all duration-200 hover:bg-white/15 hover:shadow-md active:scale-[0.98]"
             >
               İletişim Formu
             </Link>

@@ -52,6 +52,9 @@ export function ListingCard({ listing, selectedDates, showWhatsappCta = true }: 
       )
     : 0;
   const toplamFiyat = geceSayisi > 0 ? listing.gunluk_fiyat * geceSayisi : 0;
+  const yorumSayisi = listing.yorum_sayisi ?? 0;
+  const ortPuan = listing.ortalama_puan ?? 0;
+  const yorumGoster = yorumSayisi > 0 && ortPuan > 0;
 
   const waText = encodeURIComponent(
     `Merhaba, ${listing.baslik} hakkında bilgi almak istiyorum.`,
@@ -62,7 +65,7 @@ export function ListingCard({ listing, selectedDates, showWhatsappCta = true }: 
     <div className="flex h-full flex-col gap-2">
     <Link
       href={href}
-      className="villa-card group flex h-full flex-col overflow-hidden rounded-2xl border border-slate-100 text-inherit no-underline shadow-sm outline-offset-2 transition-all duration-300 hover:-translate-y-1.5 hover:border-[#0e9aa7]/30 hover:shadow-xl hover:shadow-[#0e9aa7]/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-sky-500"
+      className="villa-card group flex h-full flex-col overflow-hidden rounded-2xl border border-slate-100 text-inherit no-underline shadow-sm outline-offset-2 transition-all duration-300 motion-safe:hover:-translate-y-1 motion-safe:hover:border-[#1D9E75]/30 motion-safe:hover:shadow-xl motion-safe:hover:shadow-slate-900/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#1D9E75]"
     >
       <div className="card-image relative aspect-[4/3] shrink-0 overflow-hidden rounded-t-2xl bg-gradient-to-br from-slate-100 to-slate-200">
         {coverImage && !imageErrored ? (
@@ -136,24 +139,17 @@ export function ListingCard({ listing, selectedDates, showWhatsappCta = true }: 
 
         <div className="mt-auto flex items-end justify-between gap-2 border-t border-gray-100 pt-3">
           <div>
-            <div className="mb-1 flex items-center gap-1">
-              <Star size={13} className="fill-amber-400 text-amber-400" />
-              <span className="text-sm font-bold text-gray-900">5.0</span>
-              <span className="text-xs text-gray-400">(0)</span>
-            </div>
-            {listing.tip !== "tekne" && listing.ozellikler ? (
-              <div className="flex flex-wrap gap-1">
-                {hasFeature(listing.ozellikler, "havuz") ? (
-                  <span className="rounded-full bg-sky-50 px-2 py-0.5 text-xs text-sky-600">🏊</span>
-                ) : null}
-                {hasFeature(listing.ozellikler, "wifi") ? (
-                  <span className="rounded-full bg-sky-50 px-2 py-0.5 text-xs text-sky-600">📶</span>
-                ) : null}
-                {hasFeature(listing.ozellikler, "deniz_manzarasi") ? (
-                  <span className="rounded-full bg-sky-50 px-2 py-0.5 text-xs text-sky-600">🌊</span>
-                ) : null}
+            {yorumGoster ? (
+              <div className="mb-1 flex items-center gap-1">
+                <Star size={13} className="fill-amber-400 text-amber-400" />
+                <span className="text-sm font-bold text-gray-900">{ortPuan.toFixed(1)}</span>
+                <span className="text-xs text-gray-400">({yorumSayisi})</span>
               </div>
-            ) : null}
+            ) : (
+              <span className="mb-1 inline-flex rounded-full bg-[#E1F5EE] px-2.5 py-0.5 text-[11px] font-semibold text-[#0F6E56]">
+                Yeni ilan
+              </span>
+            )}
           </div>
           <div className="text-right">
             {geceSayisi > 0 ? (

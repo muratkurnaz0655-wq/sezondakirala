@@ -68,7 +68,7 @@ export function TekneKarti({ tekne }: { tekne: Tekne }) {
   }, [tekne.id]);
 
   return (
-    <article className="group relative flex h-full min-w-0 flex-col overflow-hidden rounded-xl border border-slate-100 bg-white shadow-sm transition-all duration-300 motion-safe:hover:-translate-y-1 motion-safe:hover:shadow-xl motion-safe:hover:shadow-slate-900/10">
+    <article className="group relative flex h-full min-w-0 flex-col overflow-hidden rounded-xl border border-slate-100 bg-white shadow-sm transition-all duration-300 motion-safe:hover:translate-y-[-4px] motion-safe:hover:shadow-xl motion-safe:hover:shadow-slate-900/10">
       <div className="relative h-[220px] w-full shrink-0 overflow-hidden rounded-t-xl">
         <Link href={href} className="relative block h-full w-full" aria-label={`${baslikGosterim} görseli`}>
           {kapak ? (

@@ -56,7 +56,24 @@ export default function TeknelerPage() {
   const [filtre, setFiltre] = useState<TekneFiltre>(defaultTekneFiltre);
   const [yukleniyor, setYukleniyor] = useState(true);
   const [mobilFiltre, setMobilFiltre] = useState(false);
+  const [tekneToplam, setTekneToplam] = useState<number | null>(null);
   const bugunIso = useMemo(() => istanbulDateString(), []);
+
+  useEffect(() => {
+    let cancelled = false;
+    const supabase = createClient();
+    void supabase
+      .from("ilanlar")
+      .select("*", { count: "exact", head: true })
+      .eq("aktif", true)
+      .eq("tip", "tekne")
+      .then(({ count }) => {
+        if (!cancelled) setTekneToplam(count ?? null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     if (currentArama?.tip !== "tekne") return;
@@ -145,13 +162,13 @@ export default function TeknelerPage() {
           <p className="mb-2 text-[13px] text-white/75">Ana Sayfa / Tekneler</p>
           <h1 className="mb-3 text-3xl font-medium tracking-tight md:text-5xl md:leading-tight">Fethiye Tekne Kiralama</h1>
           <p className="mb-8 max-w-xl text-base leading-relaxed text-white/85 md:text-lg">
-            {tekneler.length}+ tekne ile hayalinizdeki deniz tatilini bulun
+            {(tekneToplam ?? tekneler.length)}+ tekne ile hayalinizdeki deniz tatilini bulun
           </p>
           <div className="flex flex-wrap gap-2 md:gap-3">
             {["Günlük / Haftalık", "Mürettebatlı Seçenekler", "TURSAB Güvencesi"].map((chip) => (
               <span
                 key={chip}
-                className="rounded-full border border-white/25 bg-white/15 px-4 py-2 text-sm font-medium text-white shadow-sm backdrop-blur-md"
+                className="rounded-full border-2 border-white/50 bg-white/20 px-4 py-2.5 text-sm font-semibold text-white shadow-md backdrop-blur-md md:px-5 md:py-3"
               >
                 {chip}
               </span>
@@ -184,7 +201,7 @@ export default function TeknelerPage() {
         <button
           type="button"
           onClick={() => setMobilFiltre(true)}
-          className="flex w-full items-center justify-center gap-2 rounded-xl border border-[#1D9E75]/40 bg-white px-4 py-3 text-sm font-semibold text-[#1D9E75] shadow-sm lg:hidden"
+          className="mb-1 flex w-full items-center justify-center gap-2 rounded-xl border border-[#1D9E75]/40 bg-white px-4 py-3 text-sm font-semibold text-[#1D9E75] shadow-sm lg:hidden"
         >
           <SlidersHorizontal className="h-4 w-4" />
           Filtrele

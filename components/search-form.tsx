@@ -516,19 +516,22 @@ export function SearchForm({
                   ? "rounded-xl border-2 border-white bg-white font-semibold text-[#1D9E75] shadow-md hover:border-[#1D9E75] hover:bg-[#1D9E75] hover:text-white md:m-0 md:w-auto md:min-w-[140px] md:self-stretch"
                   : embedded
                     ? `rounded-lg bg-[#1D9E75] px-6 py-3 text-white shadow-sm hover:bg-[#0F6E56] md:m-0 md:min-h-12 md:w-auto md:min-w-[140px] md:self-stretch ${forceVertical ? "" : "sm:w-auto"}`
-                    : `rounded-xl text-[#0d1117] shadow-lg shadow-[#0e9aa7]/30 hover:from-[#22d3ee] hover:to-[#0e9aa7] ${forceVertical ? "" : "sm:w-auto md:m-1"} btn-primary`
+                    : `rounded-xl bg-[#1D9E75] text-white shadow-md shadow-[#1D9E75]/25 hover:bg-[#0F6E56] ${forceVertical ? "" : "sm:w-auto md:m-1"}`
               }`}
               style={
                 catalogBar || embedded
                   ? undefined
                   : {
-                      background: "linear-gradient(to right, #0e9aa7, #22d3ee)",
                       minWidth: "112px",
                       borderRadius: "16px",
                     }
               }
             >
-              <Search size={16} className={`inline ${catalogBar ? "text-current" : embedded ? "text-white" : "opacity-90"}`} aria-hidden />
+              <Search
+                size={16}
+                className={`inline ${catalogBar ? "text-current" : "text-white opacity-90"}`}
+                aria-hidden
+              />
               <span>{submitLabel}</span>
             </button>
           </div>

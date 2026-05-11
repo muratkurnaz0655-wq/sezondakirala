@@ -244,7 +244,19 @@ export default function ListingsPage() {
 
   return (
     <div className="min-h-0 w-full space-y-6 overflow-x-hidden py-6">
-      <section className="border-y border-[#E2E8F0] bg-[#F8FAFC] py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.6)]">
+      <section className="relative overflow-hidden rounded-2xl bg-[#0F6E56] px-6 py-10 text-white shadow-lg md:px-10 md:py-12">
+        <div className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-white/10 blur-2xl" aria-hidden />
+        <div className="pointer-events-none absolute -bottom-16 -left-10 h-36 w-36 rounded-full bg-emerald-400/10 blur-2xl" aria-hidden />
+        <div className="relative z-[1] max-w-3xl">
+          <p className="mb-2 text-[13px] text-white/75">Ana Sayfa / Konaklama</p>
+          <h1 className="mb-3 text-3xl font-semibold tracking-tight md:text-4xl md:leading-tight">Fethiye Villa Kiralama</h1>
+          <p className="max-w-xl text-base leading-relaxed text-emerald-50 md:text-lg">
+            Lüks villalar, aile evleri ve butik konaklama seçenekleri
+          </p>
+        </div>
+      </section>
+
+      <section className="border-y border-[#E2E8F0] bg-white py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.6)]">
         <div className="mx-auto max-w-6xl px-4 md:px-6">
           <p className="mb-3 text-[12px] font-semibold uppercase tracking-wide text-[#64748B]">Tarih ve misafir</p>
           <div className="rounded-xl border border-[#E2E8F0] bg-white px-5 py-4 shadow-sm">
@@ -332,7 +344,7 @@ export default function ListingsPage() {
             key={listeAnimasyonAnahtari}
           >
             {loading ? (
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
                 {[...Array(6)].map((_, i) => (
                   <SkeletonKart key={i} />
                 ))}
@@ -353,7 +365,7 @@ export default function ListingsPage() {
                 </button>
               </div>
             ) : (
-              <ListingReveal className="grid grid-cols-1 gap-6 md:grid-cols-2" staggerMs={50}>
+              <ListingReveal className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3" staggerMs={50}>
                 {ilanlar.map((listing) => (
                   <IlanListeKarti
                     key={listing.id}
@@ -366,8 +378,8 @@ export default function ListingsPage() {
                     oda_sayisi={listing.yatak_odasi}
                     banyo_sayisi={listing.banyo}
                     kapasite={listing.kapasite}
-                    puan={0}
-                    yorum_sayisi={0}
+                    puan={listing.ortalama_puan ?? 0}
+                    yorum_sayisi={listing.yorum_sayisi ?? 0}
                     fotograflar={listing.ilk_resim_url ? [listing.ilk_resim_url] : []}
                     one_cikan={listing.sponsorlu}
                     ozellikler={extractTags(listing.ozellikler)}

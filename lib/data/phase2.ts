@@ -71,7 +71,9 @@ export async function getFeaturedPackages(category?: string) {
       firstQuery = firstQuery.eq("kategori", category);
     }
     const firstTry = await firstQuery;
-    if (!firstTry.error) return (firstTry.data ?? []) as Paket[];
+    if (!firstTry.error) {
+      return ((firstTry.data ?? []) as Paket[]).filter((p) => !isExcludedDraftPackage(p));
+    }
 
     let fallbackQuery = supabase
       .from("paketler")
@@ -84,7 +86,7 @@ export async function getFeaturedPackages(category?: string) {
     }
     const fallback = await fallbackQuery;
     if (fallback.error) return [];
-    return (fallback.data ?? []) as Paket[];
+    return ((fallback.data ?? []) as Paket[]).filter((p) => !isExcludedDraftPackage(p));
   } catch {
     return [];
   }
@@ -122,12 +124,13 @@ export async function getPublicCatalogCounts(): Promise<PublicCatalogCounts | nu
   }
 }
 
-/** Ana sayfa önizlemesinde gösterilmeyecek taslak / test paketleri. */
-function excludeFromHomeFeaturedPreview(p: Paket): boolean {
+/** Taslak / test paketleri — ana sayfa ve `/paketler` listesinde gösterilmez. */
+export function isExcludedDraftPackage(p: Paket): boolean {
   const baslik = (p.baslik ?? "").trim().toLowerCase();
   if (baslik === "deneme") return true;
   if (baslik.startsWith("deneme ")) return true;
-  const aciklama = (p.aciklama ?? "").toLowerCase();
+  const aciklama = (p.aciklama ?? "").trim().toLowerCase();
+  if (aciklama === "deneme deneme deneme") return true;
   if (aciklama.includes("test verisi")) return true;
   if (aciklama.includes("test veri")) return true;
   if (aciklama.includes("test data")) return true;
@@ -149,7 +152,7 @@ export async function getHomeFeaturedPackages(limit = 3) {
       .order("id", { ascending: false })
       .limit(fetchCap);
     if (!firstTry.error) {
-      const rows = ((firstTry.data ?? []) as Paket[]).filter((p) => !excludeFromHomeFeaturedPreview(p));
+      const rows = ((firstTry.data ?? []) as Paket[]).filter((p) => !isExcludedDraftPackage(p));
       return rows.slice(0, safeLimit);
     }
 
@@ -160,7 +163,7 @@ export async function getHomeFeaturedPackages(limit = 3) {
       .order("id", { ascending: false })
       .limit(fetchCap);
     if (fallback.error) return [];
-    const rows = ((fallback.data ?? []) as Paket[]).filter((p) => !excludeFromHomeFeaturedPreview(p));
+    const rows = ((fallback.data ?? []) as Paket[]).filter((p) => !isExcludedDraftPackage(p));
     return rows.slice(0, safeLimit);
   } catch {
     return [];

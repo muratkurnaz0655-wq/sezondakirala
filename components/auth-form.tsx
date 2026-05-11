@@ -166,7 +166,7 @@ export function AuthForm({ mode, redirectTo }: AuthFormProps) {
 
   if (isSignIn) {
     return (
-      <div className="min-h-screen w-full bg-gradient-to-br from-[#f0fdfd] via-white to-[#ecfeff] lg:grid lg:grid-cols-2">
+      <div className="min-h-screen w-full bg-[#F8FAFC] lg:grid lg:grid-cols-2">
         <div className="relative hidden overflow-hidden lg:flex">
           <Image
             src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1200"
@@ -195,7 +195,7 @@ export function AuthForm({ mode, redirectTo }: AuthFormProps) {
 
         <div className="flex items-center justify-center p-8">
           <div className="w-full max-w-[440px]">
-            <div className="mx-auto w-full max-w-[440px] rounded-2xl border border-slate-200 bg-white p-8 shadow-xl">
+            <div className="mx-auto w-full max-w-[440px] rounded-2xl border border-slate-200/90 bg-white p-8 shadow-[0_12px_40px_-12px_rgba(15,23,42,0.18)]">
               <div className="mb-8 text-center">
                 <Link href="/" className="mb-6 inline-flex items-center justify-center gap-2">
                   <Image
@@ -221,7 +221,7 @@ export function AuthForm({ mode, redirectTo }: AuthFormProps) {
                 <div className="space-y-1">
                   <label className="text-sm text-slate-500">E-posta</label>
                   <input
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 outline-none transition-all focus:border-[#0e9aa7] focus:ring-2 focus:ring-[#0e9aa7]/20"
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 outline-none transition-all focus:border-[#1D9E75] focus:ring-[3px] focus:ring-[#E1F5EE]"
                     type="email"
                     placeholder="ornek@email.com"
                     {...signInForm.register("email")}
@@ -234,7 +234,7 @@ export function AuthForm({ mode, redirectTo }: AuthFormProps) {
                     <label className="text-sm text-slate-500">Şifre</label>
                     <button
                       type="button"
-                      className="inline-flex h-6 w-6 items-center justify-center rounded-md text-[#22d3ee] transition-colors hover:bg-slate-100"
+                      className="inline-flex h-6 w-6 items-center justify-center rounded-md text-[#1D9E75] transition-colors hover:bg-slate-100"
                       onClick={() => setShowSignInPassword((v) => !v)}
                       aria-label={showSignInPassword ? "Şifreyi gizle" : "Şifreyi göster"}
                     >
@@ -242,7 +242,7 @@ export function AuthForm({ mode, redirectTo }: AuthFormProps) {
                     </button>
                   </div>
                   <input
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 outline-none transition-all focus:border-[#0e9aa7] focus:ring-2 focus:ring-[#0e9aa7]/20"
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 outline-none transition-all focus:border-[#1D9E75] focus:ring-[3px] focus:ring-[#E1F5EE]"
                     type={showSignInPassword ? "text" : "password"}
                     placeholder="••••••••"
                     autoComplete="current-password"
@@ -251,30 +251,31 @@ export function AuthForm({ mode, redirectTo }: AuthFormProps) {
                   <p className="text-xs text-red-500">{signInForm.formState.errors.password?.message}</p>
                 </div>
 
-                <label className="flex items-center gap-2 text-sm text-slate-500">
+                <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-500">
                   <input
                     type="checkbox"
                     checked={rememberMe}
                     onChange={(e) => setRememberMe(e.target.checked)}
+                    className="h-4 w-4 rounded border-slate-300 text-[#1D9E75] accent-[#1D9E75] focus:ring-2 focus:ring-[#1D9E75]/30"
                   />
                   Beni hatırla
                 </label>
 
                 <button
-                  className="w-full rounded-xl bg-gradient-to-r from-[#0e9aa7] to-[#22d3ee] px-4 py-3 text-sm font-bold text-[#0d1117] shadow-lg shadow-[#0e9aa7]/25 transition-all duration-200 hover:scale-[1.02] hover:from-[#22d3ee] hover:to-[#0e9aa7] active:scale-[0.98] disabled:opacity-50"
+                  className="w-full rounded-xl bg-[#1D9E75] px-4 py-3 text-sm font-bold text-white shadow-md shadow-[#1D9E75]/25 transition-all duration-200 hover:bg-[#0F6E56] hover:brightness-[0.98] active:scale-[0.98] disabled:opacity-50"
                   type="submit"
                   disabled={isLoading}
                 >
                   {isLoading ? <span className="inline-spinner inline-block align-middle" aria-hidden /> : "Giriş Yap"}
                 </button>
-                <Link className="block text-center text-sm text-[#22d3ee] hover:underline" href="/sifre-sifirla">
+                <Link className="block text-center text-sm text-[#1D9E75] hover:underline" href="/sifre-sifirla">
                   Şifremi unuttum
                 </Link>
                 <p className="text-center text-sm text-slate-500">
                   Hesabın yok mu?{" "}
                   <Link
                     href={`/kayit${safeRequestedRedirect !== "/" ? `?returnUrl=${encodeURIComponent(safeRequestedRedirect)}` : ""}`}
-                    className="font-medium text-[#22d3ee] hover:underline"
+                    className="font-medium text-[#1D9E75] hover:underline"
                   >
                     Kayıt Ol
                   </Link>

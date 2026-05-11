@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { useReducedMotion } from "framer-motion";
 import type { User } from "@supabase/supabase-js";
 import { Bell, CalendarDays, Home, UserPlus, XCircle } from "lucide-react";
@@ -224,12 +224,19 @@ export function SiteHeaderClient({ siteName }: SiteHeaderClientProps) {
 
   const _solidBar = scrolled || !isHome || reduce;
   const headerShell = _solidBar
-    ? "border-b border-cyan-200/80 shadow-[0_2px_12px_rgba(0,0,0,0.08)] backdrop-blur-md"
+    ? "border-b border-[#E2E8F0] shadow-[0_2px_14px_rgba(15,23,42,0.08)] backdrop-blur-md"
     : "border-b border-cyan-200/70 shadow-sm backdrop-blur-md";
 
+  const headerBackground: CSSProperties = _solidBar
+    ? { backgroundColor: "#ffffff" }
+    : {
+        background:
+          "linear-gradient(90deg, rgba(220,252,231,0.95) 0%, rgba(207,250,254,0.95) 50%, rgba(224,242,254,0.95) 100%)",
+      };
+
   const navLinkBase =
-    "group relative font-medium text-slate-600 transition-colors duration-200 hover:text-[#0e9aa7] after:absolute after:bottom-[-8px] after:left-0 after:h-[2px] after:w-full after:origin-left after:scale-x-0 after:rounded-full after:bg-[#185FA5] after:transition-transform after:duration-200 hover:after:scale-x-100";
-  const girisClass = "text-slate-600 transition-colors duration-200 hover:text-slate-900";
+    "group relative font-medium text-slate-600 transition-colors duration-200 hover:text-[#1D9E75] after:absolute after:bottom-[-8px] after:left-0 after:h-[2px] after:w-full after:origin-left after:scale-x-0 after:rounded-full after:bg-[#1D9E75] after:transition-transform after:duration-200 hover:after:scale-x-100";
+  const girisClass = "text-slate-600 transition-colors duration-200 hover:text-[#0F6E56]";
   const dropdownVariant = "solid";
   const loggedIn = user !== null;
 
@@ -316,10 +323,10 @@ export function SiteHeaderClient({ siteName }: SiteHeaderClientProps) {
   return (
     <header
       className={`sticky top-0 z-50 w-full transition-all duration-300 ease-out ${headerShell}`}
-      style={{ background: "linear-gradient(90deg, rgba(220,252,231,0.95) 0%, rgba(207,250,254,0.95) 50%, rgba(224,242,254,0.95) 100%)" }}
+      style={headerBackground}
     >
-      <div className="relative flex min-h-[4.5rem] w-full items-center justify-between gap-3 px-4 md:min-h-[5.5rem] md:gap-4 md:px-6 lg:px-8">
-        <Link href="/" className="flex min-w-0 flex-1 items-center md:flex-none">
+      <div className="relative flex min-h-[4.5rem] w-full items-center justify-between gap-2 px-4 md:min-h-[5.25rem] md:gap-3 md:px-5 lg:px-8">
+        <Link href="/" className="flex min-w-0 flex-1 shrink-0 items-center md:mr-4 md:flex-none lg:mr-8">
           <Image
             src="/logo-clean.png"
             alt="Sezondakirala"
@@ -330,16 +337,14 @@ export function SiteHeaderClient({ siteName }: SiteHeaderClientProps) {
           />
         </Link>
 
-        <nav
-          className="hidden items-center gap-6 text-[0.95rem] font-medium md:flex lg:gap-7 lg:text-base"
-        >
-          <Link href="/" className={`${navLinkBase} ${pathname === "/" ? "font-semibold text-[#185FA5] after:scale-x-100" : ""}`}>Ana Sayfa</Link>
-          <Link href="/konaklama" className={`${navLinkBase} ${pathname.startsWith("/konaklama") ? "font-semibold text-[#185FA5] after:scale-x-100" : ""}`}>Konaklama</Link>
-          <Link href="/tekneler" className={`${navLinkBase} ${pathname.startsWith("/tekneler") ? "font-semibold text-[#185FA5] after:scale-x-100" : ""}`}>Tekneler</Link>
-          <Link href="/paketler" className={`${navLinkBase} ${pathname.startsWith("/paketler") ? "font-semibold text-[#185FA5] after:scale-x-100" : ""}`}>Paketler</Link>
-          <Link href="/hakkimizda" className={`${navLinkBase} ${pathname.startsWith("/hakkimizda") ? "font-semibold text-[#185FA5] after:scale-x-100" : ""}`}>Hakkımızda</Link>
-          <Link href="/sss" className={`${navLinkBase} ${pathname.startsWith("/sss") ? "font-semibold text-[#185FA5] after:scale-x-100" : ""}`}>SSS</Link>
-          <Link href="/iletisim" className={`${navLinkBase} ${pathname.startsWith("/iletisim") ? "font-semibold text-[#185FA5] after:scale-x-100" : ""}`}>İletişim</Link>
+        <nav className="hidden min-w-0 flex-1 items-center justify-center gap-3 text-[0.8125rem] font-medium md:flex lg:gap-4 lg:text-[0.875rem]">
+          <Link href="/" className={`${navLinkBase} ${pathname === "/" ? "font-semibold text-[#0F6E56] after:scale-x-100" : ""}`}>Ana Sayfa</Link>
+          <Link href="/konaklama" className={`${navLinkBase} ${pathname.startsWith("/konaklama") ? "font-semibold text-[#0F6E56] after:scale-x-100" : ""}`}>Konaklama</Link>
+          <Link href="/tekneler" className={`${navLinkBase} ${pathname.startsWith("/tekneler") ? "font-semibold text-[#0F6E56] after:scale-x-100" : ""}`}>Tekneler</Link>
+          <Link href="/paketler" className={`${navLinkBase} ${pathname.startsWith("/paketler") ? "font-semibold text-[#0F6E56] after:scale-x-100" : ""}`}>Paketler</Link>
+          <Link href="/hakkimizda" className={`${navLinkBase} ${pathname.startsWith("/hakkimizda") ? "font-semibold text-[#0F6E56] after:scale-x-100" : ""}`}>Hakkımızda</Link>
+          <Link href="/sss" className={`${navLinkBase} ${pathname.startsWith("/sss") ? "font-semibold text-[#0F6E56] after:scale-x-100" : ""}`}>SSS</Link>
+          <Link href="/iletisim" className={`${navLinkBase} ${pathname.startsWith("/iletisim") ? "font-semibold text-[#0F6E56] after:scale-x-100" : ""}`}>İletişim</Link>
         </nav>
 
         <div className="flex items-center gap-2 md:gap-3">
@@ -433,15 +438,13 @@ export function SiteHeaderClient({ siteName }: SiteHeaderClientProps) {
             <>
               <Link
                 href="/giris"
-                className={`hidden rounded-xl px-4 py-2.5 text-[0.95rem] font-semibold transition-colors md:inline-flex lg:text-base ${girisClass}`}
+                className={`hidden whitespace-nowrap rounded-lg px-3 py-2 text-[0.8125rem] font-semibold transition-colors md:inline-flex lg:px-4 lg:text-[0.875rem] ${girisClass}`}
               >
                 Giriş Yap
               </Link>
               <Link
                 href="/kayit"
-                className={`hidden rounded-xl border px-5 py-2.5 text-[0.95rem] font-semibold transition-colors md:inline-flex lg:text-base ${
-                  "bg-gradient-to-r from-[#0e9aa7] to-[#06b6d4] px-5 py-2 text-white font-bold rounded-xl shadow-lg shadow-[#0e9aa7]/30 hover:shadow-xl hover:shadow-[#0e9aa7]/40 hover:scale-105 active:scale-95 transition-all duration-200 border-transparent"
-                }`}
+                className="hidden whitespace-nowrap rounded-lg border border-transparent bg-[#1D9E75] px-4 py-2 text-[0.8125rem] font-bold text-white shadow-md shadow-[#1D9E75]/25 transition-all duration-200 hover:bg-[#0F6E56] hover:shadow-lg active:scale-[0.98] md:inline-flex lg:px-5 lg:text-[0.875rem]"
               >
                 Kayıt Ol →
               </Link>

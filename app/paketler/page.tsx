@@ -24,7 +24,7 @@ export default async function PackagesPage({ searchParams }: PackagesPageProps) 
   return (
     <div className="w-full overflow-x-hidden">
       <div
-        className="relative overflow-hidden pb-0 text-white"
+        className="relative min-h-[220px] overflow-hidden pb-0 text-white"
         style={{
           background: "linear-gradient(135deg, #0f4c5c 0%, #0e9aa7 42%, #185FA5 100%)",
           padding: "28px 0 0",

@@ -66,7 +66,7 @@ export async function SiteFooter() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={label}
-                className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-slate-400 transition-all duration-200 hover:scale-105 hover:border-[#0e9aa7]/30 hover:bg-[#0e9aa7]/15 hover:text-[#22d3ee]"
+                className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-slate-400 transition-all duration-200 hover:scale-105 hover:border-[#1D9E75]/40 hover:bg-[#1D9E75]/15 hover:text-[#1D9E75]"
               >
                 <Icon className="h-4 w-4" />
               </a>
@@ -81,7 +81,7 @@ export async function SiteFooter() {
           <ul className="space-y-2 text-sm text-[#64748b]">
             {quickLinks.map((item) => (
               <li key={item.label}>
-                <Link href={item.href} className="text-sm text-[#64748b] transition-colors duration-150 hover:text-[#22d3ee]">
+                <Link href={item.href} className="text-sm text-[#64748b] transition-colors duration-150 hover:text-[#1D9E75]">
                   {item.label}
                 </Link>
               </li>
@@ -98,7 +98,7 @@ export async function SiteFooter() {
               <li key={label}>
                 <Link
                   href={href}
-                  className="inline-block text-sm text-[#64748b] transition-colors duration-150 hover:text-[#22d3ee]"
+                  className="inline-block text-sm text-[#64748b] transition-colors duration-150 hover:text-[#1D9E75]"
                 >
                   {label}
                 </Link>
@@ -113,10 +113,10 @@ export async function SiteFooter() {
           </h3>
           <ul className="space-y-2 text-sm text-[#64748b]">
             <li className="inline-flex items-center gap-2">
-              <MapPin className="h-4 w-4 text-[#22d3ee]" /> Fethiye, Muğla, Türkiye
+              <MapPin className="h-4 w-4 text-[#1D9E75]" /> Fethiye, Muğla, Türkiye
             </li>
             <li className="inline-flex items-center gap-2">
-              <PhoneCall className="h-4 w-4 text-[#22d3ee]" />{" "}
+              <PhoneCall className="h-4 w-4 text-[#1D9E75]" />{" "}
               {formatWhatsappTrDisplay(settings.whatsappNumber)}
             </li>
             <li>
@@ -124,16 +124,16 @@ export async function SiteFooter() {
                 href={whatsappHref(settings.whatsappNumber)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex cursor-pointer items-center gap-2 text-[#94a3b8] transition hover:text-[#22d3ee]"
+                className="inline-flex cursor-pointer items-center gap-2 text-[#94a3b8] transition hover:text-[#1D9E75]"
               >
                 <MessageCircle className="h-4 w-4" /> WhatsApp ile ulaşın
               </a>
             </li>
             <li className="inline-flex items-center gap-2">
-              <Mail className="h-4 w-4 text-[#22d3ee]" /> {settings.contactEmail}
+              <Mail className="h-4 w-4 text-[#1D9E75]" /> {settings.contactEmail}
             </li>
             <li className="inline-flex items-center gap-2">
-              <Clock3 className="h-4 w-4 text-[#22d3ee]" /> Pazartesi-Cumartesi: 09:00-18:00
+              <Clock3 className="h-4 w-4 text-[#1D9E75]" /> Pazartesi-Cumartesi: 09:00-18:00
             </li>
           </ul>
         </div>
