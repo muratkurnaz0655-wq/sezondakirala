@@ -2,8 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
-import { Clock, Package, Users } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Clock, Users } from "lucide-react";
 import type { Paket } from "@/types/supabase";
 import { formatCurrency } from "@/lib/utils/format";
 import { fixTurkishDisplay } from "@/lib/utils/turkish-display";
@@ -53,7 +53,11 @@ export function PackageCard({ paket, variant = "default" }: PackageCardProps) {
   const aciklama = fixTurkishDisplay(paket.aciklama ?? "").trim();
   const kat = (paket.kategori ?? "macera").toLowerCase().trim();
   const hasCustomImage = Boolean(paket.gorsel_url?.trim());
-  const kapak = hasCustomImage ? (paket.gorsel_url as string) : PAKET_GORSEL;
+  const kapak = hasCustomImage ? (paket.gorsel_url as string).trim() : PAKET_GORSEL;
+
+  useEffect(() => {
+    setKapakYuklendi(false);
+  }, [kapak]);
   const badgeClassDefault = KATEGORI_RENK[kat] ?? "border-slate-200/90 bg-slate-100 text-slate-800";
   const badgeClassHome = KATEGORI_RENK_HOME[kat] ?? "bg-slate-100 text-slate-700";
 
@@ -61,31 +65,24 @@ export function PackageCard({ paket, variant = "default" }: PackageCardProps) {
     return (
       <article className="flex h-full w-full max-w-full flex-col overflow-hidden rounded-2xl border border-[#E2E8F0] bg-white">
         <div className="relative h-[200px] w-full shrink-0 overflow-hidden bg-[#F1F5F9]">
-          {hasCustomImage ? (
-            <>
-              {!kapakYuklendi ? (
-                <div
-                  className="absolute inset-0 animate-pulse bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200"
-                  aria-hidden
-                />
-              ) : null}
-              <Image
-                src={kapak}
-                alt={baslik}
-                fill
-                loading="lazy"
-                className={`object-cover transition-opacity duration-500 ${kapakYuklendi ? "opacity-100" : "opacity-0"}`}
-                sizes="(max-width: 768px) 100vw, 360px"
-                onLoadingComplete={() => setKapakYuklendi(true)}
-              />
-            </>
-          ) : (
-            <div className="flex h-full w-full items-center justify-center" aria-hidden>
-              <Package className="h-14 w-14 text-slate-300" strokeWidth={1.25} />
-            </div>
-          )}
+          {!kapakYuklendi ? (
+            <div
+              className="absolute inset-0 z-[1] animate-pulse bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200"
+              aria-hidden
+            />
+          ) : null}
+          <Image
+            src={kapak}
+            alt={baslik}
+            fill
+            loading="lazy"
+            className={`object-cover transition-opacity duration-500 ${kapakYuklendi ? "opacity-100" : "opacity-0"}`}
+            sizes="(max-width: 768px) 100vw, 360px"
+            onLoadingComplete={() => setKapakYuklendi(true)}
+            onError={() => setKapakYuklendi(true)}
+          />
           <span
-            className={`absolute left-3 top-3 rounded-full px-3 py-1 text-[12px] font-medium shadow-sm ${badgeClassHome}`}
+            className={`absolute left-3 top-3 z-[2] rounded-full px-3 py-1 text-[12px] font-medium shadow-sm ${badgeClassHome}`}
           >
             {kategoriLabel(paket.kategori)}
           </span>
@@ -140,6 +137,7 @@ export function PackageCard({ paket, variant = "default" }: PackageCardProps) {
           }`}
           sizes="(max-width: 768px) 100vw, 33vw"
           onLoadingComplete={() => setKapakYuklendi(true)}
+          onError={() => setKapakYuklendi(true)}
         />
         <span
           className={`absolute left-3 top-3 rounded-full border px-3 py-1 text-xs font-semibold shadow-sm backdrop-blur-[2px] ${badgeClassDefault}`}
