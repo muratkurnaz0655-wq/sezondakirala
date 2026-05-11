@@ -244,22 +244,21 @@ export default function ListingsPage() {
 
   return (
     <div className="min-h-0 w-full space-y-6 overflow-x-hidden py-6">
-      <section
-        className="overflow-visible rounded-2xl px-4 py-5 shadow-lg md:px-6 md:py-6"
-        style={{
-          background: "linear-gradient(120deg, #0F6E56 0%, #0c4a6e 55%, #185FA5 100%)",
-        }}
-      >
-        <p className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-white/75">Tarih ve misafir</p>
-        <SearchForm
-          bugunIso={bugunIso}
-          catalogBar
-          initialGiris={giris || undefined}
-          initialCikis={cikis || undefined}
-          initialYetiskin={yetiskin}
-          initialCocuk={cocuk}
-          initialBebek={bebek}
-        />
+      <section className="border-y border-[#E2E8F0] bg-[#F8FAFC] py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.6)]">
+        <div className="mx-auto max-w-6xl px-4 md:px-6">
+          <p className="mb-3 text-[12px] font-semibold uppercase tracking-wide text-[#64748B]">Tarih ve misafir</p>
+          <div className="rounded-xl border border-[#E2E8F0] bg-white px-5 py-4 shadow-sm">
+            <SearchForm
+              bugunIso={bugunIso}
+              embedded
+              initialGiris={giris || undefined}
+              initialCikis={cikis || undefined}
+              initialYetiskin={yetiskin}
+              initialCocuk={cocuk}
+              initialBebek={bebek}
+            />
+          </div>
+        </div>
       </section>
 
       <button

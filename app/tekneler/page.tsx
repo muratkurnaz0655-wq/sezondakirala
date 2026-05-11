@@ -1,12 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { CatalogHeroWave } from "@/components/catalog-hero-wave";
 import { ListingReveal } from "@/components/listing-reveal";
+import { SearchForm } from "@/components/search-form";
 import { TekneFiltreSidebar } from "@/components/tekne-filtre-sidebar";
 import { TekneKarti } from "@/components/tekne-karti";
-import { Search, SlidersHorizontal, X } from "lucide-react";
+import { SlidersHorizontal, X } from "lucide-react";
+import { aramaStore } from "@/lib/arama-store";
+import { istanbulDateString } from "@/lib/tr-today";
 import { defaultTekneFiltre, type TekneFiltre } from "@/lib/villa-sabitleri";
 
 type TekneRow = {
@@ -48,14 +51,23 @@ const SkeletonTekne = () => (
 );
 
 export default function TeknelerPage() {
+  const currentArama = useSyncExternalStore(aramaStore.subscribe, aramaStore.get, aramaStore.get);
   const [tekneler, setTekneler] = useState<TekneRow[]>([]);
   const [filtre, setFiltre] = useState<TekneFiltre>(defaultTekneFiltre);
   const [yukleniyor, setYukleniyor] = useState(true);
   const [mobilFiltre, setMobilFiltre] = useState(false);
-  const [baslangicTarihi, setBaslangicTarihi] = useState("");
-  const [sure, setSure] = useState("1");
-  const [kisiSayisi, setKisiSayisi] = useState(2);
-  const bugunIso = new Date().toISOString().split("T")[0];
+  const bugunIso = useMemo(() => istanbulDateString(), []);
+
+  useEffect(() => {
+    if (currentArama?.tip !== "tekne") return;
+    const gun = currentArama.gun ?? 1;
+    const kap = Math.max(1, currentArama.yetiskin ?? 2);
+    setFiltre((prev) => ({
+      ...prev,
+      minKapasite: kap,
+      sure: gun >= 7 ? ["haftalik"] : ["gunluk"],
+    }));
+  }, [currentArama?.tip, currentArama?.gun, currentArama?.yetiskin]);
 
   const fetchTekneler = async (f: TekneFiltre) => {
     setYukleniyor(true);
@@ -151,69 +163,20 @@ export default function TeknelerPage() {
         </div>
       </div>
 
-      <section
-        className="overflow-visible rounded-2xl px-4 py-5 shadow-lg md:px-6 md:py-6"
-        style={{
-          background: "linear-gradient(120deg, #0F6E56 0%, #0c4a6e 55%, #185FA5 100%)",
-        }}
-      >
-        <p className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-white/75">Tarih ve kiralama</p>
-        <div className="flex flex-col gap-3 md:flex-row md:items-stretch md:gap-3">
-          <div
-            className={`flex min-h-[52px] flex-1 flex-col justify-center rounded-xl border border-white/80 bg-white px-4 py-3 shadow-md ${
-              baslangicTarihi ? "ring-2 ring-[#1D9E75]/75 ring-offset-2 ring-offset-transparent" : ""
-            }`}
-          >
-            <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">Başlangıç tarihi</p>
-            <input
-              type="date"
-              value={baslangicTarihi}
-              min={bugunIso}
-              onChange={(e) => setBaslangicTarihi(e.target.value)}
-              className="mt-1 w-full bg-transparent text-[15px] font-medium text-slate-900 outline-none"
+      <section className="border-y border-[#E2E8F0] bg-[#F8FAFC] py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.6)]">
+        <div className="mx-auto max-w-6xl px-4 md:px-6">
+          <p className="mb-3 text-[12px] font-semibold uppercase tracking-wide text-[#64748B]">Tarih ve kiralama</p>
+          <div className="rounded-xl border border-[#E2E8F0] bg-white px-5 py-4 shadow-sm">
+            <SearchForm
+              bugunIso={bugunIso}
+              embedded
+              searchPath="/tekneler"
+              submitLabel="Tekne Ara"
+              initialGiris={currentArama?.tip === "tekne" && currentArama.giris ? currentArama.giris : undefined}
+              initialGun={currentArama?.tip === "tekne" ? (currentArama.gun ?? 1) : 1}
+              initialYetiskin={currentArama?.tip === "tekne" ? (currentArama.yetiskin ?? 2) : 2}
             />
           </div>
-          <div className="flex min-h-[52px] flex-1 flex-col justify-center rounded-xl border border-white/80 bg-white px-4 py-3 shadow-md">
-            <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">Kiralama süresi</p>
-            <select
-              value={sure}
-              onChange={(e) => setSure(e.target.value)}
-              className="mt-1 w-full cursor-pointer bg-transparent text-[15px] font-medium text-slate-900 outline-none"
-            >
-              <option value="1">Günlük</option>
-              <option value="3">3 Günlük</option>
-              <option value="7">Haftalık</option>
-              <option value="14">2 Haftalık</option>
-            </select>
-          </div>
-          <div className="flex min-h-[52px] flex-1 flex-col justify-center rounded-xl border border-white/80 bg-white px-4 py-3 shadow-md">
-            <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">Kişi sayısı</p>
-            <select
-              value={kisiSayisi}
-              onChange={(e) => setKisiSayisi(Number(e.target.value))}
-              className="mt-1 w-full cursor-pointer bg-transparent text-[15px] font-medium text-slate-900 outline-none"
-            >
-              {[2, 4, 6, 8, 10, 12, 15].map((n) => (
-                <option key={n} value={n}>
-                  {n} Kişi
-                </option>
-              ))}
-            </select>
-          </div>
-          <button
-            type="button"
-            onClick={() =>
-              setFiltre({
-                ...filtre,
-                minKapasite: kisiSayisi,
-                sure: sure === "7" || sure === "14" ? ["haftalik"] : ["gunluk"],
-              })
-            }
-            className="inline-flex min-h-[52px] w-full shrink-0 items-center justify-center gap-2 rounded-xl bg-[#1D9E75] px-8 py-3.5 text-base font-semibold text-white shadow-lg shadow-emerald-900/20 transition-transform hover:brightness-110 active:scale-[0.98] md:w-auto md:min-w-[160px] md:self-stretch"
-          >
-            <Search className="h-5 w-5" aria-hidden />
-            Tekne Ara
-          </button>
         </div>
       </section>
 

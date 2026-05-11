@@ -86,7 +86,7 @@ export function HomeHeroStacked() {
           </div>
 
           <div
-            className="search-form-card pointer-events-auto relative z-30 mt-2 w-full max-w-6xl shrink-0 rounded-2xl border border-slate-200 bg-white p-5 text-left shadow-2xl shadow-black/15 backdrop-blur-md md:p-6"
+            className="search-form-card pointer-events-auto relative z-30 mt-2 w-full max-w-6xl shrink-0 rounded-xl border border-[#E2E8F0] bg-white p-5 text-left shadow-md shadow-black/8 backdrop-blur-md md:p-5"
             style={undefined}
           >
             <div className="mb-4 md:mb-5">

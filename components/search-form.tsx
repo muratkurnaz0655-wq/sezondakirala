@@ -98,7 +98,7 @@ function GuestSteppers({
       <button
         type="button"
         onClick={onUygula}
-        className="w-full rounded-xl bg-gradient-to-r from-[#0e9aa7] to-[#22d3ee] px-3 py-2 text-sm font-bold text-[#0d1117] shadow-lg shadow-[#0e9aa7]/25 transition-all duration-200 hover:scale-[1.02] hover:from-[#22d3ee] hover:to-[#0e9aa7] active:scale-[0.98]"
+        className="w-full rounded-lg bg-[#1D9E75] px-3 py-2 text-sm font-semibold text-white shadow-sm transition-colors duration-200 hover:bg-[#0F6E56] active:scale-[0.98]"
       >
         Uygula
       </button>
@@ -288,7 +288,7 @@ export function SearchForm({
   const shellClass = catalogBar
     ? "relative z-40 rounded-2xl border-0 bg-transparent p-0 text-slate-800 shadow-none"
     : embedded
-      ? "relative z-[1] rounded-2xl border border-slate-200 bg-white p-2 text-slate-800 shadow-2xl shadow-black/15 md:p-2.5"
+      ? "relative z-[1] border-0 bg-transparent p-0 text-[#1E293B] shadow-none"
       : "relative z-[100] rounded-2xl border border-slate-200 bg-white p-3 text-slate-800 shadow-2xl shadow-black/15 md:bg-white/95 md:p-2 md:backdrop-blur-xl";
 
   const shellStyle = catalogBar
@@ -371,38 +371,48 @@ export function SearchForm({
 
         <div
           className={`search-form-inner relative z-[1] flex flex-col gap-3 border ${
-            catalogBar ? "md:flex-row md:items-stretch md:gap-3" : forceVertical ? "" : "md:flex-row md:items-stretch md:gap-0"
+            catalogBar
+              ? "md:flex-row md:items-stretch md:gap-3"
+              : embedded
+                ? "flex-col gap-3 md:flex-row md:items-stretch md:gap-3"
+                : forceVertical
+                  ? ""
+                  : "md:flex-row md:items-stretch md:gap-0"
           } ${
             dateError ? "border-red-400 ring-1 ring-red-400" : "border-transparent"
-          } ${embedded ? "rounded-2xl border border-slate-200 bg-white px-1.5 py-1.5" : ""}`}
+          } ${embedded ? "rounded-none border-0 bg-transparent p-0" : ""}`}
         >
           <button
             ref={dateButtonRef}
             type="button"
             onClick={openCalendar}
-            className={`flex min-h-[48px] flex-1 cursor-pointer touch-manipulation flex-col items-start rounded-xl px-3 py-2 text-left transition-colors ${
+            className={`flex min-h-[48px] flex-1 cursor-pointer touch-manipulation flex-col items-start text-left transition-colors ${
               catalogBar
-                ? "border border-slate-100 bg-white px-4 py-3 shadow-sm md:min-h-0 md:rounded-xl md:border md:px-4 md:py-3"
+                ? "rounded-xl border border-slate-100 bg-white px-4 py-3 shadow-sm md:min-h-0 md:rounded-xl md:border md:px-4 md:py-3"
+                : embedded
+                  ? `rounded-lg border px-4 py-3 md:min-h-0 ${
+                      dateSecili ? "border-[#1D9E75] bg-white" : "border-[#E2E8F0] bg-white hover:border-[#CBD5E1]"
+                    }`
                 : forceVertical
-                  ? ""
-                  : "md:min-h-0 md:rounded-none md:border-r md:px-4 md:py-3"
+                  ? "rounded-xl px-3 py-2"
+                  : "rounded-xl px-3 py-2 md:min-h-0 md:rounded-none md:border-r md:px-4 md:py-3"
             } ${
               catalogBar
                 ? dateSecili
                   ? "ring-2 ring-[#1D9E75]/80 ring-offset-2 ring-offset-transparent"
                   : "text-slate-600 ring-0"
                 : embedded
-                  ? "border border-slate-200 bg-slate-50 hover:bg-white md:border-r-0"
+                  ? ""
                   : "hover:bg-slate-50 md:border-slate-200"
             }`}
           >
             <div
-              className={`text-xs ${
+              className={`${
                 catalogBar
-                  ? "font-medium text-slate-500"
+                  ? "text-xs font-medium text-slate-500"
                   : embedded
-                    ? "font-medium text-slate-500"
-                    : "font-semibold uppercase text-slate-500"
+                    ? "text-[12px] font-semibold uppercase tracking-wide text-[#64748B]"
+                    : "text-xs font-semibold uppercase text-slate-500"
               }`}
             >
               Tarihler
@@ -412,7 +422,7 @@ export function SearchForm({
                 catalogBar
                   ? `text-[15px] font-medium ${dateSecili ? "text-slate-900" : "text-slate-500"} md:text-base`
                   : embedded
-                    ? "text-[17px] font-medium text-slate-800"
+                    ? `text-[15px] font-medium ${dateSecili ? "text-[#1E293B]" : "text-[#64748B]"}`
                     : "text-sm font-medium text-slate-800 md:text-base"
               }`}
             >
@@ -427,13 +437,13 @@ export function SearchForm({
                   : "Tarih seçin"}
             </div>
             {searchPath !== "/tekneler" && nightCount > 0 ? (
-              <p className="mt-0.5 text-xs text-slate-500">{nightCount} gece</p>
+              <p className={`mt-0.5 text-[12px] ${embedded ? "text-[#94A3B8]" : "text-slate-500"}`}>{nightCount} gece</p>
             ) : null}
           </button>
 
-          {!catalogBar ? (
+          {!catalogBar && !embedded ? (
             <div
-              className={`hidden w-px shrink-0 self-stretch ${forceVertical ? "" : "md:block"} ${embedded ? "bg-slate-200" : "bg-slate-200"}`}
+              className={`hidden w-px shrink-0 self-stretch ${forceVertical ? "" : "md:block"} bg-slate-200`}
               aria-hidden
             />
           ) : null}
@@ -447,35 +457,41 @@ export function SearchForm({
               <button
                 type="button"
                 onClick={openGuestPanel}
-                className={`min-h-[48px] w-full cursor-pointer touch-manipulation rounded-xl px-3 py-2 text-left transition-colors ${
+                className={`min-h-[48px] w-full cursor-pointer touch-manipulation text-left transition-colors ${
                   catalogBar
-                    ? "border border-slate-100 bg-white px-4 py-3 shadow-sm md:min-h-0 md:rounded-xl md:border md:px-4 md:py-3"
-                    : forceVertical
-                      ? ""
-                      : "md:min-h-0 md:rounded-none md:border-r md:px-4 md:py-3"
+                    ? "rounded-xl border border-slate-100 bg-white px-4 py-3 shadow-sm md:min-h-0 md:rounded-xl md:border md:px-4 md:py-3"
+                    : embedded
+                      ? "rounded-lg border border-[#E2E8F0] bg-white px-4 py-3 hover:border-[#CBD5E1] md:min-h-0"
+                      : forceVertical
+                        ? "rounded-xl px-3 py-2"
+                        : "rounded-xl px-3 py-2 md:min-h-0 md:rounded-none md:border-r md:px-4 md:py-3"
                 } ${
                   catalogBar
                     ? "ring-2 ring-transparent hover:ring-[#1D9E75]/25"
                     : embedded
-                      ? "border border-slate-200 bg-slate-50 hover:bg-white md:border-r-0"
+                      ? ""
                       : "hover:bg-slate-50 md:border-slate-200"
                 }`}
               >
                 <div
-                  className={`flex items-center gap-2 text-xs ${
+                  className={`flex items-center gap-2 ${
                     catalogBar
-                      ? "font-medium text-slate-500"
+                      ? "text-xs font-medium text-slate-500"
                       : embedded
-                        ? "font-medium text-slate-500"
-                        : "font-semibold uppercase text-slate-500"
+                        ? "text-[12px] font-semibold uppercase tracking-wide text-[#64748B]"
+                        : "text-xs font-semibold uppercase text-slate-500"
                   }`}
                 >
-                  <Users size={12} className={`shrink-0 ${catalogBar ? "text-[#1D9E75]" : "text-[#0e9aa7]"}`} aria-hidden />
+                  <Users size={14} className={`shrink-0 ${catalogBar || embedded ? "text-[#1D9E75]" : "text-[#0e9aa7]"}`} aria-hidden />
                   Kişi
                 </div>
                 <div
                   className={`mt-0.5 text-left leading-snug ${
-                    catalogBar ? "text-[15px] font-medium text-slate-800 md:text-base" : embedded ? "text-[17px] font-medium text-slate-800" : "text-sm font-medium text-slate-800"
+                    catalogBar
+                      ? "text-[15px] font-medium text-slate-800 md:text-base"
+                      : embedded
+                        ? "text-[15px] font-medium text-[#1E293B]"
+                        : "text-sm font-medium text-slate-800"
                   }`}
                 >
                   {searchPath === "/tekneler" ? `${yetiskin} kişi` : misafirOzeti}
@@ -495,37 +511,37 @@ export function SearchForm({
             <button
               type="button"
               onClick={submitSearch}
-              className={`inline-flex min-h-12 w-full min-w-0 shrink-0 touch-manipulation items-center justify-center gap-2 whitespace-nowrap rounded-xl px-8 py-3.5 text-sm font-bold transition-all duration-200 active:scale-[0.98] ${
+              className={`inline-flex min-h-12 w-full min-w-0 shrink-0 touch-manipulation items-center justify-center gap-2 whitespace-nowrap text-sm font-semibold transition-colors duration-200 active:scale-[0.98] ${
                 catalogBar
-                  ? "border-2 border-white bg-white font-semibold text-[#1D9E75] shadow-md hover:border-[#1D9E75] hover:bg-[#1D9E75] hover:text-white md:m-0 md:w-auto md:min-w-[140px] md:self-stretch"
-                  : `text-[#0d1117] shadow-lg shadow-[#0e9aa7]/30 hover:from-[#22d3ee] hover:to-[#0e9aa7] ${forceVertical ? "" : "sm:w-auto md:m-1"} ${embedded ? "" : "btn-primary"}`
+                  ? "rounded-xl border-2 border-white bg-white font-semibold text-[#1D9E75] shadow-md hover:border-[#1D9E75] hover:bg-[#1D9E75] hover:text-white md:m-0 md:w-auto md:min-w-[140px] md:self-stretch"
+                  : embedded
+                    ? `rounded-lg bg-[#1D9E75] px-6 py-3 text-white shadow-sm hover:bg-[#0F6E56] md:m-0 md:min-h-12 md:w-auto md:min-w-[140px] md:self-stretch ${forceVertical ? "" : "sm:w-auto"}`
+                    : `rounded-xl text-[#0d1117] shadow-lg shadow-[#0e9aa7]/30 hover:from-[#22d3ee] hover:to-[#0e9aa7] ${forceVertical ? "" : "sm:w-auto md:m-1"} btn-primary`
               }`}
               style={
-                catalogBar
+                catalogBar || embedded
                   ? undefined
-                  : embedded
-                    ? {
-                        background: "linear-gradient(to right, #0e9aa7, #22d3ee)",
-                        minWidth: "112px",
-                        borderRadius: "16px",
-                      }
-                    : undefined
+                  : {
+                      background: "linear-gradient(to right, #0e9aa7, #22d3ee)",
+                      minWidth: "112px",
+                      borderRadius: "16px",
+                    }
               }
             >
-              <Search size={16} className={`inline ${catalogBar ? "text-current" : "opacity-90"}`} aria-hidden />
+              <Search size={16} className={`inline ${catalogBar ? "text-current" : embedded ? "text-white" : "opacity-90"}`} aria-hidden />
               <span>{submitLabel}</span>
             </button>
           </div>
         </div>
 
         {searchPath === "/tekneler" ? (
-          <div className="mt-3 grid gap-3 rounded-2xl border border-slate-200 bg-white p-3 md:grid-cols-2">
+          <div className="mt-3 grid gap-3 rounded-lg border border-[#E2E8F0] bg-white p-4 md:grid-cols-2">
             <div>
-              <p className="mb-1 text-xs font-medium text-slate-500">Kiralama Süresi</p>
+              <p className="mb-1.5 text-[12px] font-semibold uppercase tracking-wide text-[#64748B]">Kiralama Süresi</p>
               <select
                 value={tekneGun}
                 onChange={(e) => setTekneGun(Number(e.target.value))}
-                className="h-10 w-full rounded-lg border border-slate-200 bg-slate-50 px-2 text-sm text-slate-800 placeholder:text-slate-400 focus:border-[#0e9aa7] focus:ring-1 focus:ring-[#0e9aa7]/20"
+                className="h-11 w-full rounded-lg border border-[#E2E8F0] bg-white px-3 text-sm font-medium text-[#1E293B] focus:border-[#1D9E75] focus:outline-none focus:ring-2 focus:ring-[#1D9E75]/20"
               >
                 <option value={1}>Günlük</option>
                 <option value={2}>2 Günlük</option>
@@ -535,13 +551,13 @@ export function SearchForm({
               </select>
             </div>
             <div>
-              <p className="mb-1 text-xs font-medium text-slate-500">Kişi Sayısı</p>
+              <p className="mb-1.5 text-[12px] font-semibold uppercase tracking-wide text-[#64748B]">Kişi Sayısı</p>
               <input
                 type="number"
                 min={1}
                 value={yetiskin}
                 onChange={(e) => setYetiskin(Math.max(1, Number(e.target.value) || 1))}
-                className="h-10 w-full rounded-lg border border-slate-200 bg-slate-50 px-2 text-sm text-slate-800 placeholder:text-slate-400 focus:border-[#0e9aa7] focus:ring-1 focus:ring-[#0e9aa7]/20"
+                className="h-11 w-full rounded-lg border border-[#E2E8F0] bg-white px-3 text-sm font-medium text-[#1E293B] focus:border-[#1D9E75] focus:outline-none focus:ring-2 focus:ring-[#1D9E75]/20"
               />
             </div>
           </div>
