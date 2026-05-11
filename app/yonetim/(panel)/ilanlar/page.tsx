@@ -1,6 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { formatCurrency } from "@/lib/utils/format";
-import { Plus } from "lucide-react";
+import { Home, Plus } from "lucide-react";
 import { ListingActions } from "./ListingActions";
 import { AdminStatsRow } from "@/components/admin/AdminStatsRow";
 import { AdminFilterBar } from "@/components/admin/AdminFilterBar";
@@ -9,7 +9,7 @@ import { AdminPageLayout } from "@/components/admin/AdminPageLayout";
 import { AdminMobileCard, AdminMobileCardList } from "@/components/admin/AdminMobileCardList";
 import { AdminSegmentedTabs } from "@/components/admin/AdminSegmentedTabs";
 import { AdminActionButton } from "@/components/admin/AdminActionButton";
-import { ListingsBulkTable, type ListingTableRow } from "./ListingsBulkTable";
+import { ListingsBulkTable, listingCoverImageUrl, type ListingTableRow } from "./ListingsBulkTable";
 import { AdminEmptyState } from "@/components/admin/AdminEmptyState";
 
 type AdminListingsPageProps = {
@@ -85,9 +85,39 @@ export default async function AdminListingsPage({ searchParams }: AdminListingsP
     Promise.resolve(listingsResult),
     supabase.from("kullanicilar").select("id,ad_soyad,email"),
   ]);
+
+  const listingRows = listings ?? [];
+  const mediaByIlanId = new Map<string, { id: string; url: string; sira: number }[]>();
+  const listingIds = listingRows.map((row) => row.id).filter(Boolean);
+  if (listingIds.length > 0) {
+    const { data: mediaRows, error: mediaErr } = await supabase
+      .from("ilan_medyalari")
+      .select("id,ilan_id,url,sira")
+      .in("ilan_id", listingIds)
+      .order("sira", { ascending: true });
+    if (mediaErr) {
+      console.error("[admin-ilanlar] medya sorgu hatasi:", mediaErr);
+    }
+    for (const m of mediaRows ?? []) {
+      const ilanId = m.ilan_id as string;
+      const list = mediaByIlanId.get(ilanId) ?? [];
+      list.push({ id: m.id, url: m.url, sira: m.sira });
+      mediaByIlanId.set(ilanId, list);
+    }
+  }
+
+  const listingsWithMedia = listingRows.map((row) => {
+    const fromDb = mediaByIlanId.get(row.id);
+    const existing = (row as { ilan_medyalari?: { id: string; url: string; sira: number }[] | null }).ilan_medyalari;
+    return {
+      ...row,
+      ilan_medyalari: fromDb?.length ? fromDb : existing ?? [],
+    };
+  });
+
   const userMap = new Map((users ?? []).map((user) => [user.id, user.ad_soyad ?? user.email ?? "-"]));
-  const locationOptions = [...new Set((listings ?? []).map((row) => row.konum).filter(Boolean))].sort();
-  const filteredListings = (listings ?? []).filter((row) => {
+  const locationOptions = [...new Set(listingsWithMedia.map((row) => row.konum).filter(Boolean))].sort();
+  const filteredListings = listingsWithMedia.filter((row) => {
     if (filtre === "villa") return row.tip === "villa";
     if (filtre === "tekne") return row.tip === "tekne";
     if (filtre === "aktif") return row.aktif === true;
@@ -207,12 +237,27 @@ export default async function AdminListingsPage({ searchParams }: AdminListingsP
           const row = listing as {
             id: string; baslik: string; konum: string; tip: string; gunluk_fiyat: number; aktif: boolean; ilan_medyalari?: { id: string; url: string; sira: number }[] | null;
           };
+          const kapak = listingCoverImageUrl(row.ilan_medyalari);
           return (
             <AdminMobileCard key={row.id}>
+              <div className="flex gap-3">
+                <div className="h-12 w-12 shrink-0 overflow-hidden rounded-[8px] bg-slate-200">
+                  {kapak ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={kapak} alt="" className="h-full w-full object-cover" width={48} height={48} />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center">
+                      <Home className="h-5 w-5 text-slate-500" aria-hidden />
+                    </div>
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
               <p className="text-sm font-semibold text-slate-800">{row.baslik}</p>
               <p className="mt-1 text-xs text-slate-500">{row.konum}</p>
               <p className="mt-2 text-sm font-semibold text-[#0e9aa7]">{formatCurrency(Number(row.gunluk_fiyat ?? 0))}</p>
               <div className="mt-3"><ListingActions listing={row as never} /></div>
+                </div>
+              </div>
             </AdminMobileCard>
           );
         })}

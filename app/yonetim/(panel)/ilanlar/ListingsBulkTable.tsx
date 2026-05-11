@@ -29,9 +29,14 @@ export type ListingTableRow = {
   ilan_medyalari?: { id: string; url: string; sira: number }[] | null;
 };
 
-function firstImage(medias: { id?: string; url: string; sira: number }[] | null | undefined) {
+/** Kapak: sira=1 varsa o; yoksa en küçük sıradaki görsel (ORDER BY sira ASC LIMIT 1). */
+export function listingCoverImageUrl(
+  medias: { url: string; sira: number }[] | null | undefined,
+): string | null {
   if (!medias?.length) return null;
-  return [...medias].sort((a, b) => a.sira - b.sira)[0]?.url ?? null;
+  const sorted = [...medias].sort((a, b) => a.sira - b.sira);
+  const siraBir = sorted.find((m) => m.sira === 1);
+  return (siraBir ?? sorted[0])?.url ?? null;
 }
 
 export function ListingsBulkTable({ listings }: { listings: ListingTableRow[] }) {
@@ -65,12 +70,13 @@ export function ListingsBulkTable({ listings }: { listings: ListingTableRow[] })
 
   return (
     <div className="space-y-3">
-      <AdminDataTable minWidthClass="min-w-[980px]">
+      <AdminDataTable minWidthClass="min-w-[1040px]">
         <AdminTableHead>
           <tr>
             <AdminTableHeaderCell>
               <input type="checkbox" checked={allSelected} onChange={toggleAll} aria-label="Tümünü seç" />
             </AdminTableHeaderCell>
+            <AdminTableHeaderCell className="w-[64px]">Kapak</AdminTableHeaderCell>
             <AdminTableHeaderCell>İlan</AdminTableHeaderCell>
             <AdminTableHeaderCell>Tip</AdminTableHeaderCell>
             <AdminTableHeaderCell>Fiyat</AdminTableHeaderCell>
@@ -80,7 +86,7 @@ export function ListingsBulkTable({ listings }: { listings: ListingTableRow[] })
         </AdminTableHead>
         <tbody>
           {listings.map((row) => {
-            const url = firstImage(row.ilan_medyalari);
+            const url = listingCoverImageUrl(row.ilan_medyalari);
             return (
               <AdminTableRow key={row.id}>
                 <AdminTableCell>
@@ -91,22 +97,22 @@ export function ListingsBulkTable({ listings }: { listings: ListingTableRow[] })
                     aria-label={`${row.baslik} seç`}
                   />
                 </AdminTableCell>
+                <AdminTableCell className="w-[64px]">
+                  <div className="h-12 w-12 shrink-0 overflow-hidden rounded-[8px] bg-slate-200">
+                    {url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={url} alt="" className="h-full w-full object-cover" width={48} height={48} />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center">
+                        <Home className="h-5 w-5 text-slate-500" aria-hidden />
+                      </div>
+                    )}
+                  </div>
+                </AdminTableCell>
                 <AdminTableCell>
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-xl bg-slate-100">
-                      {url ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={url} alt="" className="h-full w-full object-cover" />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center">
-                          <Home className="h-5 w-5 text-slate-400" />
-                        </div>
-                      )}
-                    </div>
-                    <div>
-                      <p className="line-clamp-1 text-sm font-semibold text-slate-800">{row.baslik}</p>
-                      <p className="mt-0.5 text-xs text-slate-400">{row.konum}</p>
-                    </div>
+                  <div>
+                    <p className="line-clamp-1 text-sm font-semibold text-slate-800">{row.baslik}</p>
+                    <p className="mt-0.5 text-xs text-slate-400">{row.konum}</p>
                   </div>
                 </AdminTableCell>
                 <AdminTableCell>

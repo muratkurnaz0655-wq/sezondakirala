@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
+import { Star, X } from "lucide-react";
 import {
   deleteListingMediaByAdmin,
   reorderListingMediaByAdmin,
@@ -36,7 +37,6 @@ export function EditListingModal({
   const [mediaError, setMediaError] = useState<string | null>(null);
   const [mediaToDelete, setMediaToDelete] = useState<string | null>(null);
   const [mediaNotice, setMediaNotice] = useState<string | null>(null);
-  const [draggingId, setDraggingId] = useState<string | null>(null);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [media, setMedia] = useState([...(listing.ilan_medyalari ?? [])].sort((a, b) => a.sira - b.sira));
 
@@ -116,41 +116,23 @@ export function EditListingModal({
     startMediaTransition(async () => {
       const result = await reorderListingMediaByAdmin(listing.id, orderedIds);
       applyMediaResult(result);
-      if (result.success) setMediaNotice("Görsel sırası güncellendi.");
+      if (result.success) setMediaNotice("Kapak görseli güncellendi.");
     });
   };
 
-  const moveMedia = (index: number, direction: -1 | 1) => {
-    const target = index + direction;
-    if (target < 0 || target >= media.length) return;
-    const next = [...media];
-    const [moved] = next.splice(index, 1);
-    next.splice(target, 0, moved);
-    persistOrder(next.map((item) => item.id));
-  };
-
   const setCoverMedia = (mediaId: string) => {
-    setMediaNotice("Kapak görsel güncelleniyor...");
-    persistOrder([mediaId, ...media.filter((item) => item.id !== mediaId).map((item) => item.id)]);
+    const ordered = [mediaId, ...media.filter((item) => item.id !== mediaId).map((item) => item.id)];
+    persistOrder(ordered);
   };
 
-  const dropMedia = (targetId: string) => {
-    if (!draggingId || draggingId === targetId) return;
-    const next = [...media];
-    const from = next.findIndex((item) => item.id === draggingId);
-    const to = next.findIndex((item) => item.id === targetId);
-    if (from < 0 || to < 0) return;
-    const [moved] = next.splice(from, 1);
-    next.splice(to, 0, moved);
-    setDraggingId(null);
-    persistOrder(next.map((item) => item.id));
-  };
+  const mediaCount = media.length;
+  const mediaCountLabel = `${mediaCount} görsel`;
 
   return (
     <div onClick={onClose} className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-2 sm:p-4">
       <form
         onClick={(e) => e.stopPropagation()}
-        className="flex max-h-[92vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl"
+        className="flex max-h-[92vh] w-full max-w-[680px] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl"
         action={(formData) => {
           startTransition(async () => {
             await updateListing(listing.id, formData);
@@ -158,26 +140,26 @@ export function EditListingModal({
           });
         }}
       >
-        <div className="sticky top-0 z-10 border-b border-slate-200 bg-white/95 px-4 sm:px-6 py-4 backdrop-blur">
+        <div className="sticky top-0 z-10 border-b border-slate-200 bg-white/95 px-4 py-4 backdrop-blur sm:px-6">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h3 className="text-lg sm:text-xl font-semibold text-slate-900">İlan Düzenle</h3>
+              <h3 className="text-lg font-semibold text-slate-900 sm:text-xl">İlan Düzenle</h3>
               <p className="mt-1 text-sm text-slate-500">
-                Temel bilgileri güncelle, görselleri yönet ve kapak görseli seç.
+                Temel bilgileri güncelleyin; fotoğrafları yönetin ve kapak seçin.
               </p>
             </div>
             <button
               type="button"
               onClick={onClose}
-              className="inline-flex h-9 items-center rounded-lg border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+              className="inline-flex h-9 shrink-0 items-center rounded-lg border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
             >
               Kapat
             </button>
           </div>
         </div>
 
-        <div className="flex-1 space-y-6 overflow-y-auto px-4 sm:px-6 py-5">
-          <section className="rounded-xl border border-slate-200 bg-slate-50/40 p-4">
+        <div className="flex-1 space-y-0 overflow-y-auto px-4 py-5 sm:px-6">
+          <section>
             <h4 className="mb-4 text-sm font-semibold text-slate-900">Temel Bilgiler</h4>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <label className="block">
@@ -239,12 +221,72 @@ export function EditListingModal({
             </div>
           </section>
 
-          <section className="rounded-xl border border-slate-200 bg-white p-4">
-            <div className="mb-3 flex items-center justify-between gap-3">
-              <h4 className="text-sm font-semibold text-slate-900">Fotoğraflar</h4>
-              <span className="text-xs text-slate-500">{media.length} görsel</span>
-            </div>
-            <div className="mb-2 flex flex-wrap items-center gap-2">
+          <hr className="my-6 border-0 border-t border-slate-200" />
+
+          <section>
+            <h4 className="mb-1 text-sm font-semibold text-slate-900">
+              Fotoğraflar ({mediaCountLabel})
+            </h4>
+            <p className="mb-4 text-xs text-slate-500">
+              Yıldız ile kapak seçin; kırmızı X ile silin. Yeni görselleri aşağıdan ekleyin.
+            </p>
+
+            {media.length === 0 ? (
+              <p className="mb-4 text-sm text-slate-500">Henüz görsel yok.</p>
+            ) : (
+              <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-5">
+                {media.map((item, idx) => {
+                  const isCover = idx === 0;
+                  return (
+                    <div key={item.id} className="relative h-20 w-20 shrink-0 sm:h-20 sm:w-20">
+                      <div className="relative h-full w-full overflow-hidden rounded-[8px] border border-slate-200 bg-slate-100">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={item.url}
+                          alt={`Görsel ${idx + 1}`}
+                          className="h-full w-full object-cover"
+                          width={80}
+                          height={80}
+                        />
+                        <div className="absolute inset-x-0 top-0 z-10 flex justify-between px-0.5 pt-0.5">
+                          {isCover ? (
+                            <span
+                              className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-amber-400/95 text-white shadow-sm"
+                              title="Kapak görseli"
+                            >
+                              <Star className="h-4 w-4 fill-current" aria-hidden />
+                            </span>
+                          ) : (
+                            <button
+                              type="button"
+                              title="Kapak yap"
+                              aria-label="Kapak yap"
+                              disabled={mediaPending}
+                              onClick={() => setCoverMedia(item.id)}
+                              className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-white/80 bg-black/35 text-white shadow-sm backdrop-blur-sm transition hover:bg-black/50 disabled:opacity-50"
+                            >
+                              <Star className="h-4 w-4" strokeWidth={2} aria-hidden />
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            title="Görseli sil"
+                            aria-label="Görseli sil"
+                            disabled={mediaPending}
+                            onClick={() => setMediaToDelete(item.id)}
+                            className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-[#E24B4A] text-white shadow-sm transition hover:bg-[#c93d3b] disabled:opacity-50"
+                          >
+                            <X className="h-4 w-4" strokeWidth={2.5} aria-hidden />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            <div className="flex flex-wrap items-center gap-2 border-t border-slate-100 pt-4">
               <input
                 ref={fileInputRef}
                 type="file"
@@ -264,103 +306,38 @@ export function EditListingModal({
                 type="button"
                 onClick={uploadMedia}
                 disabled={mediaPending}
-                className="inline-flex h-9 items-center rounded-lg bg-sky-500 px-4 text-xs font-semibold text-white transition hover:bg-sky-600 disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex h-9 items-center rounded-lg bg-slate-800 px-4 text-xs font-semibold text-white transition hover:bg-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Görsel Ekle
               </button>
             </div>
             {selectedFiles.length > 0 ? (
-              <p className="mb-2 text-xs text-slate-600">{selectedFiles.length} dosya seçildi</p>
+              <p className="mt-2 text-xs text-slate-600">{selectedFiles.length} dosya seçildi</p>
             ) : null}
             {mediaError ? (
-              <p className="mb-2 rounded-lg bg-red-50 px-2 py-1 text-xs text-red-700">{mediaError}</p>
+              <p className="mt-2 rounded-lg bg-red-50 px-2 py-1 text-xs text-red-700">{mediaError}</p>
             ) : null}
             {mediaNotice ? (
-              <p className="mb-2 rounded-lg bg-emerald-50 px-2 py-1 text-xs text-emerald-700">{mediaNotice}</p>
+              <p className="mt-2 rounded-lg bg-emerald-50 px-2 py-1 text-xs text-emerald-700">{mediaNotice}</p>
             ) : null}
-            {media.length === 0 ? (
-              <p className="text-xs text-slate-500">Henüz görsel yok.</p>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:grid-cols-3">
-                {media.map((item, idx) => (
-                  <div
-                    key={item.id}
-                    draggable={!mediaPending}
-                    onDragStart={() => setDraggingId(item.id)}
-                    onDragEnd={() => setDraggingId(null)}
-                    onDragOver={(e) => e.preventDefault()}
-                    onDrop={() => dropMedia(item.id)}
-                    className={`rounded-lg border border-slate-200 p-2 transition ${
-                      draggingId === item.id ? "opacity-60" : "opacity-100"
-                    } ${idx === 0 ? "ring-1 ring-sky-400" : ""}`}
-                    style={{ cursor: mediaPending ? "not-allowed" : "grab" }}
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={item.url} alt={`Görsel ${idx + 1}`} className="h-24 w-full rounded-md object-cover" />
-                    <div className="mt-2">
-                      {idx === 0 ? (
-                        <span className="inline-block rounded-md bg-sky-100 px-2 py-0.5 text-[11px] font-semibold text-sky-700">
-                          Kapak Görsel
-                        </span>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => setCoverMedia(item.id)}
-                          disabled={mediaPending}
-                          className="h-6 rounded-md border border-sky-200 bg-sky-50 px-2 text-[11px] font-semibold text-sky-700 transition hover:bg-sky-100 disabled:opacity-50"
-                        >
-                          Kapak Yap
-                        </button>
-                      )}
-                    </div>
-                    <div className="mt-2 flex gap-1.5">
-                      <button
-                        type="button"
-                        onClick={() => moveMedia(idx, -1)}
-                        disabled={idx === 0 || mediaPending}
-                        className="h-7 flex-1 rounded-md border border-slate-200 bg-white text-xs font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
-                      >
-                        ↑
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => moveMedia(idx, 1)}
-                        disabled={idx === media.length - 1 || mediaPending}
-                        className="h-7 flex-1 rounded-md border border-slate-200 bg-white text-xs font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
-                      >
-                        ↓
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setMediaToDelete(item.id)}
-                        disabled={mediaPending}
-                        className="h-7 flex-1 rounded-md border border-red-200 bg-red-50 text-xs font-semibold text-red-700 transition hover:bg-red-100 disabled:opacity-50"
-                      >
-                        Sil
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
           </section>
         </div>
 
-        <div className="sticky bottom-0 border-t border-slate-200 bg-white px-4 sm:px-6 py-4">
-          <div className="flex flex-col-reverse sm:flex-row justify-end gap-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="inline-flex h-10 w-full sm:w-auto items-center justify-center rounded-lg border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-            >
-              Vazgeç
-            </button>
+        <div className="sticky bottom-0 border-t border-slate-200 bg-white px-4 py-4 sm:px-6">
+          <div className="flex flex-col gap-2">
             <button
               type="submit"
               disabled={isPending}
-              className="inline-flex h-10 w-full sm:w-auto items-center justify-center rounded-lg bg-sky-500 px-4 text-sm font-semibold text-white transition hover:bg-sky-600 disabled:opacity-50"
+              className="inline-flex h-11 w-full items-center justify-center rounded-lg bg-[#1D9E75] text-sm font-semibold text-white shadow-sm transition hover:bg-[#188f6a] disabled:cursor-not-allowed disabled:opacity-50"
             >
               Kaydet
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="inline-flex h-11 w-full items-center justify-center rounded-lg border border-slate-300 bg-white text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+            >
+              Vazgeç
             </button>
           </div>
         </div>

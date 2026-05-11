@@ -14,10 +14,18 @@ export function AdminTableHead({ children }: { children: ReactNode }) {
   return <thead className="border-b border-slate-200 bg-slate-50">{children}</thead>;
 }
 
-export function AdminTableHeaderCell({ children, align = "left" }: { children: ReactNode; align?: "left" | "right" }) {
+export function AdminTableHeaderCell({
+  children,
+  align = "left",
+  className = "",
+}: {
+  children: ReactNode;
+  align?: "left" | "right";
+  className?: string;
+}) {
   return (
     <th
-      className={`px-5 py-3.5 text-xs font-semibold uppercase tracking-wider text-slate-500 ${align === "right" ? "text-right" : "text-left"}`}
+      className={`px-5 py-3.5 text-xs font-semibold uppercase tracking-wider text-slate-500 ${align === "right" ? "text-right" : "text-left"} ${className}`.trim()}
     >
       {children}
     </th>
