@@ -34,6 +34,9 @@ export type Ilan = {
   sponsorlu: boolean;
   olusturulma_tarihi: string;
   ilk_resim_url?: string | null;
+  /** Yorum trigger ile güncellenir (opsiyonel kolonlar) */
+  ortalama_puan?: number | null;
+  yorum_sayisi?: number | null;
 };
 
 export type IlanMedyasi = {

@@ -417,7 +417,11 @@ export async function getListingBySlug(tip: "villa" | "tekne", slug: string) {
         .select("id,giris_tarihi,cikis_tarihi,durum")
         .eq("ilan_id", listing.id)
         .in("durum", ["beklemede", "onaylandi"]),
-      supabase.from("yorumlar").select("*").eq("ilan_id", listing.id),
+      supabase
+        .from("yorumlar")
+        .select("id,rezervasyon_id,kullanici_id,ilan_id,puan,yorum,olusturulma_tarihi,kullanicilar(ad_soyad,avatar_url)")
+        .eq("ilan_id", listing.id)
+        .order("olusturulma_tarihi", { ascending: false }),
       supabase
         .from("ilanlar")
         .select("*")

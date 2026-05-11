@@ -27,6 +27,8 @@ import { ListingQuestionForm } from "@/components/listing-detail-extras";
 import { RecentListingsTracker } from "@/components/recent-listings-tracker";
 import { RezervasyonBaslatButton } from "@/components/rezervasyon-baslat-button";
 import { getListingBySlug } from "@/lib/data/phase2";
+import { createClient } from "@/lib/supabase/server";
+import { ListingCommentsSection, type ListingCommentRow } from "@/components/listing-comments-section";
 import { OZELLIKLER } from "@/lib/villa-sabitleri";
 import { reservationUrlSegmentFromListing } from "@/lib/rezervasyon-segment";
 import { getPlatformSettings } from "@/lib/settings";
@@ -111,6 +113,35 @@ export async function ListingDetailPage({ tip, slug, selectedDates }: ListingDet
     getPlatformSettings(),
   ]);
   if (!detail) notFound();
+
+  const supabaseAuth = await createClient();
+  const {
+    data: { user: authUser },
+  } = await supabaseAuth.auth.getUser();
+  const viewerUserId = authUser?.id ?? null;
+  let approvedReservationId: string | null = null;
+  let hasExistingReview = false;
+  if (viewerUserId) {
+    const { data: approvedRez } = await supabaseAuth
+      .from("rezervasyonlar")
+      .select("id")
+      .eq("ilan_id", detail.listing.id)
+      .eq("kullanici_id", viewerUserId)
+      .in("durum", ["approved", "onaylandi"])
+      .order("olusturulma_tarihi", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    approvedReservationId = approvedRez?.id ?? null;
+
+    const { data: existingReview } = await supabaseAuth
+      .from("yorumlar")
+      .select("id")
+      .eq("ilan_id", detail.listing.id)
+      .eq("kullanici_id", viewerUserId)
+      .maybeSingle();
+    hasExistingReview = Boolean(existingReview);
+  }
+
   const yetiskin = Number(selectedDates?.yetiskin ?? 2);
   const cocuk = Number(selectedDates?.cocuk ?? 0);
   const bebek = Number(selectedDates?.bebek ?? 0);
@@ -134,11 +165,9 @@ export async function ListingDetailPage({ tip, slug, selectedDates }: ListingDet
         }
       : undefined;
 
-  const totalScore = (detail.comments as Array<{ puan?: number | string | null }>).reduce<number>(
-    (sum, row) => sum + Number(row.puan ?? 0),
-    0,
-  );
-  const averageScore = detail.comments.length > 0 ? totalScore / detail.comments.length : 0;
+  const commentRows = detail.comments as ListingCommentRow[];
+  const totalScore = commentRows.reduce<number>((sum, row) => sum + Number(row.puan ?? 0), 0);
+  const averageScore = commentRows.length > 0 ? totalScore / commentRows.length : 0;
 
   const coverImage =
     detail.media[0]?.url ??
@@ -238,9 +267,14 @@ export async function ListingDetailPage({ tip, slug, selectedDates }: ListingDet
           <div className="text-right">
             <p className="text-lg font-semibold text-slate-900">{formatCurrency(detail.listing.gunluk_fiyat)} / gece</p>
             <p className="text-sm text-slate-600">
-              {detail.comments.length > 0
-                ? `${averageScore.toFixed(1)} puan (${detail.comments.length} yorum)`
-                : "Henüz yorum yok"}
+              {commentRows.length > 0 ? (
+                <span className="inline-flex items-center gap-1">
+                  <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" aria-hidden />
+                  {averageScore.toFixed(1)} · {commentRows.length} yorum
+                </span>
+              ) : (
+                "Henüz yorum yok"
+              )}
             </p>
           </div>
         </div>
@@ -311,20 +345,18 @@ export async function ListingDetailPage({ tip, slug, selectedDates }: ListingDet
             </>
           ) : null}
           <ListingMapSection label={fixTurkishDisplay(detail.listing.konum)} />
-          <section className="rounded-2xl border border-slate-200 p-4">
-            <h2 className="font-semibold text-slate-900">Yorumlar</h2>
-            {detail.comments.length === 0 ? (
-              <div className="mt-8 rounded-2xl border border-[#0e9aa7]/20 bg-[#f0fdfd] p-6 text-center">
-                <Star className="mx-auto mb-3 h-10 w-10 text-[#0e9aa7]/30" />
-                <p className="mb-1 font-medium text-slate-500">Henüz yorum yapılmamış</p>
-                <p className="text-sm text-slate-400">İlk yorumu siz yazın!</p>
-              </div>
-            ) : (
-              <p className="mt-1 text-sm text-slate-700">
-                Ortalama puan: {averageScore.toFixed(1)} ({detail.comments.length} yorum)
-              </p>
-            )}
-          </section>
+          <ListingCommentsSection
+            ilanId={detail.listing.id}
+            listingSlug={listingSlug}
+            tip={tip}
+            comments={commentRows}
+            averageScore={averageScore}
+            viewer={{
+              userId: viewerUserId,
+              approvedReservationId,
+              hasExistingReview,
+            }}
+          />
           <section className="rounded-2xl border border-slate-200 p-4 text-sm text-slate-700">
             TURSAB Üyesidir - Belge No: {TURSAB_NO}
           </section>
