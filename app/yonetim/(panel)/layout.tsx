@@ -40,7 +40,7 @@ export default async function AdminPanelSegmentLayout({ children }: { children: 
     if (notifRes.error) {
       console.error("[admin-panel-layout] bildirim listesi:", notifRes.error);
     }
-    unreadCount = unreadResult.count ?? 0;
+    unreadCount = Number(unreadResult.count ?? 0);
     if (unreadResult.error) {
       console.error("[admin-panel-layout] okunmamis bildirim sayimi:", unreadResult.error);
     }
@@ -72,7 +72,7 @@ export default async function AdminPanelSegmentLayout({ children }: { children: 
     if (pendingRes.error) {
       console.error("[admin-panel-layout] bekleyen rezervasyon sayimi:", pendingRes.error);
     }
-    pendingReservationCount = pendingRes.count ?? 0;
+    pendingReservationCount = Number(pendingRes.count ?? 0);
   } catch (e) {
     console.error("[admin-panel-layout] supabase:", e);
   }
