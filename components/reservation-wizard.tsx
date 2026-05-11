@@ -19,6 +19,7 @@ import {
   CalendarDays,
   Check,
   CreditCard,
+  Mail,
   Info,
   Landmark,
   Lock,
@@ -1037,7 +1038,20 @@ export function ReservationWizard({
 
               <div className="mb-4 text-xs text-slate-500">TURSAB Üyesidir — Belge No: {tursabNo}</div>
 
-              <p className="mb-1 text-sm text-slate-600">Onay e-postası gönderildi.</p>
+              <div
+                className="mb-4 flex items-center gap-2.5 rounded-lg px-[18px] py-[14px] text-left"
+                style={{ backgroundColor: "#E1F5EE", border: "0.5px solid #1D9E75" }}
+              >
+                <Mail className="h-5 w-5 shrink-0 text-[#1D9E75]" strokeWidth={2} aria-hidden />
+                <div className="min-w-0">
+                  <p className="text-[13px] font-medium leading-snug text-slate-800">
+                    Rezervasyon bilgileriniz e-posta adresinize gönderildi.
+                  </p>
+                  <p className="mt-1 text-[12px] leading-snug text-slate-500">
+                    Gelen kutunuzu kontrol edin, spam klasörüne düşmüş olabilir.
+                  </p>
+                </div>
+              </div>
               {isPending ? <p className="mb-4 text-sm text-slate-500">Onay e-postası gönderiliyor…</p> : null}
               {errorMessage ? <p className="mb-4 text-sm text-red-600">{errorMessage}</p> : null}
 
