@@ -35,6 +35,7 @@ const socialLinks = [
 
 export async function SiteFooter() {
   const settings = await getPlatformSettings();
+  const currentYear = new Date().getFullYear();
 
   return (
     <footer className="mt-auto text-[#e2e8f0]">
@@ -65,7 +66,7 @@ export async function SiteFooter() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={label}
-                className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-slate-400 transition-all duration-200 hover:border-[#0e9aa7]/30 hover:bg-[#0e9aa7]/15 hover:text-[#22d3ee]"
+                className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-slate-400 transition-all duration-200 hover:scale-105 hover:border-[#0e9aa7]/30 hover:bg-[#0e9aa7]/15 hover:text-[#22d3ee]"
               >
                 <Icon className="h-4 w-4" />
               </a>
@@ -146,7 +147,7 @@ export async function SiteFooter() {
             </span>
           </div>
           <p className="text-center text-[#334155]">
-            © 2026 is Powered by Xanthos Dijital. Tüm Hakları Saklıdır.
+            © {currentYear} is Powered by Xanthos Dijital. Tüm Hakları Saklıdır.
           </p>
         </div>
       </div>

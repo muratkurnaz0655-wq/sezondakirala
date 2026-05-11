@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import { Menu } from "lucide-react";
@@ -27,6 +27,7 @@ export type MobileMenuProps = {
 export function MobileMenu({ siteName: _siteName, variant, user, profil: _profil }: MobileMenuProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const router = useRouter();
+  const pathname = usePathname();
   const hero = variant === "hero";
 
   const triggerClass = hero
@@ -52,7 +53,7 @@ export function MobileMenu({ siteName: _siteName, variant, user, profil: _profil
         onClick={() => setMenuOpen((prev) => !prev)}
         className={`flex h-10 w-10 items-center justify-center rounded-xl border transition-all duration-200 hover:shadow-md active:scale-[0.98] ${triggerClass}`}
       >
-        <Menu size={22} strokeWidth={2} />
+        <Menu size={22} strokeWidth={2} className={menuOpen ? "rotate-90" : ""} />
       </button>
       {menuOpen ? (
         <button
@@ -64,14 +65,18 @@ export function MobileMenu({ siteName: _siteName, variant, user, profil: _profil
       ) : null}
       <div
         id="mobile-nav-dropdown"
-        className={`${menuOpen ? "flex" : "hidden"} fixed inset-x-0 top-[4.5rem] z-50 max-h-[calc(100dvh-4.5rem)] flex-col gap-1 overflow-y-auto border-b border-slate-100 bg-white p-4 shadow-lg md:hidden`}
+        className={`${menuOpen ? "flex opacity-100 translate-y-0" : "hidden opacity-0 -translate-y-2"} fixed inset-x-0 top-[4.5rem] z-50 max-h-[calc(100dvh-4.5rem)] flex-col gap-1 overflow-y-auto border-b border-slate-100 bg-white p-4 shadow-lg transition-all duration-200 md:hidden`}
       >
         {navLinks.map((link) => (
           <Link
             key={link.href}
             href={link.href}
             onClick={kapat}
-            className="rounded-xl border-b border-slate-50 px-4 py-3 font-medium text-slate-700 transition-all duration-200 hover:bg-[#f0fdfd] hover:text-[#0e9aa7] hover:shadow-md active:scale-[0.98] last:border-0"
+            className={`rounded-xl border-b border-slate-50 px-4 py-3 font-medium transition-all duration-200 hover:bg-[#f0fdfd] hover:text-[#0e9aa7] hover:shadow-md active:scale-[0.98] last:border-0 ${
+              pathname === link.href || (link.href !== "/" && pathname.startsWith(link.href))
+                ? "text-[#185FA5] bg-sky-50/60"
+                : "text-slate-700"
+            }`}
           >
             {link.label}
           </Link>

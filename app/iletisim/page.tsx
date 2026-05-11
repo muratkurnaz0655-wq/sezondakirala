@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getPlatformSettings } from "@/lib/settings";
 import { SITE_NAME, formatWhatsappTrDisplay, whatsappHref } from "@/lib/constants";
 import { mesajGonder } from "@/app/iletisim/actions";
+import { ContactSubmitButton } from "@/components/contact-submit-button";
 import { Clock3, Mail, MapPin, MessageCircle, Phone } from "lucide-react";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -35,8 +36,8 @@ export default async function IletisimPage() {
               <p className="text-xs font-semibold uppercase text-slate-500">Telefon</p>
               <p className="text-sm text-slate-800">{formatWhatsappTrDisplay(settings.whatsappNumber)}</p>
             </a>
-            <Link href={wa} className="rounded-xl border border-slate-200 bg-[#f0fdfd] p-4 transition-all hover:border-[#0e9aa7]/45">
-              <MessageCircle className="mb-2 h-5 w-5 text-[#0e9aa7]" />
+            <Link href={wa} className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 transition-all hover:border-emerald-400 hover-lift-soft">
+              <MessageCircle className="mb-2 h-5 w-5 text-emerald-600" />
               <p className="text-xs font-semibold uppercase text-slate-500">WhatsApp</p>
               <p className="text-sm text-slate-800">Mesaj Gönder</p>
             </Link>
@@ -127,9 +128,7 @@ export default async function IletisimPage() {
               placeholder="Mesajınızı yazın..."
             />
           </div>
-          <button type="submit" className="w-full sm:w-auto rounded-xl bg-gradient-to-r from-[#0e9aa7] to-[#22d3ee] px-5 py-2.5 text-sm font-bold text-[#0d1117] transition-all hover:from-[#22d3ee] hover:to-[#0e9aa7] active:scale-95">
-            Mesaj Gönder
-          </button>
+          <ContactSubmitButton />
         </form>
         </div>
       </div>

@@ -224,10 +224,11 @@ export function SiteHeaderClient({ siteName }: SiteHeaderClientProps) {
 
   const _solidBar = scrolled || !isHome || reduce;
   const headerShell = _solidBar
-    ? "border-b border-cyan-200/80 shadow-sm backdrop-blur-md"
+    ? "border-b border-cyan-200/80 shadow-[0_2px_12px_rgba(0,0,0,0.08)] backdrop-blur-md"
     : "border-b border-cyan-200/70 shadow-sm backdrop-blur-md";
 
-  const navLinkBase = "font-medium text-slate-600 transition-colors duration-200 hover:text-[#0e9aa7]";
+  const navLinkBase =
+    "group relative font-medium text-slate-600 transition-colors duration-200 hover:text-[#0e9aa7] after:absolute after:bottom-[-8px] after:left-0 after:h-[2px] after:w-full after:origin-left after:scale-x-0 after:rounded-full after:bg-[#185FA5] after:transition-transform after:duration-200 hover:after:scale-x-100";
   const girisClass = "text-slate-600 transition-colors duration-200 hover:text-slate-900";
   const dropdownVariant = "solid";
   const loggedIn = user !== null;
@@ -332,12 +333,12 @@ export function SiteHeaderClient({ siteName }: SiteHeaderClientProps) {
         <nav
           className="hidden items-center gap-6 text-[0.95rem] font-medium md:flex lg:gap-7 lg:text-base"
         >
-          <Link href="/" className={`${navLinkBase} ${pathname === "/" ? "font-semibold text-[#0e9aa7]" : ""}`}>Ana Sayfa</Link>
-          <Link href="/konaklama" className={`${navLinkBase} ${pathname.startsWith("/konaklama") ? "font-semibold text-[#0e9aa7]" : ""}`}>Konaklama</Link>
-          <Link href="/tekneler" className={`${navLinkBase} ${pathname.startsWith("/tekneler") ? "font-semibold text-[#0e9aa7]" : ""}`}>Tekneler</Link>
-          <Link href="/paketler" className={`${navLinkBase} ${pathname.startsWith("/paketler") ? "font-semibold text-[#0e9aa7]" : ""}`}>Paketler</Link>
-          <Link href="/hakkimizda" className={`${navLinkBase} ${pathname.startsWith("/hakkimizda") ? "font-semibold text-[#0e9aa7]" : ""}`}>Hakkımızda</Link>
-          <Link href="/sss" className={`${navLinkBase} ${pathname.startsWith("/sss") ? "font-semibold text-[#0e9aa7]" : ""}`}>SSS</Link>
+          <Link href="/" className={`${navLinkBase} ${pathname === "/" ? "font-semibold text-[#185FA5] after:scale-x-100" : ""}`}>Ana Sayfa</Link>
+          <Link href="/konaklama" className={`${navLinkBase} ${pathname.startsWith("/konaklama") ? "font-semibold text-[#185FA5] after:scale-x-100" : ""}`}>Konaklama</Link>
+          <Link href="/tekneler" className={`${navLinkBase} ${pathname.startsWith("/tekneler") ? "font-semibold text-[#185FA5] after:scale-x-100" : ""}`}>Tekneler</Link>
+          <Link href="/paketler" className={`${navLinkBase} ${pathname.startsWith("/paketler") ? "font-semibold text-[#185FA5] after:scale-x-100" : ""}`}>Paketler</Link>
+          <Link href="/hakkimizda" className={`${navLinkBase} ${pathname.startsWith("/hakkimizda") ? "font-semibold text-[#185FA5] after:scale-x-100" : ""}`}>Hakkımızda</Link>
+          <Link href="/sss" className={`${navLinkBase} ${pathname.startsWith("/sss") ? "font-semibold text-[#185FA5] after:scale-x-100" : ""}`}>SSS</Link>
         </nav>
 
         <div className="flex items-center gap-2 md:gap-3">
@@ -353,14 +354,14 @@ export function SiteHeaderClient({ siteName }: SiteHeaderClientProps) {
               >
                 <Bell className="h-5 w-5" />
                 {notificationCount > 0 ? (
-                  <span className="absolute -right-1 -top-1 flex min-h-5 min-w-5 items-center justify-center rounded-full border border-white bg-red-600 px-1 text-[10px] font-bold text-white shadow">
+                  <span className="pulse-soft absolute -right-1 -top-1 flex min-h-5 min-w-5 items-center justify-center rounded-full border border-white bg-red-600 px-1 text-[10px] font-bold text-white shadow">
                     {notificationCount > 9 ? "9+" : notificationCount}
                   </span>
                 ) : null}
               </button>
               {notificationOpen ? (
                 <div
-                  className="absolute right-20 top-[4.5rem] z-50 hidden w-[340px] overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-xl md:block"
+                  className="absolute right-20 top-[4.5rem] z-50 hidden w-[340px] overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-xl md:block slide-down-fade"
                   style={{ borderWidth: "0.5px" }}
                 >
                   <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">

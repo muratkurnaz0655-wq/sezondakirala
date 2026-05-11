@@ -40,8 +40,8 @@ const STEP_TITLE = "text-[22px] font-medium tracking-tight text-slate-900";
 const STEP_SUB = "mt-1 text-sm text-slate-500";
 const BTN_BASE =
   "inline-flex items-center justify-center gap-2 rounded-lg px-5 py-3 text-sm font-medium transition-all duration-200 ease-in-out";
-const BTN_PRIMARY = `${BTN_BASE} bg-sky-600 text-white hover:bg-sky-700 active:brightness-[0.97]`;
-const BTN_WHITE = `${BTN_BASE} border border-slate-200 bg-white text-slate-800 hover:bg-slate-50 active:brightness-[0.98]`;
+const BTN_PRIMARY = `${BTN_BASE} min-h-11 bg-[#185FA5] text-white hover:bg-[#154d86] active:brightness-[0.97]`;
+const BTN_WHITE = `${BTN_BASE} min-h-11 border border-slate-200 bg-white text-slate-800 hover:bg-slate-50 active:brightness-[0.98]`;
 const INPUT_FOCUS =
   "rounded-lg border border-slate-200 px-4 py-3 text-sm text-slate-800 transition-[box-shadow,border-color] focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-400/35";
 
@@ -490,7 +490,7 @@ export function ReservationWizard({
                     <div className="flex w-full items-center">
                       {i > 0 ? (
                         <div
-                          className={`h-0.5 min-w-[8px] flex-1 rounded-full ${step > i ? "bg-emerald-500" : "bg-slate-200"}`}
+                          className={`h-0.5 min-w-[8px] flex-1 rounded-full transition-all duration-300 ${step > i ? "bg-emerald-500" : "bg-slate-200"}`}
                           aria-hidden
                         />
                       ) : (
@@ -507,7 +507,7 @@ export function ReservationWizard({
                             step > i + 1
                               ? "bg-emerald-500 text-white shadow-sm shadow-emerald-500/25"
                               : step === i + 1
-                                ? "bg-sky-600 text-white shadow-sm shadow-sky-600/25"
+                                ? "pulse-soft bg-[#185FA5] text-white shadow-sm shadow-sky-600/25"
                                 : "border border-slate-200 bg-slate-100 text-slate-500"
                           }`}
                           aria-label={`${i + 1}. adıma dön`}
@@ -520,7 +520,7 @@ export function ReservationWizard({
                             step > i + 1
                               ? "bg-emerald-500 text-white shadow-sm shadow-emerald-500/25"
                               : step === i + 1
-                                ? "bg-sky-600 text-white shadow-sm shadow-sky-600/25"
+                                ? "pulse-soft bg-[#185FA5] text-white shadow-sm shadow-sky-600/25"
                                 : "border border-slate-200 bg-slate-100 text-slate-500"
                           }`}
                         >
@@ -529,7 +529,7 @@ export function ReservationWizard({
                       )}
                       {i < stepTitles.length - 1 ? (
                         <div
-                          className={`h-0.5 min-w-[8px] flex-1 rounded-full ${step > i + 1 ? "bg-emerald-500" : "bg-slate-200"}`}
+                          className={`h-0.5 min-w-[8px] flex-1 rounded-full transition-all duration-300 ${step > i + 1 ? "bg-emerald-500" : "bg-slate-200"}`}
                           aria-hidden
                         />
                       ) : (
@@ -754,7 +754,7 @@ export function ReservationWizard({
                   <ArrowRight className="h-4 w-4 shrink-0" aria-hidden />
                 </button>
                 {errorMessage ? (
-                  <p className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{errorMessage}</p>
+                  <p className="slide-down-fade mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{errorMessage}</p>
                 ) : null}
               </div>
             </div>
@@ -950,7 +950,10 @@ export function ReservationWizard({
                     className={`${BTN_PRIMARY} w-full flex-1 shadow-sm shadow-sky-600/20 disabled:cursor-not-allowed disabled:opacity-60`}
                   >
                     {savingReservation ? (
-                      "Kaydediliyor…"
+                      <>
+                        <span className="inline-spinner" aria-hidden />
+                        <span className="sr-only">Yukleniyor</span>
+                      </>
                     ) : (
                       <>
                         <Check className="h-4 w-4 shrink-0" strokeWidth={2.5} aria-hidden />
@@ -961,7 +964,7 @@ export function ReservationWizard({
                 </div>
 
                 {errorMessage ? (
-                  <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{errorMessage}</p>
+                  <p className="slide-down-fade rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{errorMessage}</p>
                 ) : null}
               </form>
             </div>

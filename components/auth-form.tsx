@@ -194,8 +194,8 @@ export function AuthForm({ mode, redirectTo }: AuthFormProps) {
         </div>
 
         <div className="flex items-center justify-center p-8">
-          <div className="w-full max-w-md">
-            <div className="mx-auto w-full max-w-md rounded-2xl border border-slate-200 bg-white p-8 shadow-xl">
+          <div className="w-full max-w-[440px]">
+            <div className="mx-auto w-full max-w-[440px] rounded-2xl border border-slate-200 bg-white p-8 shadow-xl">
               <div className="mb-8 text-center">
                 <Link href="/" className="mb-6 inline-flex items-center justify-center gap-2">
                   <Image
@@ -221,7 +221,7 @@ export function AuthForm({ mode, redirectTo }: AuthFormProps) {
                 <div className="space-y-1">
                   <label className="text-sm text-slate-500">E-posta</label>
                   <input
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-800 outline-none transition-all focus:border-[#0e9aa7] focus:ring-2 focus:ring-[#0e9aa7]/20"
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 outline-none transition-all focus:border-[#0e9aa7] focus:ring-2 focus:ring-[#0e9aa7]/20"
                     type="email"
                     placeholder="ornek@email.com"
                     {...signInForm.register("email")}
@@ -242,7 +242,7 @@ export function AuthForm({ mode, redirectTo }: AuthFormProps) {
                     </button>
                   </div>
                   <input
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-800 outline-none transition-all focus:border-[#0e9aa7] focus:ring-2 focus:ring-[#0e9aa7]/20"
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 outline-none transition-all focus:border-[#0e9aa7] focus:ring-2 focus:ring-[#0e9aa7]/20"
                     type={showSignInPassword ? "text" : "password"}
                     placeholder="••••••••"
                     autoComplete="current-password"
@@ -265,7 +265,7 @@ export function AuthForm({ mode, redirectTo }: AuthFormProps) {
                   type="submit"
                   disabled={isLoading}
                 >
-                  {isLoading ? "İşleniyor..." : "Giriş Yap"}
+                  {isLoading ? <span className="inline-spinner inline-block align-middle" aria-hidden /> : "Giriş Yap"}
                 </button>
                 <Link className="block text-center text-sm text-[#22d3ee] hover:underline" href="/sifre-sifirla">
                   Şifremi unuttum
@@ -281,7 +281,7 @@ export function AuthForm({ mode, redirectTo }: AuthFormProps) {
                 </p>
               </form>
 
-              {message ? <p className="mt-4 text-center text-sm text-gray-700">{message}</p> : null}
+              {message ? <p className={`mt-4 text-center text-sm ${message.includes("Başarı") ? "text-emerald-600" : "text-gray-700"}`}>{message}</p> : null}
             </div>
           </div>
         </div>
@@ -402,7 +402,7 @@ export function AuthForm({ mode, redirectTo }: AuthFormProps) {
           <div className="space-y-1">
             <label className="text-sm text-slate-500">Ad Soyad</label>
             <input
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 transition-all focus:border-[#0e9aa7] focus:ring-2 focus:ring-[#0e9aa7]/20"
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 transition-all focus:border-[#0e9aa7] focus:ring-2 focus:ring-[#0e9aa7]/20"
               type="text"
               {...signUpForm.register("adSoyad")}
             />
@@ -414,7 +414,7 @@ export function AuthForm({ mode, redirectTo }: AuthFormProps) {
           <div className="space-y-1">
             <label className="text-sm text-slate-500">E-posta</label>
             <input
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 transition-all focus:border-[#0e9aa7] focus:ring-2 focus:ring-[#0e9aa7]/20"
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 transition-all focus:border-[#0e9aa7] focus:ring-2 focus:ring-[#0e9aa7]/20"
               type="email"
               {...signUpForm.register("email")}
             />
@@ -426,7 +426,7 @@ export function AuthForm({ mode, redirectTo }: AuthFormProps) {
           <div className="space-y-1">
             <label className="text-sm text-slate-500">Telefon</label>
             <input
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 transition-all focus:border-[#0e9aa7] focus:ring-2 focus:ring-[#0e9aa7]/20"
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 transition-all focus:border-[#0e9aa7] focus:ring-2 focus:ring-[#0e9aa7]/20"
               type="tel"
               placeholder="05XX XXX XX XX"
               {...signUpForm.register("telefon")}
@@ -449,7 +449,7 @@ export function AuthForm({ mode, redirectTo }: AuthFormProps) {
               </button>
             </div>
             <input
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 transition-all focus:border-[#0e9aa7] focus:ring-2 focus:ring-[#0e9aa7]/20"
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 transition-all focus:border-[#0e9aa7] focus:ring-2 focus:ring-[#0e9aa7]/20"
               type={showSignUpPassword ? "text" : "password"}
               {...signUpForm.register("password")}
             />
@@ -468,7 +468,7 @@ export function AuthForm({ mode, redirectTo }: AuthFormProps) {
               </button>
             </div>
             <input
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 transition-all focus:border-[#0e9aa7] focus:ring-2 focus:ring-[#0e9aa7]/20"
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 transition-all focus:border-[#0e9aa7] focus:ring-2 focus:ring-[#0e9aa7]/20"
               type={showSignUpConfirmPassword ? "text" : "password"}
               {...signUpForm.register("confirmPassword")}
             />
@@ -514,7 +514,7 @@ export function AuthForm({ mode, redirectTo }: AuthFormProps) {
             type="submit"
             disabled={isLoading}
           >
-            {isLoading ? "İşleniyor..." : "Kayıt Ol"}
+            {isLoading ? <span className="inline-spinner inline-block align-middle" aria-hidden /> : "Kayıt Ol"}
           </button>
           <p className="text-center text-sm text-slate-500">
             Zaten hesabınız var mı?{" "}
