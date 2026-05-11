@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { Toaster } from "sonner";
 import "./globals.css";
 import { GlobalWhatsappWidget } from "@/components/global-whatsapp-widget";
+import { PageTransition } from "@/components/page-transition";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { SITE_FAVICON_PATH } from "@/lib/constants";
@@ -98,11 +99,11 @@ export default async function RootLayout({
           <main
             className={
               isSssPage
-                ? "page-fade-in flex w-full flex-1 px-0 pb-8"
-                : "page-fade-in flex w-full flex-1 px-4 pb-8 md:px-6 lg:px-8"
+                ? "flex w-full flex-1 flex-col px-0 pb-8"
+                : "flex w-full flex-1 flex-col px-4 pb-8 md:px-6 lg:px-8"
             }
           >
-            {children}
+            <PageTransition>{children}</PageTransition>
           </main>
         )}
         {!isAdmin && <SiteFooter />}

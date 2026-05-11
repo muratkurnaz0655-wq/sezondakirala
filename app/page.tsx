@@ -13,6 +13,7 @@ import { HomeKategoriFiltre } from "@/components/HomeKategoriFiltre";
 import { HomePaketFiltreler } from "@/components/HomePaketFiltreler";
 import { SITE_NAME, SITE_URL } from "@/lib/constants";
 import { fixTurkishDisplay } from "@/lib/utils/turkish-display";
+import { isExcludedDraftListing } from "@/lib/utils/excluded-draft-listing";
 import { getPlatformSettings } from "@/lib/settings";
 import { createClient } from "@/lib/supabase/server";
 import { ListingCard } from "@/components/listing-card";
@@ -83,8 +84,10 @@ export default async function Home() {
     .eq("aktif", true)
     .eq("tip", "villa")
     .order("olusturulma_tarihi", { ascending: false })
-    .limit(4);
-  const oneIlanlar = withCoverImage((oneIlanlarRaw ?? []) as ListingRow[]);
+    .limit(16);
+  const oneIlanlar = withCoverImage((oneIlanlarRaw ?? []) as ListingRow[]).filter(
+    (row) => !isExcludedDraftListing(row),
+  ).slice(0, 4);
   const statsCounts = {
     rezervasyon: rezervasyonCountRes.count ?? catalogCounts?.rezervasyonCount ?? 0,
     villa: ilanCountRes.count ?? catalogCounts?.villaCount ?? 0,

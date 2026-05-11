@@ -3,6 +3,7 @@ import { isSupabaseEnvConfigured } from "@/lib/supabase/env";
 import { getPublicSupabase } from "@/lib/supabase/public-anon";
 import { createClient } from "@/lib/supabase/server";
 import type { Ilan, Paket } from "@/types/supabase";
+import { isExcludedDraftListing } from "@/lib/utils/excluded-draft-listing";
 
 /** `get_ilan_yorumlari` RPC satırlarını liste detayı şekline çevirir. */
 function mapGetIlanYorumlariRpc(data: unknown): ListingCommentRow[] {
@@ -172,8 +173,18 @@ export async function getHomeFeaturedPackages(limit = 3) {
 
 export async function getFeaturedListings() {
   if (!isSupabaseEnvConfigured()) return [];
+  const mapRows = (
+    rows: (Ilan & { ilan_medyalari?: { url: string; sira: number }[] })[],
+  ) =>
+    rows
+      .filter((item) => !isExcludedDraftListing(item))
+      .map((item) => ({
+        ...item,
+        ilk_resim_url: item.ilan_medyalari?.[0]?.url ?? "/images/villa-placeholder.svg",
+      }));
   try {
     const supabase = await dbForPublicReads();
+    const fetchCap = 24;
     const firstTry = await supabase
       .from("ilanlar")
       .select("*, ilan_medyalari(url,sira)")
@@ -181,7 +192,7 @@ export async function getFeaturedListings() {
       .order("sira", { foreignTable: "ilan_medyalari", ascending: true })
       .order("olusturulma_tarihi", { ascending: false })
       .order("id", { ascending: false })
-      .limit(6);
+      .limit(fetchCap);
     if (firstTry.error) {
       const fallback = await supabase
         .from("ilanlar")
@@ -189,23 +200,17 @@ export async function getFeaturedListings() {
         .eq("aktif", true)
         .order("sira", { foreignTable: "ilan_medyalari", ascending: true })
         .order("id", { ascending: false })
-        .limit(6);
+        .limit(fetchCap);
       if (fallback.error) return [];
       const rows = (fallback.data ?? []) as (Ilan & {
         ilan_medyalari?: { url: string; sira: number }[];
       })[];
-      return rows.map((item) => ({
-        ...item,
-        ilk_resim_url: item.ilan_medyalari?.[0]?.url ?? "/images/villa-placeholder.svg",
-      }));
+      return mapRows(rows).slice(0, 6);
     }
     const rows = (firstTry.data ?? []) as (Ilan & {
       ilan_medyalari?: { url: string; sira: number }[];
     })[];
-    return rows.map((item) => ({
-      ...item,
-      ilk_resim_url: item.ilan_medyalari?.[0]?.url ?? "/images/villa-placeholder.svg",
-    }));
+    return mapRows(rows).slice(0, 6);
   } catch {
     return [];
   }
@@ -463,7 +468,8 @@ export async function getFilteredListings(filters: ListingFilters) {
       return filters.ozellikler!.every((feature) => Boolean(row[feature]));
     });
 
-  return attachPreviewImages(filteredRows);
+  const withoutDrafts = filteredRows.filter((listing) => !isExcludedDraftListing(listing));
+  return attachPreviewImages(withoutDrafts);
 }
 
 export async function getListingBySlug(tip: "villa" | "tekne", slug: string) {
@@ -501,6 +507,8 @@ export async function getListingBySlug(tip: "villa" | "tekne", slug: string) {
 
   if (!listing) return null;
 
+  if (isExcludedDraftListing(listing as Ilan)) return null;
+
   const listingId = listing.id as string;
 
   const [mediaRes, availabilityRes, seasonsRes, reservationsRes, commentsRpcRes, similarListingsRes] =
@@ -531,7 +539,8 @@ export async function getListingBySlug(tip: "villa" | "tekne", slug: string) {
     ]);
 
   const similarRaw = (similarListingsRes.data ?? []) as Ilan[];
-  const similar = await attachPreviewImages(similarRaw);
+  const similarFiltered = similarRaw.filter((l) => !isExcludedDraftListing(l));
+  const similar = await attachPreviewImages(similarFiltered);
 
   let commentsForListing: ListingCommentRow[];
   if (!commentsRpcRes.error && commentsRpcRes.data != null) {

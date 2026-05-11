@@ -34,7 +34,7 @@ export function ListingReveal({ children, className, staggerMs = 50 }: ListingRe
       {Children.map(children, (child, i) => (
         <div
           key={i}
-          className={`listing-reveal-item motion-safe:transition-all motion-safe:duration-500 motion-safe:ease-out ${
+          className={`listing-reveal-item motion-safe:transition-[opacity,transform] motion-safe:duration-[250ms] motion-safe:ease-out ${
             visible ? "translate-y-0 opacity-100" : "translate-y-3 opacity-0"
           }`}
           style={{ transitionDelay: visible ? `${i * staggerMs}ms` : "0ms" }}

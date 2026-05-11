@@ -11,6 +11,7 @@ import { KATEGORILER, OZELLIKLER } from "@/lib/villa-sabitleri";
 import { createClient } from "@/lib/supabase/client";
 import { dateFromYmdLocal, istanbulDateString } from "@/lib/tr-today";
 import { defaultFiltre, type VillaFiltre } from "@/types/filtre";
+import { isExcludedDraftListing } from "@/lib/utils/excluded-draft-listing";
 import type { Ilan } from "@/types/supabase";
 
 type ListingRow = Ilan & { ilan_medyalari?: Array<{ url: string; sira: number }> | null };
@@ -175,7 +176,9 @@ export default function ListingsPage() {
 
     const { data, error } = await query;
     if (error) console.error(error);
-    setIlanlar(withCoverImage((data ?? []) as ListingRow[]));
+    setIlanlar(
+      withCoverImage((data ?? []) as ListingRow[]).filter((row) => !isExcludedDraftListing(row)),
+    );
     setLoading(false);
   }, [cikis, giris]);
 

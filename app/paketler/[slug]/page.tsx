@@ -6,6 +6,7 @@ import { normalizePaketListingIds } from "@/lib/paket-ilan-idleri";
 import { formatCurrency } from "@/lib/utils/format";
 import { getPlatformSettings } from "@/lib/settings";
 import type { Ilan, Paket } from "@/types/supabase";
+import { isExcludedDraftListing } from "@/lib/utils/excluded-draft-listing";
 
 type PackageDetailPageProps = {
   params: Promise<{ slug: string }>;
@@ -48,10 +49,12 @@ export default async function PackageDetailPage({ params }: PackageDetailPagePro
     : { data: [] };
 
   type Row = Ilan & { ilan_medyalari?: { url: string; sira: number }[] };
-  const packageListings = ((packageListingsRaw ?? []) as Row[]).map((row) => ({
-    ...row,
-    ilk_resim_url: row.ilan_medyalari?.[0]?.url ?? "/images/villa-placeholder.svg",
-  }));
+  const packageListings = ((packageListingsRaw ?? []) as Row[])
+    .filter((row) => !isExcludedDraftListing(row))
+    .map((row) => ({
+      ...row,
+      ilk_resim_url: row.ilan_medyalari?.[0]?.url ?? "/images/villa-placeholder.svg",
+    }));
 
   /** Paket için rezervasyon URL'i slug tabanlıdır. */
   const rezervasyonHref =

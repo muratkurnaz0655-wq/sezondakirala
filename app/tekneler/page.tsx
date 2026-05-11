@@ -11,11 +11,13 @@ import { SlidersHorizontal, X } from "lucide-react";
 import { aramaStore } from "@/lib/arama-store";
 import { istanbulDateString } from "@/lib/tr-today";
 import { defaultTekneFiltre, type TekneFiltre } from "@/lib/villa-sabitleri";
+import { isExcludedDraftListing } from "@/lib/utils/excluded-draft-listing";
 
 type TekneRow = {
   id: string;
   slug: string | null;
   baslik: string;
+  aciklama?: string | null;
   konum: string;
   gunluk_fiyat: number;
   kapasite: number;
@@ -41,7 +43,7 @@ function parseEtiketler(ozellikler: unknown): string[] {
 
 const SkeletonTekne = () => (
   <div className="overflow-hidden rounded-xl border border-slate-100 bg-white shadow-sm">
-    <div className="skeleton h-[220px] w-full rounded-none" />
+    <div className="skeleton h-[200px] w-full rounded-none" />
     <div className="space-y-3 p-4">
       <div className="skeleton h-4 w-3/4" />
       <div className="skeleton h-3 w-1/2" />
@@ -91,7 +93,9 @@ export default function TeknelerPage() {
     const supabase = createClient();
     let query = supabase
       .from("ilanlar")
-      .select("id, slug, baslik, konum, gunluk_fiyat, kapasite, yatak_odasi, ozellikler, sponsorlu, olusturulma_tarihi, ilan_medyalari(url, sira, tip)")
+      .select(
+        "id, slug, baslik, aciklama, konum, gunluk_fiyat, kapasite, yatak_odasi, ozellikler, sponsorlu, olusturulma_tarihi, ilan_medyalari(url, sira, tip)",
+      )
       .eq("aktif", true)
       .eq("tip", "tekne")
       .gte("gunluk_fiyat", Number(f.minFiyat) || 0)
@@ -118,7 +122,9 @@ export default function TeknelerPage() {
     }
 
     const { data } = await query;
-    const rows = ((data as TekneRow[]) ?? []).filter((row) => {
+    const rows = ((data as TekneRow[]) ?? [])
+      .filter((row) => !isExcludedDraftListing({ baslik: row.baslik, aciklama: row.aciklama }))
+      .filter((row) => {
       const etiketler = parseEtiketler(row.ozellikler);
       const hasSure = f.sure.length === 0 || f.sure.every((sure) => etiketler.includes(sure));
       const hasOzellik = f.ozellikler.length === 0 || f.ozellikler.every((oz) => etiketler.includes(oz));

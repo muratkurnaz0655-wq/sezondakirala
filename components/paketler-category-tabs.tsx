@@ -39,7 +39,7 @@ export function PaketlerCategoryTabs({ activeCategory }: PaketlerCategoryTabsPro
             className={`rounded-full border px-5 py-2.5 text-base font-medium transition-all duration-300 motion-safe:hover:scale-[1.02] ${
               active
                 ? "border-transparent bg-[#1D9E75] text-white shadow-md shadow-[#1D9E75]/25"
-                : "border-slate-200 bg-slate-50 text-slate-700 hover:border-[#1D9E75]/35 hover:bg-emerald-50"
+                : "border-slate-200 bg-slate-50 text-slate-700 hover:border-[#1D9E75]/35 hover:bg-[#E1F5EE]"
             }`}
           >
             {LABELS[tab]}

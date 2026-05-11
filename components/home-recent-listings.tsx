@@ -8,6 +8,7 @@ import { fixTurkishDisplay } from "@/lib/utils/turkish-display";
 import type { RecentListingEntry } from "@/lib/recent-listings";
 import { pruneRecentListingsToExistingIds, readRecentListings } from "@/lib/recent-listings";
 import { createClient } from "@/lib/supabase/client";
+import { isExcludedDraftListing } from "@/lib/utils/excluded-draft-listing";
 
 export function HomeRecentListings() {
   const [items, setItems] = useState<RecentListingEntry[]>([]);
@@ -66,13 +67,13 @@ export function HomeRecentListings() {
       <div className="mx-auto max-w-7xl px-6">
         <h2 className="heading-section mb-4 text-slate-900">Son baktıklarınız</h2>
         <div className="flex gap-4 overflow-x-auto pb-2">
-          {items.map((item) => {
+          {items.filter((item) => !isExcludedDraftListing({ baslik: item.baslik, aciklama: null })).map((item) => {
             const href = item.tip === "tekne" ? `/tekneler/${item.slug}` : `/konaklama/${item.slug}`;
             return (
               <Link
                 key={item.id}
                 href={href}
-                className="card group flex w-64 shrink-0 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md"
+                className="card card-lift-interactive group flex w-64 shrink-0 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
               >
                 <div className="relative h-36 bg-slate-100">
                   <Image

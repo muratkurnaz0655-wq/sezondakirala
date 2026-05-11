@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
-import { Search, Users } from "lucide-react";
+import { ChevronDown, Search, Users } from "lucide-react";
 import { ClientDayPicker } from "@/components/day-picker-client";
 import { aramaStore } from "@/lib/arama-store";
 import { dateFromYmdLocal } from "@/lib/tr-today";
@@ -46,6 +46,14 @@ function toLocalIso(date?: Date) {
   const d = String(date.getDate()).padStart(2, "0");
   return `${y}-${m}-${d}`;
 }
+
+const TEKNE_GUN_SECENEKLERI: { value: number; label: string }[] = [
+  { value: 1, label: "Günlük" },
+  { value: 2, label: "2 günlük" },
+  { value: 3, label: "3 günlük" },
+  { value: 7, label: "Haftalık" },
+  { value: 14, label: "2 haftalık" },
+];
 
 function GuestSteppers({
   yetiskin,
@@ -138,12 +146,14 @@ export function SearchForm({
   const [cocuk, setCocuk] = useState(Math.max(0, initialCocuk));
   const [bebek, setBebek] = useState(Math.max(0, initialBebek));
   const [tekneGun, setTekneGun] = useState(Math.max(1, initialGun));
+  const [tekneGunAcik, setTekneGunAcik] = useState(false);
   const formRef = useRef<HTMLDivElement | null>(null);
   const guestWrapRef = useRef<HTMLDivElement | null>(null);
   const guestPopoverRef = useRef<HTMLDivElement | null>(null);
   const datePopoverRef = useRef<HTMLDivElement | null>(null);
   const dateButtonRef = useRef<HTMLButtonElement | null>(null);
   const inlineDatePanelRef = useRef<HTMLDivElement | null>(null);
+  const tekneGunWrapRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     setGiris(toDate(initialGiris));
@@ -167,8 +177,10 @@ export function SearchForm({
         Boolean(datePopoverRef.current?.contains(target)) ||
         Boolean(dateButtonRef.current?.contains(target)) ||
         Boolean(inlineDatePanelRef.current?.contains(target));
+      const inTekneGun = Boolean(tekneGunWrapRef.current?.contains(target));
       if (!inGuest) setOpenGuests(false);
       if (!inDate) setOpenDates(false);
+      if (!inTekneGun) setTekneGunAcik(false);
     }
     document.addEventListener("pointerdown", onDocPointerDown);
     return () => document.removeEventListener("pointerdown", onDocPointerDown);
@@ -229,6 +241,7 @@ export function SearchForm({
   }
 
   function submitSearch() {
+    setTekneGunAcik(false);
     if (searchPath === "/tekneler") {
       if (!giris) {
         setDateError(true);
@@ -539,19 +552,54 @@ export function SearchForm({
 
         {searchPath === "/tekneler" ? (
           <div className="mt-3 grid gap-3 rounded-lg border border-[#E2E8F0] bg-white p-4 md:grid-cols-2">
-            <div>
+            <div ref={tekneGunWrapRef} className="relative">
               <p className="mb-1.5 text-[12px] font-semibold uppercase tracking-wide text-[#64748B]">Kiralama Süresi</p>
-              <select
-                value={tekneGun}
-                onChange={(e) => setTekneGun(Number(e.target.value))}
-                className="h-11 w-full rounded-lg border border-[#E2E8F0] bg-white px-3 text-sm font-medium text-[#1E293B] focus:border-[#1D9E75] focus:outline-none focus:ring-2 focus:ring-[#1D9E75]/20"
+              <button
+                type="button"
+                id="tekne-gun-dropdown"
+                aria-haspopup="listbox"
+                aria-expanded={tekneGunAcik}
+                aria-controls="tekne-gun-listbox"
+                onClick={() => {
+                  setTekneGunAcik((o) => !o);
+                  setOpenDates(false);
+                  setOpenGuests(false);
+                }}
+                className="flex h-11 w-full items-center justify-between gap-2 rounded-lg border border-[#E2E8F0] bg-white px-3 text-left text-sm font-medium text-[#1E293B] shadow-sm transition-colors hover:border-[#1D9E75]/40 focus:border-[#1D9E75] focus:outline-none focus:ring-2 focus:ring-[#1D9E75]/20"
               >
-                <option value={1}>Günlük</option>
-                <option value={2}>2 Günlük</option>
-                <option value={3}>3 Günlük</option>
-                <option value={7}>Haftalık</option>
-                <option value={14}>2 Haftalık</option>
-              </select>
+                <span>{TEKNE_GUN_SECENEKLERI.find((o) => o.value === tekneGun)?.label ?? "Günlük"}</span>
+                <ChevronDown
+                  className={`h-4 w-4 shrink-0 text-slate-500 transition-transform duration-200 ${tekneGunAcik ? "rotate-180" : ""}`}
+                  aria-hidden
+                />
+              </button>
+              <ul
+                id="tekne-gun-listbox"
+                role="listbox"
+                aria-labelledby="tekne-gun-dropdown"
+                className={`absolute left-0 right-0 top-full z-[80] mt-1 max-h-60 overflow-auto rounded-lg border border-[#E2E8F0] bg-white py-1 shadow-lg transition-all duration-200 ${
+                  tekneGunAcik ? "visible opacity-100" : "invisible pointer-events-none opacity-0"
+                }`}
+              >
+                {TEKNE_GUN_SECENEKLERI.map((opt) => (
+                  <li key={opt.value} role="presentation">
+                    <button
+                      type="button"
+                      role="option"
+                      aria-selected={tekneGun === opt.value}
+                      className={`flex w-full px-3 py-2.5 text-left text-sm transition-colors hover:bg-[#E1F5EE] hover:text-[#0F6E56] ${
+                        tekneGun === opt.value ? "bg-emerald-50/80 font-semibold text-[#0F6E56]" : "text-[#1E293B]"
+                      }`}
+                      onClick={() => {
+                        setTekneGun(opt.value);
+                        setTekneGunAcik(false);
+                      }}
+                    >
+                      {opt.label}
+                    </button>
+                  </li>
+                ))}
+              </ul>
             </div>
             <div>
               <p className="mb-1.5 text-[12px] font-semibold uppercase tracking-wide text-[#64748B]">Kişi Sayısı</p>

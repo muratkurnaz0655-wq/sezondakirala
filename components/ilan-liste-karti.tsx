@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Bath, BedDouble, Heart, MapPin, Star, Users, Waves, Wifi } from "lucide-react";
+import { Heart, MapPin, Star, Waves } from "lucide-react";
 import { formatCurrency } from "@/lib/utils/format";
 import { fixTurkishDisplay } from "@/lib/utils/turkish-display";
 import {
@@ -87,6 +87,17 @@ export function IlanListeKarti({
 
   const toplamFiyat = geceSayisi > 1 ? fiyat * geceSayisi : fiyat;
   const puanGoster = puan > 0;
+  const odaBanyoKisiParcalari: string[] = [];
+  if (oda_sayisi != null && oda_sayisi > 0) {
+    odaBanyoKisiParcalari.push(`${oda_sayisi} ${tip === "tekne" ? "kabin" : "oda"}`);
+  }
+  if (banyo_sayisi != null && banyo_sayisi > 0) {
+    odaBanyoKisiParcalari.push(`${banyo_sayisi} banyo`);
+  }
+  if (kapasite != null && kapasite > 0) {
+    odaBanyoKisiParcalari.push(`${kapasite} kişi`);
+  }
+  const odaBanyoKisiMetin = odaBanyoKisiParcalari.join(" · ");
 
   return (
     <article className="group relative flex h-full min-w-0 flex-col overflow-hidden rounded-xl border border-slate-100 bg-white shadow-sm transition-all duration-300 motion-safe:hover:translate-y-[-4px] motion-safe:hover:shadow-xl motion-safe:hover:shadow-slate-900/10">
@@ -154,26 +165,9 @@ export function IlanListeKarti({
             <span className="line-clamp-1">{konumGosterim}</span>
           </div>
 
-          <div className="mt-3 flex flex-wrap gap-2 text-[13px] text-slate-600">
-            {oda_sayisi != null && oda_sayisi > 0 ? (
-              <span className="inline-flex items-center gap-1 rounded-full bg-slate-50 px-2 py-0.5 font-medium text-slate-700 ring-1 ring-slate-100">
-                <BedDouble className="h-3.5 w-3.5 text-slate-500" aria-hidden />
-                {oda_sayisi}
-              </span>
-            ) : null}
-            {banyo_sayisi != null && banyo_sayisi > 0 ? (
-              <span className="inline-flex items-center gap-1 rounded-full bg-slate-50 px-2 py-0.5 font-medium text-slate-700 ring-1 ring-slate-100">
-                <Bath className="h-3.5 w-3.5 text-slate-500" aria-hidden />
-                {banyo_sayisi}
-              </span>
-            ) : null}
-            {kapasite != null && kapasite > 0 ? (
-              <span className="inline-flex items-center gap-1 rounded-full bg-slate-50 px-2 py-0.5 font-medium text-slate-700 ring-1 ring-slate-100">
-                <Users className="h-3.5 w-3.5 text-slate-500" aria-hidden />
-                {kapasite}
-              </span>
-            ) : null}
-          </div>
+          {odaBanyoKisiMetin ? (
+            <p className="mt-3 text-[13px] font-medium leading-snug text-slate-600">{odaBanyoKisiMetin}</p>
+          ) : null}
 
           {ozellikler.slice(0, 3).length > 0 ? (
             <div className="mt-3 flex flex-wrap gap-1.5">
@@ -184,7 +178,6 @@ export function IlanListeKarti({
                     tagRenkleri[oz.toLowerCase()] ?? tagRenkleri.default
                   }`}
                 >
-                  {oz.toLowerCase().includes("wifi") ? <Wifi className="h-3 w-3" aria-hidden /> : null}
                   {fixTurkishDisplay(oz)}
                 </span>
               ))}

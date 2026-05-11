@@ -20,8 +20,13 @@ export function MotionFadeIn({ children, delay = 0, className, style }: MotionFa
       className={className}
       style={style}
       initial={reduce ? false : { opacity: 0, y: 20 }}
-      animate={reduce ? undefined : { opacity: 1, y: 0 }}
-      transition={{ duration: 0.45, delay, ease: pageEase }}
+      {...(reduce
+        ? { animate: { opacity: 1, y: 0 } }
+        : {
+            whileInView: { opacity: 1, y: 0 },
+            viewport: { once: true, amount: 0.12, margin: "0px 0px -56px 0px" },
+          })}
+      transition={{ duration: 0.5, delay, ease: pageEase }}
     >
       {children}
     </motion.div>

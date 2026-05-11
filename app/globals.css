@@ -481,7 +481,15 @@ small {
 }
 
 .page-fade-in {
-  animation: pageFadeIn 0.3s ease-out both;
+  animation: pageFadeIn 0.5s ease both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-fade-in {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
 }
 
 .fade-in-up {
@@ -526,6 +534,22 @@ small {
 .button-animate:hover {
   transform: scale(1.02);
   filter: brightness(1.05);
+}
+
+/** Tıklanabilir kartlar — prompt: -4px, gölge, ~0.25s */
+.card-lift-interactive {
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .card-lift-interactive:hover {
+    transform: translateY(-4px);
+    box-shadow:
+      0 12px 24px -8px rgba(15, 23, 42, 0.12),
+      0 4px 8px -4px rgba(15, 23, 42, 0.08);
+  }
 }
 
 .glass-panel {
@@ -669,7 +693,7 @@ small {
 @keyframes pageFadeIn {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(20px);
   }
   to {
     opacity: 1;

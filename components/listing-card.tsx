@@ -65,7 +65,7 @@ export function ListingCard({ listing, selectedDates, showWhatsappCta = true }: 
     <div className="flex h-full flex-col gap-2">
     <Link
       href={href}
-      className="villa-card group flex h-full flex-col overflow-hidden rounded-2xl border border-slate-100 text-inherit no-underline shadow-sm outline-offset-2 transition-all duration-300 motion-safe:hover:-translate-y-1 motion-safe:hover:border-[#1D9E75]/30 motion-safe:hover:shadow-xl motion-safe:hover:shadow-slate-900/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#1D9E75]"
+      className="villa-card card-lift-interactive group flex h-full flex-col overflow-hidden rounded-2xl border border-slate-100 text-inherit no-underline shadow-sm outline-offset-2 motion-safe:hover:border-[#1D9E75]/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#1D9E75]"
     >
       <div className="card-image relative aspect-[4/3] shrink-0 overflow-hidden rounded-t-2xl bg-gradient-to-br from-slate-100 to-slate-200">
         {coverImage && !imageErrored ? (
