@@ -1,157 +1,176 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
-import { PageListingHero } from "@/components/page-listing-hero";
-import { getPlatformSettings } from "@/lib/settings";
-import { SITE_NAME, TURSAB_NO, whatsappHref } from "@/lib/constants";
+import {
+  Clock3,
+  Eye,
+  Headphones,
+  Home,
+  MapPin,
+  Shield,
+  BadgeCheck,
+} from "lucide-react";
+import { MotionFadeIn } from "@/components/motion-fade-in";
+import { SITE_NAME } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/server";
-
-const HERO_IMG =
-  "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1600&q=80";
-const ekip = [
-  { ad: "Muratcan", unvan: "Kurucu & CEO", avatar: "M", detay: "Operasyon, ürün ve partner yönetimi" },
-  { ad: "Destek Ekibi", unvan: "Müşteri Hizmetleri", avatar: "D", detay: "Rezervasyon öncesi ve sonrası 7/24 destek" },
-];
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
     title: "Hakkımızda",
-    description: `${SITE_NAME} ekibini ve güven yaklaşımımızı tanıyın.`,
+    description: `${SITE_NAME} hakkında bilgi alın.`,
     openGraph: {
       title: "Hakkımızda",
-      description: `${SITE_NAME} ekibini ve güven yaklaşımımızı tanıyın.`,
+      description: `${SITE_NAME} hakkında bilgi alın.`,
       images: ["/og-image.jpg"],
     },
   };
 }
 
 export default async function AboutPage() {
-  const [settings, supabase] = await Promise.all([getPlatformSettings(), createClient()]);
-  const wa = whatsappHref(settings.whatsappNumber);
-  const [rezervasyonRes, ilanRes, kullaniciRes] = await Promise.all([
-    supabase.from("rezervasyonlar").select("*", { count: "exact", head: true }),
+  const supabase = await createClient();
+  const [ilanRes, rezervasyonRes] = await Promise.all([
     supabase.from("ilanlar").select("*", { count: "exact", head: true }).eq("aktif", true),
-    supabase.from("kullanicilar").select("*", { count: "exact", head: true }),
+    supabase.from("rezervasyonlar").select("*", { count: "exact", head: true }).eq("durum", "approved"),
   ]);
 
-  const rezervasyonCount = rezervasyonRes.count ?? 0;
   const ilanCount = ilanRes.count ?? 0;
-  const kullaniciCount = kullaniciRes.count ?? 0;
-  const gucluIstatistik = rezervasyonCount >= 20 || ilanCount >= 20 || kullaniciCount >= 50;
+  const rezervasyonCount = rezervasyonRes.count ?? 0;
+  const valueCards = [
+    {
+      title: "Güvenli İşlem",
+      description: "Ödeme ve rezervasyon adımlarında güvenliği önceliklendiren süreçler uygularız.",
+      Icon: Shield,
+    },
+    {
+      title: "Tam Şeffaflık",
+      description: "Fiyatlandırma, müsaitlik ve koşulları açık ve anlaşılır şekilde sunarız.",
+      Icon: Eye,
+    },
+    {
+      title: "7/24 Destek",
+      description: "Rezervasyon öncesi ve sonrası ihtiyaçlarınızda ekibimiz her an ulaşılabilirdir.",
+      Icon: Headphones,
+    },
+    {
+      title: "Özenle Seçilmiş İlanlar",
+      description: "Yayınlanan ilanları kalite ve güvenlik kriterlerine göre düzenli olarak değerlendiririz.",
+      Icon: Home,
+    },
+    {
+      title: "Hızlı Onay",
+      description: "Uygun rezervasyon taleplerini kısa sürede işleyerek süreci hızlandırırız.",
+      Icon: Clock3,
+    },
+    {
+      title: "Yerel Uzmanlık",
+      description: "Fethiye bölgesini iyi bilen ekiplerle doğru lokasyon ve deneyim önerileri sunarız.",
+      Icon: MapPin,
+    },
+  ] as const;
 
   return (
     <div className="w-full overflow-x-hidden bg-white">
-      <PageListingHero
-        breadcrumbCurrent="Hakkımızda"
-        title="Hakkımızda"
-        subtitle="Fethiye&apos;nin güvenilir villa ve tekne kiralama platformu."
-      />
-      <section className="relative h-48 md:h-72">
-        <Image src={HERO_IMG} alt="Fethiye" fill className="object-cover" priority sizes="100vw" />
-        <div className="absolute inset-0 bg-black/40" aria-hidden />
+      <section className="-mx-4 bg-[#0F6E56] px-4 py-16 text-white sm:-mx-6 sm:px-6 md:py-20 lg:-mx-8 lg:px-8">
+        <MotionFadeIn className="mx-auto max-w-6xl text-center" delay={0.03}>
+          <span className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/10 px-4 py-1.5 text-sm font-medium text-white">
+            <MapPin className="h-4 w-4" />
+            Fethiye, Muğla
+          </span>
+          <h1 className="mx-auto mt-5 max-w-3xl text-3xl font-bold leading-tight text-white sm:text-4xl md:text-5xl">
+            Fethiye&apos;nin En Güvenilir Kiralama Platformu
+          </h1>
+          <p className="mx-auto mt-4 max-w-3xl text-base leading-relaxed text-emerald-50 sm:text-lg">
+            Villa ve tekne kiralama sürecini şeffaf, güvenli ve kolay hale getiriyoruz. TURSAB güvencesiyle.
+          </p>
+        </MotionFadeIn>
       </section>
 
-      <section className="mx-auto max-w-6xl bg-[#f0fdfd] px-4 py-10 sm:px-6 sm:py-12 md:py-16">
-        <div className="grid items-center gap-6 sm:gap-8 md:grid-cols-2 md:gap-12">
+      <section className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-12 md:py-16">
+        <MotionFadeIn className="grid gap-8 md:grid-cols-2 md:items-start" delay={0.08}>
           <div>
-            <h2 className="mb-4 text-xl font-bold text-slate-900 sm:text-2xl md:text-3xl">Hikayemiz</h2>
-            <p className="mb-4 leading-relaxed text-slate-500">
-              {SITE_NAME}, Fethiye&apos;nin eşsiz güzelliklerini her tatilciyle buluşturma hayaliyle
-              kuruldu. Villa ve tekne kiralama sürecini şeffaf, güvenli ve kolay hale getirmek için
-              çalışıyoruz.
+            <span className="inline-flex rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-[#0F6E56]">
+              Hikayemiz
+            </span>
+            <h2 className="mt-4 text-2xl font-bold leading-tight text-slate-900 sm:text-3xl">
+              Fethiye&apos;yi Dünyanın Geri Kalanıyla Buluşturuyoruz
+            </h2>
+            <p className="mt-4 text-base leading-relaxed text-slate-600">
+              {SITE_NAME}, Fethiye&apos;de kaliteli villa ve tekne kiralama deneyimini tek noktadan güvenle sunmak için kuruldu.
+              Kuruluş amacımız; ilan sahipleriyle tatilcileri şeffaf, doğrulanabilir ve sorunsuz bir süreçte buluşturmaktır.
             </p>
-            <p className="leading-relaxed text-slate-500">
-              TURSAB çatısı altında lisanslı bir platform olarak, hem ilan sahiplerine hem de
-              tatilcilere en iyi deneyimi sunmayı hedefliyoruz.
+            <p className="mt-3 text-base leading-relaxed text-slate-600">
+              TURSAB lisanslı bir platform olarak yasal uyumu, güvenli işlem altyapısını ve sürdürülebilir hizmet kalitesini
+              merkeze alıyoruz. Misyonumuz, her rezervasyonda güven veren ve tekrar tercih edilen bir standart oluşturmak.
             </p>
           </div>
-          <div className="grid gap-4 rounded-2xl border border-slate-200 bg-white p-4 sm:p-6 md:p-8 shadow-sm">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {[
-              { label: "Doğrulanan rezervasyon", value: `${rezervasyonCount}+` },
               { label: "Aktif ilan", value: `${ilanCount}+` },
-              { label: "Ortalama destek yanıtı", value: "< 10 dk" },
+              { label: "Tamamlanan rezervasyon", value: `${rezervasyonCount}+` },
+              { label: "Müşteri desteği", value: "7/24" },
+              { label: "Memnuniyet oranı", value: "%98" },
             ].map((item) => (
-              <div key={item.label} className="rounded-2xl border border-slate-200 bg-[#f0fdfd] p-4 sm:p-6 md:p-8 text-center shadow-sm transition-shadow hover:shadow-md">
-                <p className="text-2xl font-bold text-[#0e9aa7]">{item.value}</p>
-                <p className="text-sm text-slate-500">{item.label}</p>
+              <div key={item.label} className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                <div className="mb-3 h-[3px] w-full rounded-full bg-[#0F6E56]" />
+                <p className="text-2xl font-bold text-slate-900">{item.value}</p>
+                <p className="mt-1 text-sm text-slate-500">{item.label}</p>
               </div>
             ))}
           </div>
-        </div>
+        </MotionFadeIn>
       </section>
 
-      {gucluIstatistik ? (
-        <section className="bg-white py-10 sm:py-12 md:py-16">
-          <div className="mx-auto max-w-6xl px-4 sm:px-6">
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-6 text-center lg:grid-cols-4 lg:gap-8">
-              {[
-                { num: `${rezervasyonCount}+`, label: "Tamamlanan Rezervasyon" },
-                { num: `${ilanCount}+`, label: "Aktif İlan" },
-                { num: `${kullaniciCount}+`, label: "Kayıtlı Kullanıcı" },
-                { num: "%98", label: "Memnuniyet Oranı" },
-              ].map(({ num, label }) => (
-                <div key={label}>
-                  <div className="text-2xl font-bold text-[#0e9aa7] sm:text-3xl md:text-4xl">{num}</div>
-                  <div className="mt-1 text-sm text-slate-500">{label}</div>
+      <section className="-mx-4 bg-slate-100 px-4 py-10 sm:-mx-6 sm:px-6 sm:py-12 md:py-16 lg:-mx-8 lg:px-8">
+        <MotionFadeIn className="mx-auto max-w-6xl" delay={0.13}>
+          <h2 className="text-center text-2xl font-bold text-slate-900 sm:text-3xl">
+            Neden Sezondakirala?
+          </h2>
+          <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {valueCards.map(({ title, description, Icon }) => (
+              <div key={title} className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                <div className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50 text-[#0F6E56]">
+                  <Icon className="h-5 w-5" />
                 </div>
-              ))}
-            </div>
+                <h3 className="text-lg font-semibold text-slate-900">{title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-slate-600">{description}</p>
+              </div>
+            ))}
           </div>
-        </section>
-      ) : (
-        <section className="bg-white py-10 sm:py-12 md:py-16">
-          <div className="mx-auto max-w-3xl px-4 sm:px-6 text-center">
-            <p className="text-lg font-semibold text-slate-800">Büyüyen bir platformuz</p>
-            <p className="mt-2 text-slate-500">
-              Her geçen gün yeni ilan sahipleri ve tatilcilerle büyüyoruz. İlk günden beri şeffaf ve güvenli
-              rezervasyon deneyimine odaklanıyoruz.
-            </p>
-          </div>
-        </section>
-      )}
-
-      <section className="mx-auto max-w-6xl px-4 sm:px-6 py-10 sm:py-12 md:py-16">
-        <div className="flex flex-col items-center gap-4 sm:gap-6 rounded-2xl border border-slate-200 bg-[#f0fdfd] p-4 sm:p-6 md:p-8 md:flex-row">
-          <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-2xl bg-[#0e9aa7]/20 text-4xl">
-            🏆
-          </div>
-          <div>
-            <h3 className="mb-2 text-xl font-bold text-[#0e9aa7]">TURSAB Güvencesi</h3>
-            <p className="text-slate-500">
-              {SITE_NAME}, Türkiye Seyahat Acenteleri Birliği (TURSAB) üyesidir. Belge No:{" "}
-              {TURSAB_NO} ile tüm işlemleriniz yasal güvence altındadır.
-            </p>
-          </div>
-        </div>
+        </MotionFadeIn>
       </section>
 
-      <section className="mx-auto max-w-6xl px-4 sm:px-6 pb-10 sm:pb-12 md:pb-16">
-        <h2 className="mb-6 text-lg font-bold text-slate-900 sm:text-xl md:text-2xl">Ekibimiz</h2>
-        <div className="grid gap-4 md:grid-cols-2">
-          {ekip.map((kisi) => (
-            <div key={kisi.ad} className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-[#0e9aa7]/20 to-[#06b6d4]/20 font-bold text-[#0e9aa7]">
-                {kisi.avatar}
-              </div>
-              <div>
-                <p className="font-semibold text-slate-800">{kisi.ad}</p>
-                <p className="text-sm text-slate-500">{kisi.unvan}</p>
-                <p className="mt-1 text-xs text-slate-500">{kisi.detay}</p>
-              </div>
+      <section className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-12 md:py-16">
+        <MotionFadeIn delay={0.18}>
+          <span className="inline-flex rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-[#0F6E56]">
+            Yasal Güvence
+          </span>
+          <h2 className="mt-4 text-2xl font-bold text-slate-900 sm:text-3xl">TURSAB Üyesiyiz</h2>
+          <div className="mt-6 flex flex-col items-start gap-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm sm:flex-row sm:items-center">
+            <div className="inline-flex h-14 w-14 items-center justify-center rounded-xl bg-emerald-50 text-[#0F6E56]">
+              <BadgeCheck className="h-7 w-7" />
             </div>
-          ))}
-        </div>
+            <div>
+              <p className="text-lg font-semibold text-slate-900">TURSAB Üyesi — Belge No: 5141</p>
+              <p className="mt-1 text-sm leading-relaxed text-slate-600">
+                Yasal mevzuata uygun, güvenilir ve denetlenebilir bir rezervasyon altyapısı sunuyoruz.
+              </p>
+            </div>
+          </div>
+        </MotionFadeIn>
       </section>
 
-      <section className="bg-gradient-to-br from-[#0f4c5c] via-[#0e9aa7] to-[#4a7c7e] py-10 sm:py-12 md:py-16 text-center text-white">
-        <h2 className="mb-4 text-xl font-bold sm:text-2xl md:text-3xl">Sorularınız İçin Bize Ulaşın</h2>
-        <p className="mb-8 text-[#e2e8f0]/90">7/24 WhatsApp desteğimizle yanınızdayız</p>
-        <Link
-          href={wa}
-          className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#0e9aa7] to-[#22d3ee] px-8 py-4 font-bold text-[#0d1117] shadow-lg transition hover:scale-[1.02]"
-        >
-          WhatsApp ile İletişim Kur
-        </Link>
+      <section className="-mx-4 bg-[#0F6E56] px-4 py-14 text-center text-white sm:-mx-6 sm:px-6 md:py-16 lg:-mx-8 lg:px-8">
+        <MotionFadeIn className="mx-auto max-w-4xl" delay={0.22}>
+          <h2 className="text-2xl font-bold text-white sm:text-3xl">Hayalinizdeki Tatile Hazır mısınız?</h2>
+          <p className="mx-auto mt-3 max-w-2xl text-emerald-50">
+            Fethiye&apos;nin en güzel villalarını ve teknelerini keşfedin.
+          </p>
+          <Link
+            href="/konaklama"
+            className="mt-7 inline-flex min-h-11 items-center justify-center rounded-xl bg-white px-6 py-3 text-sm font-semibold text-[#0F6E56] transition-colors hover:bg-emerald-50"
+          >
+            İlanları İncele
+          </Link>
+        </MotionFadeIn>
       </section>
     </div>
   );
