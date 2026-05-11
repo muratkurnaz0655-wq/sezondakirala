@@ -25,7 +25,11 @@ type AdminListingsPageProps = {
   }>;
 };
 
-type ListingOwner = { ad_soyad: string | null; email: string | null } | { ad_soyad: string | null; email: string | null }[] | null;
+type ListingOwner =
+  | { ad_soyad: string | null; email: string | null }
+  | { ad_soyad: string | null; email: string | null }[]
+  | null
+  | undefined;
 
 function ownerDisplayName(owner: ListingOwner) {
   const row = Array.isArray(owner) ? owner[0] : owner;
