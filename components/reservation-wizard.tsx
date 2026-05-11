@@ -435,6 +435,7 @@ export function ReservationWizard({
           cikisTarihi: reservationInfo.cikis_tarihi,
           misafirSayisi,
           toplamFiyat: totalPrice.total,
+          odemeYontemi,
         });
         if (!result.success) {
           setErrorMessage(result.error ?? "E-posta gönderiminde hata oluştu.");
