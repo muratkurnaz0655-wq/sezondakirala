@@ -44,14 +44,12 @@ export default async function AdminListingsPage({ searchParams }: AdminListingsP
   const minFiyat = Number(params.min_fiyat ?? "");
   const maxFiyat = Number(params.max_fiyat ?? "");
   const supabase = createAdminClient();
-  const buildListingsQuery = (withMedia: boolean) => {
-    let query = withMedia
-      ? supabase
-          .from("ilanlar")
-          .select("id,baslik,konum,tip,sahip_id,gunluk_fiyat,aktif,onay_durumu,slug,olusturulma_tarihi,kullanicilar!ilanlar_sahip_id_fkey(ad_soyad,email),ilan_medyalari(id,url,sira)")
-      : supabase
-          .from("ilanlar")
-          .select("id,baslik,konum,tip,sahip_id,gunluk_fiyat,aktif,onay_durumu,slug,olusturulma_tarihi,kullanicilar!ilanlar_sahip_id_fkey(ad_soyad,email)");
+  const buildListingsQuery = () => {
+    let query = supabase
+      .from("ilanlar")
+      .select(
+        "id,baslik,konum,tip,sahip_id,gunluk_fiyat,aktif,onay_durumu,slug,olusturulma_tarihi,kullanicilar(ad_soyad,email),ilan_medyalari(id,url,sira)",
+      );
 
     if (durum === "onay_bekliyor" || durum === "yayinda" || durum === "reddedildi") {
       query = query.eq("onay_durumu", durum);
@@ -74,9 +72,9 @@ export default async function AdminListingsPage({ searchParams }: AdminListingsP
     return query.order("id", { ascending: false });
   };
 
-  let listingsResult = await buildListingsQuery(true);
+  const listingsResult = await buildListingsQuery();
   if (listingsResult.error) {
-    listingsResult = await buildListingsQuery(false);
+    console.error("[admin-ilanlar] liste sorgu hatasi:", listingsResult.error);
   }
 
   const [{ data: listings }, { data: users }] = await Promise.all([
