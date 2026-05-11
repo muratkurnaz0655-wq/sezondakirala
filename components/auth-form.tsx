@@ -73,7 +73,10 @@ export function AuthForm({ mode, redirectTo }: AuthFormProps) {
     },
   });
 
-  const requestedRedirect = searchParams.get("redirect") ?? redirectTo ?? "/";
+  const returnUrlParam = searchParams.get("returnUrl");
+  const redirectParam = searchParams.get("redirect");
+  const requestedRedirect = (returnUrlParam ?? redirectParam ?? redirectTo ?? "/").trim();
+  const safeRequestedRedirect = requestedRedirect.startsWith("/") ? requestedRedirect : "/";
   const incomingMessage = searchParams.get("message");
   async function onSignIn(values: SignInValues) {
     setIsLoading(true);
@@ -102,16 +105,15 @@ export function AuthForm({ mode, redirectTo }: AuthFormProps) {
 
     setIsLoading(false);
     setMessage("Başarıyla giriş yaptınız.");
+    if (safeRequestedRedirect !== "/") {
+      router.push(safeRequestedRedirect);
+      return;
+    }
     if (profile?.rol === "ilan_sahibi") {
-      const r = requestedRedirect.trim();
-      if (r.startsWith("/rezervasyon/")) {
-        router.push(r);
-        return;
-      }
       router.push("/panel/ilanlarim");
       return;
     }
-    router.push(requestedRedirect);
+    router.push("/");
   }
 
   async function onSignUp(values: SignUpValues) {
@@ -142,7 +144,9 @@ export function AuthForm({ mode, redirectTo }: AuthFormProps) {
       }
 
       setIsLoading(false);
-      if (values.hesapTuru === "ilan_sahibi") {
+      if (safeRequestedRedirect !== "/") {
+        router.push(safeRequestedRedirect);
+      } else if (values.hesapTuru === "ilan_sahibi") {
         router.push("/panel/ilanlarim");
       } else {
         router.push("/");
@@ -268,7 +272,10 @@ export function AuthForm({ mode, redirectTo }: AuthFormProps) {
                 </Link>
                 <p className="text-center text-sm text-slate-500">
                   Hesabın yok mu?{" "}
-                  <Link href="/kayit" className="font-medium text-[#22d3ee] hover:underline">
+                  <Link
+                    href={`/kayit${safeRequestedRedirect !== "/" ? `?returnUrl=${encodeURIComponent(safeRequestedRedirect)}` : ""}`}
+                    className="font-medium text-[#22d3ee] hover:underline"
+                  >
                     Kayıt Ol
                   </Link>
                 </p>
@@ -511,7 +518,10 @@ export function AuthForm({ mode, redirectTo }: AuthFormProps) {
           </button>
           <p className="text-center text-sm text-slate-500">
             Zaten hesabınız var mı?{" "}
-            <Link href="/giris" className="font-semibold text-[#22d3ee] hover:underline">
+            <Link
+              href={`/giris${safeRequestedRedirect !== "/" ? `?returnUrl=${encodeURIComponent(safeRequestedRedirect)}` : ""}`}
+              className="font-semibold text-[#22d3ee] hover:underline"
+            >
               Giriş Yapın
             </Link>
           </p>
