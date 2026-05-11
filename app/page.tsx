@@ -424,38 +424,46 @@ export default async function Home() {
         </section>
       ) : null}
 
-      <section className="-mx-4 bg-gradient-to-b from-[#0f4c5c]/20 to-[#111827] py-10 sm:py-12 md:py-16 text-[#e2e8f0] md:-mx-6 lg:-mx-8">
+      <section className="-mx-4 bg-white py-16 text-slate-900 md:-mx-6 lg:-mx-8">
         <MotionFadeIn className="w-full" delay={0.3}>
-          <div className="mb-12 text-center">
-            <h2 className="mb-4 text-2xl font-bold text-[#e2e8f0] sm:text-3xl md:text-4xl">Fethiye&apos;yi Keşfedin</h2>
-            <p className="mx-auto max-w-2xl text-lg text-[#94a3b8]">
+          <div className="mb-10 text-center">
+            <h2 className="mb-3 text-2xl font-semibold tracking-tight sm:text-3xl md:text-4xl">Fethiye&apos;yi Keşfedin</h2>
+            <p className="mx-auto max-w-2xl text-base text-slate-600 sm:text-lg">
               Eşsiz güzellikleriyle her bölge farklı bir tatil vaat ediyor
             </p>
           </div>
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
             {regionShowcase.map((bolge) => (
               <Link
                 key={bolge.slug}
                 href={`/konaklama?konum=${encodeURIComponent(bolge.slug)}`}
-                className="group relative aspect-[5/4] cursor-pointer overflow-hidden rounded-2xl transition-transform duration-300 hover:scale-105"
+                className="group relative h-[160px] cursor-pointer overflow-hidden rounded-2xl md:h-[200px]"
               >
                 <Image
                   src={bolge.gorsel}
                   alt={bolge.isim}
                   fill
-                  className="object-cover transition-transform duration-700 group-hover:scale-110"
-                  sizes="(max-width: 768px) 50vw, 33vw"
+                  className="object-cover transition-transform duration-500 ease-out motion-safe:group-hover:scale-105"
+                  sizes="(max-width: 1024px) 50vw, 25vw"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent transition-all hover:from-black/40" />
-                <div className="absolute bottom-4 left-4 right-4">
-                  <div className="text-lg font-bold text-white">{bolge.isim}</div>
-                  <div className="text-sm text-white/70">{bolge.ilanSayisi} villa</div>
-                </div>
-                <div className="absolute inset-0 bg-[#0e9aa7]/20 opacity-0 transition-opacity group-hover:opacity-100" />
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity group-hover:opacity-100">
-                  <span className="rounded-full bg-[#e2e8f0] px-4 py-2 text-sm font-semibold text-[#0d1117]">
-                    Villaları Gör →
-                  </span>
+                <div
+                  className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_top,rgba(0,0,0,0.7)_0%,rgba(0,0,0,0)_60%)]"
+                  aria-hidden
+                />
+                <div
+                  className="pointer-events-none absolute inset-0 bg-black/0 transition-colors duration-300 group-hover:bg-black/25"
+                  aria-hidden
+                />
+                <div className="absolute inset-x-0 bottom-0 z-[1] flex flex-col gap-2 p-4">
+                  <div>
+                    <div className="text-base font-medium leading-snug text-white">{bolge.isim}</div>
+                    <div className="mt-0.5 text-[13px] text-white/75">{bolge.ilanSayisi} Villa</div>
+                  </div>
+                  <div className="translate-y-full transition-transform duration-300 ease-out motion-safe:group-hover:translate-y-0">
+                    <span className="inline-flex rounded-full bg-white/95 px-3 py-1.5 text-sm font-semibold text-slate-900 shadow-md ring-1 ring-black/5">
+                      Villalara Bak →
+                    </span>
+                  </div>
                 </div>
               </Link>
             ))}
