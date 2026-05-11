@@ -44,12 +44,15 @@ export default async function AdminListingsPage({ searchParams }: AdminListingsP
   const minFiyat = Number(params.min_fiyat ?? "");
   const maxFiyat = Number(params.max_fiyat ?? "");
   const supabase = createAdminClient();
+  const { data: debugIlanlarData, error: debugIlanlarError } = await supabase
+    .from("ilanlar")
+    .select("*");
+  console.log("ilanlar data:", debugIlanlarData);
+  console.log("ilanlar error:", debugIlanlarError);
   const buildListingsQuery = () => {
     let query = supabase
-      .from("ilanlar")
-      .select(
-        "id,baslik,konum,tip,sahip_id,gunluk_fiyat,aktif,onay_durumu,slug,olusturulma_tarihi,kullanicilar(ad_soyad,email),ilan_medyalari(id,url,sira)",
-      );
+      .from("admin_ilanlar")
+      .select("*");
 
     if (durum === "onay_bekliyor" || durum === "yayinda" || durum === "reddedildi") {
       query = query.eq("onay_durumu", durum);
