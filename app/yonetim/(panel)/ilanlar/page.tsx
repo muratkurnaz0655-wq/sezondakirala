@@ -42,6 +42,62 @@ function parseOptionalNumber(value: string | undefined) {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
+function asMediaRows(raw: unknown): { id: string; url: string; sira: number }[] {
+  if (!Array.isArray(raw)) return [];
+  const out: { id: string; url: string; sira: number }[] = [];
+  for (const item of raw) {
+    if (!item || typeof item !== "object") continue;
+    const o = item as Record<string, unknown>;
+    const id = String(o.id ?? "");
+    const url = String(o.url ?? "");
+    const sira = typeof o.sira === "number" ? o.sira : Number(o.sira);
+    if (!id || !url) continue;
+    out.push({ id, url, sira: Number.isFinite(sira) ? sira : 0 });
+  }
+  return out;
+}
+
+const ILAN_MEDYA_IN_CHUNK = 80;
+
+async function fetchMediaByListingIds(
+  supabase: ReturnType<typeof createAdminClient>,
+  listingIds: string[],
+) {
+  const mediaByIlanId = new Map<string, { id: string; url: string; sira: number }[]>();
+  if (listingIds.length === 0) return mediaByIlanId;
+
+  try {
+    for (let i = 0; i < listingIds.length; i += ILAN_MEDYA_IN_CHUNK) {
+      const chunk = listingIds.slice(i, i + ILAN_MEDYA_IN_CHUNK);
+      const { data: mediaRows, error: mediaErr } = await supabase
+        .from("ilan_medyalari")
+        .select("id,ilan_id,url,sira")
+        .in("ilan_id", chunk)
+        .order("sira", { ascending: true });
+      if (mediaErr) {
+        console.error("[admin-ilanlar] medya sorgu hatasi:", mediaErr);
+        continue;
+      }
+      for (const m of mediaRows ?? []) {
+        const r = m as { ilan_id?: string; id?: string; url?: string; sira?: number | string };
+        const ilanId = String(r.ilan_id ?? "");
+        if (!ilanId) continue;
+        const list = mediaByIlanId.get(ilanId) ?? [];
+        const siraNum = typeof r.sira === "number" ? r.sira : Number(r.sira);
+        list.push({
+          id: String(r.id ?? ""),
+          url: String(r.url ?? ""),
+          sira: Number.isFinite(siraNum) ? siraNum : 0,
+        });
+        mediaByIlanId.set(ilanId, list);
+      }
+    }
+  } catch (e) {
+    console.error("[admin-ilanlar] medya sorgusu beklenmeyen hata:", e);
+  }
+  return mediaByIlanId;
+}
+
 export default async function AdminListingsPage({ searchParams }: AdminListingsPageProps) {
   const params = await searchParams;
   const durum = params.durum ?? "";
@@ -87,31 +143,19 @@ export default async function AdminListingsPage({ searchParams }: AdminListingsP
   ]);
 
   const listingRows = listings ?? [];
-  const mediaByIlanId = new Map<string, { id: string; url: string; sira: number }[]>();
-  const listingIds = listingRows.map((row) => row.id).filter(Boolean);
-  if (listingIds.length > 0) {
-    const { data: mediaRows, error: mediaErr } = await supabase
-      .from("ilan_medyalari")
-      .select("id,ilan_id,url,sira")
-      .in("ilan_id", listingIds)
-      .order("sira", { ascending: true });
-    if (mediaErr) {
-      console.error("[admin-ilanlar] medya sorgu hatasi:", mediaErr);
-    }
-    for (const m of mediaRows ?? []) {
-      const ilanId = m.ilan_id as string;
-      const list = mediaByIlanId.get(ilanId) ?? [];
-      list.push({ id: m.id, url: m.url, sira: m.sira });
-      mediaByIlanId.set(ilanId, list);
-    }
-  }
+  const listingIds = [
+    ...new Set(listingRows.map((row) => String((row as { id?: unknown }).id ?? "")).filter(Boolean)),
+  ];
+  const mediaByIlanId = await fetchMediaByListingIds(supabase, listingIds);
 
   const listingsWithMedia = listingRows.map((row) => {
-    const fromDb = mediaByIlanId.get(row.id);
-    const existing = (row as { ilan_medyalari?: { id: string; url: string; sira: number }[] | null }).ilan_medyalari;
+    const rowId = String((row as { id?: unknown }).id ?? "");
+    const fromDb = mediaByIlanId.get(rowId);
+    const existing = (row as { ilan_medyalari?: unknown }).ilan_medyalari;
+    const merged = fromDb?.length ? fromDb : asMediaRows(existing);
     return {
       ...row,
-      ilan_medyalari: fromDb?.length ? fromDb : existing ?? [],
+      ilan_medyalari: merged,
     };
   });
 
@@ -128,10 +172,10 @@ export default async function AdminListingsPage({ searchParams }: AdminListingsP
         ? ownerDisplayName((row as { kullanicilar?: ListingOwner }).kullanicilar).toLowerCase()
         : (userMap.get(row.sahip_id)?.toLowerCase() ?? "");
     return (
-      row.baslik?.toLowerCase().includes(q) ||
-      row.konum?.toLowerCase().includes(q) ||
+      String(row.baslik ?? "").toLowerCase().includes(q) ||
+      String(row.konum ?? "").toLowerCase().includes(q) ||
       owner.includes(q) ||
-      row.id?.toLowerCase().includes(q)
+      String(row.id ?? "").toLowerCase().includes(q)
     );
   });
   const aktifCount = filteredListings.filter((row) => row.aktif).length;
