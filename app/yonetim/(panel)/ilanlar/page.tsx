@@ -36,19 +36,20 @@ function ownerDisplayName(owner: ListingOwner) {
   return row?.ad_soyad ?? row?.email ?? "-";
 }
 
+function parseOptionalNumber(value: string | undefined) {
+  if (value == null || value.trim() === "") return null;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
 export default async function AdminListingsPage({ searchParams }: AdminListingsPageProps) {
   const params = await searchParams;
   const durum = params.durum ?? "";
   const filtre = params.filtre ?? "tumu";
   const q = (params.q ?? "").trim().toLowerCase();
-  const minFiyat = Number(params.min_fiyat ?? "");
-  const maxFiyat = Number(params.max_fiyat ?? "");
+  const minFiyat = parseOptionalNumber(params.min_fiyat);
+  const maxFiyat = parseOptionalNumber(params.max_fiyat);
   const supabase = createAdminClient();
-  const { data: debugIlanlarData, error: debugIlanlarError } = await supabase
-    .from("ilanlar")
-    .select("*");
-  console.log("ilanlar data:", debugIlanlarData);
-  console.log("ilanlar error:", debugIlanlarError);
   const buildListingsQuery = () => {
     let query = supabase
       .from("admin_ilanlar")
@@ -57,8 +58,8 @@ export default async function AdminListingsPage({ searchParams }: AdminListingsP
     if (durum === "onay_bekliyor" || durum === "yayinda" || durum === "reddedildi") {
       query = query.eq("onay_durumu", durum);
     }
-    if (Number.isFinite(minFiyat)) query = query.gte("gunluk_fiyat", minFiyat);
-    if (Number.isFinite(maxFiyat)) query = query.lte("gunluk_fiyat", maxFiyat);
+    if (minFiyat != null) query = query.gte("gunluk_fiyat", minFiyat);
+    if (maxFiyat != null) query = query.lte("gunluk_fiyat", maxFiyat);
     if (params.konum) query = query.eq("konum", params.konum);
     if (params.sahip) query = query.eq("sahip_id", params.sahip);
 
@@ -122,12 +123,6 @@ export default async function AdminListingsPage({ searchParams }: AdminListingsP
         </AdminActionButton>
       }
     >
-      <pre className="overflow-x-auto rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">
-        {JSON.stringify(debugIlanlarError, null, 2)}
-      </pre>
-      <pre className="overflow-x-auto rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">
-        {JSON.stringify(debugIlanlarData?.length, null, 2)}
-      </pre>
       <AdminStatsRow
         items={[
           { label: "Toplam", value: filteredListings.length, tone: "default" },
