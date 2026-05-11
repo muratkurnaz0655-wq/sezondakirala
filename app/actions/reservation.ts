@@ -107,7 +107,6 @@ function buildReservationConfirmationEmailHtml(params: {
 </tr></table>
 <div style="text-align:center;margin-top:12px;font-size:15px;color:#444444;font-family:Arial,sans-serif;">Say&#305;n ${c(adSoyad)}</div>
 <div style="text-align:center;margin-top:16px;font-size:24px;font-weight:bold;color:#1a1a1a;font-family:Arial,sans-serif;">Rezervasyonunuz Al&#305;nd&#305;!</div>
-<div style="text-align:center;margin-top:12px;font-size:14px;color:#666666;line-height:1.5;font-family:Arial,sans-serif;">En k&#305;sa s&#252;rede sizi arayarak rezervasyonunuzu onaylayaca&#287;&#305;z.</div>
 <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin-top:28px;background-color:#EBF4FF;border:1px solid #185FA5;border-radius:8px;">
 <tr><td style="padding:20px;font-family:Arial,sans-serif;">
 <div style="font-size:11px;letter-spacing:0.08em;color:#666666;text-align:center;font-family:Arial,sans-serif;">REFERANS NUMARANIZ</div>
@@ -126,7 +125,7 @@ function buildReservationConfirmationEmailHtml(params: {
 </table>
 <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin-top:24px;background-color:#FFF8E7;border-left:4px solid #EF9F27;">
 <tr><td style="padding:16px 18px;font-size:14px;color:#444444;line-height:1.55;font-family:Arial,sans-serif;">
-&#128203; Rezervasyonunuz inceleme a&#351;amas&#305;ndad&#305;r. Ekibimiz en k&#305;sa s&#252;rede sizinle ileti&#351;ime ge&#231;erek onay verecektir.
+&#128203; Rezervasyonunuz inceleme a&#351;amas&#305;ndad&#305;r. Durum g&#252;ncellemelerini panelinizden ve e-posta bildirimlerinizden takip edebilirsiniz.
 </td></tr></table>
 <div style="margin-top:28px;font-size:14px;color:#333333;font-family:Arial,sans-serif;">Sorular&#305;n&#305;z i&#231;in bizimle ileti&#351;ime ge&#231;in:</div>
 <div style="margin-top:10px;font-size:14px;font-family:Arial,sans-serif;">

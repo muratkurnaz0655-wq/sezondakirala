@@ -975,7 +975,7 @@ export function ReservationWizard({
 
               <h2 className={`${STEP_TITLE} mb-2`}>Rezervasyonunuz Alındı!</h2>
               <p className={`mb-8 ${STEP_SUB}`}>
-                En kısa sürede sizi arayarak rezervasyonunuzu onaylayacağız.
+                Rezervasyon talebiniz başarıyla alındı.
               </p>
 
               <div className="mb-6 rounded-[12px] border border-sky-100/80 bg-gradient-to-br from-sky-50 via-white to-emerald-50/90 px-5 py-6 shadow-inner shadow-sky-100/50">
