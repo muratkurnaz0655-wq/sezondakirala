@@ -41,22 +41,29 @@ function displayNameFromCommentRow(row: ListingCommentRow): string {
     const local = em.split("@")[0]?.trim();
     if (local) return local;
   }
-  return "Kullanıcı";
+  return "Misafir";
 }
 
-function initialsFromDisplayName(name: string): string {
-  const t = name.trim();
-  if (!t) return "?";
-  const parts = t.split(/\s+/).filter(Boolean);
-  if (parts.length >= 2) {
-    const a = parts[0]!.charAt(0);
-    const b = parts[parts.length - 1]!.charAt(0);
-    return (a + b).toLocaleUpperCase("tr-TR");
+/** Avatar harfleri: önce ad_soyad (ör. Muratcan Kurnaz → MK); yoksa e-posta @ öncesi. */
+function initialsFromCommentRow(row: ListingCommentRow): string {
+  const k = kullaniciFromRow(row);
+  const rawAd = k?.ad_soyad?.trim();
+  if (rawAd) {
+    const parts = rawAd.split(/\s+/).filter(Boolean);
+    if (parts.length >= 2) {
+      return (parts[0]!.charAt(0) + parts[parts.length - 1]!.charAt(0)).toLocaleUpperCase("tr-TR");
+    }
+    if (parts.length === 1) {
+      const p = parts[0]!;
+      if (p.length >= 2) return (p.charAt(0) + p.charAt(1)).toLocaleUpperCase("tr-TR");
+      return p.charAt(0).toLocaleUpperCase("tr-TR");
+    }
   }
-  if (parts.length === 1) {
-    const p = parts[0]!;
-    if (p.length >= 2) return (p.charAt(0) + p.charAt(1)).toLocaleUpperCase("tr-TR");
-    return p.charAt(0).toLocaleUpperCase("tr-TR");
+  const em = k?.email?.trim();
+  if (em) {
+    const local = em.split("@")[0]?.trim() ?? "";
+    if (local.length >= 2) return (local.charAt(0) + local.charAt(1)).toLocaleUpperCase("tr-TR");
+    if (local.length === 1) return local.toLocaleUpperCase("tr-TR");
   }
   return "?";
 }
@@ -310,7 +317,7 @@ export function ListingCommentsSection({
         <ul className="mt-5 space-y-3">
           {comments.map((row) => {
             const displayName = displayNameFromCommentRow(row);
-            const initials = initialsFromDisplayName(displayName);
+            const initials = initialsFromCommentRow(row);
             const tone = avatarToneClass(row.kullanici_id);
             const d = new Date(row.olusturulma_tarihi);
             const dateStr = Number.isNaN(d.getTime()) ? "" : format(d, "dd.MM.yyyy", { locale: tr });

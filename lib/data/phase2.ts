@@ -1,7 +1,29 @@
+import type { ListingCommentRow } from "@/components/listing-comments-section";
 import { isSupabaseEnvConfigured } from "@/lib/supabase/env";
 import { getPublicSupabase } from "@/lib/supabase/public-anon";
 import { createClient } from "@/lib/supabase/server";
 import type { Ilan, Paket } from "@/types/supabase";
+
+/** `get_ilan_yorumlari` RPC satırlarını liste detayı şekline çevirir. */
+function mapGetIlanYorumlariRpc(data: unknown): ListingCommentRow[] {
+  if (!Array.isArray(data)) return [];
+  return data.map((raw: unknown) => {
+    const r = raw as Record<string, unknown>;
+    return {
+      id: String(r.id ?? ""),
+      kullanici_id: String(r.kullanici_id ?? ""),
+      ilan_id: String(r.ilan_id ?? ""),
+      puan: Number(r.puan ?? 0),
+      yorum: String(r.yorum ?? ""),
+      olusturulma_tarihi: String(r.olusturulma_tarihi ?? ""),
+      kullanicilar: {
+        ad_soyad: r.ad_soyad != null && String(r.ad_soyad).trim() !== "" ? String(r.ad_soyad) : null,
+        email: r.email != null ? String(r.email) : null,
+        avatar_url: r.avatar_url != null && String(r.avatar_url).trim() !== "" ? String(r.avatar_url) : null,
+      },
+    };
+  });
+}
 
 /** Oturumdan bağımsız katalog / yayın okumaları — girişli kullanıcıda RLS tutarlılığı için. */
 async function dbForPublicReads() {
@@ -403,31 +425,29 @@ export async function getListingBySlug(tip: "villa" | "tekne", slug: string) {
 
   if (!listing) return null;
 
-  const [mediaRes, availabilityRes, seasonsRes, reservationsRes, commentsRes, similarListingsRes] =
+  const listingId = listing.id as string;
+
+  const [mediaRes, availabilityRes, seasonsRes, reservationsRes, commentsRpcRes, similarListingsRes] =
     await Promise.all([
       supabase
         .from("ilan_medyalari")
         .select("*")
-        .eq("ilan_id", listing.id)
+        .eq("ilan_id", listingId)
         .order("sira", { ascending: true }),
-      supabase.from("musaitlik").select("*").eq("ilan_id", listing.id),
-      supabase.from("sezon_fiyatlari").select("*").eq("ilan_id", listing.id),
+      supabase.from("musaitlik").select("*").eq("ilan_id", listingId),
+      supabase.from("sezon_fiyatlari").select("*").eq("ilan_id", listingId),
       supabase
         .from("rezervasyonlar")
         .select("id,giris_tarihi,cikis_tarihi,durum")
-        .eq("ilan_id", listing.id)
+        .eq("ilan_id", listingId)
         .in("durum", ["beklemede", "onaylandi"]),
-      supabase
-        .from("yorumlar")
-        .select("id,rezervasyon_id,kullanici_id,ilan_id,puan,yorum,olusturulma_tarihi,kullanicilar(ad_soyad,avatar_url,email)")
-        .eq("ilan_id", listing.id)
-        .order("olusturulma_tarihi", { ascending: false }),
+      supabase.rpc("get_ilan_yorumlari", { p_ilan_id: listingId }),
       supabase
         .from("ilanlar")
         .select("*")
         .eq("tip", tip)
         .eq("konum", listing.konum)
-        .neq("id", listing.id)
+        .neq("id", listingId)
         .eq("aktif", true)
         .order("sponsorlu", { ascending: false })
         .order("olusturulma_tarihi", { ascending: false })
@@ -437,11 +457,20 @@ export async function getListingBySlug(tip: "villa" | "tekne", slug: string) {
   const similarRaw = (similarListingsRes.data ?? []) as Ilan[];
   const similar = await attachPreviewImages(similarRaw);
 
-  const listingId = listing.id as string;
-  const commentsRaw = commentsRes.data ?? [];
-  const commentsForListing = commentsRaw.filter(
-    (row: { ilan_id?: string | null }) => row.ilan_id === listingId,
-  );
+  let commentsForListing: ListingCommentRow[];
+  if (!commentsRpcRes.error && commentsRpcRes.data != null) {
+    commentsForListing = mapGetIlanYorumlariRpc(commentsRpcRes.data);
+  } else {
+    const legacy = await supabase
+      .from("yorumlar")
+      .select("id,rezervasyon_id,kullanici_id,ilan_id,puan,yorum,olusturulma_tarihi,kullanicilar(ad_soyad,avatar_url,email)")
+      .eq("ilan_id", listingId)
+      .order("olusturulma_tarihi", { ascending: false });
+    const raw = legacy.data ?? [];
+    commentsForListing = raw.filter(
+      (row: { ilan_id?: string | null }) => row.ilan_id === listingId,
+    ) as ListingCommentRow[];
+  }
 
   return {
     listing: listing as Ilan,
