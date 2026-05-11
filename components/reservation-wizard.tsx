@@ -13,13 +13,36 @@ import { createReservation, sendReservationConfirmation } from "@/app/actions/re
 import { aramaStore, rezervasyonStore } from "@/lib/arama-store";
 import { createClient } from "@/lib/supabase/client";
 import { SITE_NAME, WHATSAPP_NUMBER } from "@/lib/constants";
-import { CalendarDays, Check, Info, MapPin, Users } from "lucide-react";
+import {
+  ArrowRight,
+  Award,
+  CalendarDays,
+  Check,
+  CreditCard,
+  Info,
+  Landmark,
+  Lock,
+  MapPin,
+  Shield,
+  Users,
+} from "lucide-react";
 import { ClientDayPicker } from "@/components/day-picker-client";
 import { dateFromYmdLocal } from "@/lib/tr-today";
 import { toast } from "sonner";
 
 const FALLBACK_KAPAK =
   "https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=400&q=80";
+
+/** Ortak adım kartı + buton stilleri (yalnızca görsel) */
+const STEP_CARD = "rounded-[12px] border border-slate-200 bg-white px-8 py-7";
+const STEP_TITLE = "text-[22px] font-medium tracking-tight text-slate-900";
+const STEP_SUB = "mt-1 text-sm text-slate-500";
+const BTN_BASE =
+  "inline-flex items-center justify-center gap-2 rounded-lg px-5 py-3 text-sm font-medium transition-all duration-200 ease-in-out";
+const BTN_PRIMARY = `${BTN_BASE} bg-sky-600 text-white hover:bg-sky-700 active:brightness-[0.97]`;
+const BTN_WHITE = `${BTN_BASE} border border-slate-200 bg-white text-slate-800 hover:bg-slate-50 active:brightness-[0.98]`;
+const INPUT_FOCUS =
+  "rounded-lg border border-slate-200 px-4 py-3 text-sm text-slate-800 transition-[box-shadow,border-color] focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-400/35";
 
 function referansSayiEki(): string {
   const buf = new Uint32Array(1);
@@ -113,8 +136,8 @@ function OzetKarti({
   const kapak = kapakUrl ?? FALLBACK_KAPAK;
 
   return (
-    <div className="sticky top-6 w-full self-start overflow-hidden rounded-xl border border-slate-200 bg-white">
-      <div className="relative h-44 w-full overflow-hidden rounded-t-xl">
+    <div className="sticky top-6 w-full self-start overflow-hidden rounded-[12px] border border-slate-200 bg-white">
+      <div className="relative h-44 w-full overflow-hidden rounded-t-[12px]">
         <Image src={kapak} alt={baslik} fill className="object-cover" sizes="(max-width: 1024px) 100vw, 360px" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
         <span className="absolute left-3 top-3 rounded-md border border-white/30 bg-black/25 px-2 py-1 text-xs font-normal text-white">
@@ -122,7 +145,7 @@ function OzetKarti({
         </span>
       </div>
 
-      <div className="p-5">
+      <div className="px-8 py-7">
         <div className="mb-4">
           <h3 className="text-base font-semibold leading-snug text-slate-800">
             {packageSummary?.baslik || baslik}
@@ -454,58 +477,71 @@ export function ReservationWizard({
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-slate-50">
-      <div className="sticky top-0 z-20 border-b border-sky-100/70 bg-white/90 backdrop-blur-md">
-        <div className="w-full border-b border-slate-100 bg-white px-4 py-4 xl:px-8">
-          <div className="flex max-w-none items-center gap-6">
-            <div className="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700">
-              Adım {step} / 4
-            </div>
-            <div className="flex flex-1 items-center">
+      <div className="sticky top-0 z-20 border-b border-slate-200/80 bg-white/95 backdrop-blur-md">
+        <div className="w-full border-b border-slate-100 bg-white px-4 py-5 xl:px-8">
+          <div className="mx-auto flex w-full max-w-4xl flex-col gap-1">
+            <p className="text-center text-xs font-medium text-slate-500">Adım {step} / 4</p>
+            <div className="flex w-full items-center">
               {stepTitles.map((ad, i) => (
                 <Fragment key={ad}>
-                  <div className="flex flex-col items-center gap-1">
-                    {canNavigateToStep(i + 1) ? (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setErrorMessage(null);
-                          goToStep(i + 1);
-                        }}
-                        className={`flex h-8 w-8 items-center justify-center rounded-full border text-sm font-medium ${
-                          step > i + 1
-                            ? "border-sky-500 bg-sky-500 text-white"
-                            : step === i + 1
-                              ? "border-sky-500 bg-sky-500 text-white"
-                              : "border-slate-300 bg-white text-slate-400"
-                        }`}
-                        aria-label={`${i + 1}. adıma dön`}
-                      >
-                        {step > i + 1 ? "✓" : i + 1}
-                      </button>
-                    ) : (
-                      <div
-                        className={`flex h-8 w-8 items-center justify-center rounded-full border text-sm font-medium ${
-                          step > i + 1
-                            ? "border-sky-500 bg-sky-500 text-white"
-                            : step === i + 1
-                              ? "border-sky-500 bg-sky-500 text-white"
-                              : "border-slate-300 bg-white text-slate-400"
-                        }`}
-                      >
-                        {step > i + 1 ? "✓" : i + 1}
-                      </div>
-                    )}
+                  <div className="flex min-w-0 flex-1 flex-col items-center">
+                    <div className="flex w-full items-center">
+                      {i > 0 ? (
+                        <div
+                          className={`h-0.5 min-w-[8px] flex-1 rounded-full ${step > i ? "bg-emerald-500" : "bg-slate-200"}`}
+                          aria-hidden
+                        />
+                      ) : (
+                        <div className="min-w-[8px] flex-1" aria-hidden />
+                      )}
+                      {canNavigateToStep(i + 1) ? (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setErrorMessage(null);
+                            goToStep(i + 1);
+                          }}
+                          className={`relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-semibold transition-colors ${
+                            step > i + 1
+                              ? "bg-emerald-500 text-white shadow-sm shadow-emerald-500/25"
+                              : step === i + 1
+                                ? "bg-sky-600 text-white shadow-sm shadow-sky-600/25"
+                                : "border border-slate-200 bg-slate-100 text-slate-500"
+                          }`}
+                          aria-label={`${i + 1}. adıma dön`}
+                        >
+                          {step > i + 1 ? <Check className="h-5 w-5" strokeWidth={2.5} aria-hidden /> : i + 1}
+                        </button>
+                      ) : (
+                        <div
+                          className={`relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-semibold ${
+                            step > i + 1
+                              ? "bg-emerald-500 text-white shadow-sm shadow-emerald-500/25"
+                              : step === i + 1
+                                ? "bg-sky-600 text-white shadow-sm shadow-sky-600/25"
+                                : "border border-slate-200 bg-slate-100 text-slate-500"
+                          }`}
+                        >
+                          {step > i + 1 ? <Check className="h-5 w-5" strokeWidth={2.5} aria-hidden /> : i + 1}
+                        </div>
+                      )}
+                      {i < stepTitles.length - 1 ? (
+                        <div
+                          className={`h-0.5 min-w-[8px] flex-1 rounded-full ${step > i + 1 ? "bg-emerald-500" : "bg-slate-200"}`}
+                          aria-hidden
+                        />
+                      ) : (
+                        <div className="min-w-[8px] flex-1" aria-hidden />
+                      )}
+                    </div>
                     <span
-                      className={`hidden whitespace-nowrap text-xs sm:block ${
-                        step === i + 1 ? "font-medium text-slate-800" : "text-slate-400"
+                      className={`mt-2 max-w-[5.5rem] text-center text-[11px] leading-tight sm:max-w-none sm:text-xs ${
+                        step === i + 1 ? "font-medium text-slate-800" : step > i + 1 ? "text-emerald-700" : "text-slate-400"
                       }`}
                     >
                       {ad}
                     </span>
                   </div>
-                  {i < stepTitles.length - 1 ? (
-                    <div className={`mx-2 mb-4 h-px flex-1 ${step > i + 1 ? "bg-sky-400" : "bg-slate-200"}`} />
-                  ) : null}
                 </Fragment>
               ))}
             </div>
@@ -516,9 +552,9 @@ export function ReservationWizard({
       <div className="flex flex-col-reverse gap-6 px-4 py-8 lg:grid lg:grid-cols-12 lg:gap-7 xl:px-8">
         <div className="w-full lg:col-span-8 xl:col-span-9">
           {step === 1 ? (
-            <div className="flex min-h-[600px] flex-col rounded-xl border border-slate-200 bg-white p-7">
-              <h1 className="text-xl font-medium text-slate-800">Rezervasyon Detayları</h1>
-              <p className="mb-6 mt-0.5 text-sm text-slate-500">{listingTitle}</p>
+            <div className={`flex min-h-[600px] flex-col ${STEP_CARD}`}>
+              <h1 className={STEP_TITLE}>Rezervasyon Detayları</h1>
+              <p className={`mb-6 ${STEP_SUB}`}>{listingTitle}</p>
               {fixedPackageNights ? (
                 <p className="mb-4 rounded-lg bg-sky-50 px-3 py-2 text-xs font-medium text-sky-700">
                   Bu paket için konaklama süresi sabittir: {fixedPackageNights} gece. Giriş tarihi seçtiğinizde çıkış tarihi otomatik belirlenir.
@@ -533,11 +569,11 @@ export function ReservationWizard({
                   <button
                     type="button"
                     onClick={() => setAcikTakvim((prev) => (prev === "giris" ? null : "giris"))}
-                    className={`flex w-full items-center gap-2 rounded-lg border px-3.5 py-3 text-left text-sm font-medium text-slate-800 transition-all ${
+                    className={`flex w-full items-center gap-2 rounded-lg border px-3.5 py-3 text-left text-sm font-medium text-slate-800 transition-all duration-200 ${
                       reservationInfo.giris_tarihi
-                        ? "border-sky-300 bg-sky-50"
-                        : "border-slate-200 bg-slate-50 hover:border-slate-300"
-                    }`}
+                        ? "border-sky-500 bg-sky-50 ring-1 ring-sky-200/80"
+                        : "border-slate-200 bg-white hover:border-sky-300 hover:bg-sky-50/40"
+                    } ${acikTakvim === "giris" ? "border-sky-500 bg-sky-50 ring-2 ring-sky-400/30" : ""}`}
                   >
                     <div className="flex w-full items-center justify-between gap-2">
                       <div className="flex min-w-0 items-center gap-2">
@@ -563,11 +599,11 @@ export function ReservationWizard({
                   <button
                     type="button"
                     onClick={() => setAcikTakvim((prev) => (prev === "cikis" ? null : "cikis"))}
-                    className={`flex w-full items-center gap-2 rounded-lg border px-3.5 py-3 text-left text-sm font-medium text-slate-800 transition-all ${
+                    className={`flex w-full items-center gap-2 rounded-lg border px-3.5 py-3 text-left text-sm font-medium text-slate-800 transition-all duration-200 ${
                       reservationInfo.cikis_tarihi
-                        ? "border-sky-300 bg-sky-50"
-                        : "border-slate-200 bg-slate-50 hover:border-slate-300"
-                    }`}
+                        ? "border-sky-500 bg-sky-50 ring-1 ring-sky-200/80"
+                        : "border-slate-200 bg-white hover:border-sky-300 hover:bg-sky-50/40"
+                    } ${acikTakvim === "cikis" ? "border-sky-500 bg-sky-50 ring-2 ring-sky-400/30" : ""}`}
                   >
                     <div className="flex w-full items-center justify-between gap-2">
                       <div className="flex min-w-0 items-center gap-2">
@@ -635,7 +671,7 @@ export function ReservationWizard({
                 <label className="mb-3 block text-[10px] font-semibold uppercase tracking-widest text-slate-400">
                   Misafirler
                 </label>
-                <div className="overflow-hidden rounded-lg border border-slate-200">
+                <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
                   {(
                     [
                       { label: "Yetişkin", desc: "13 yaş ve üzeri", key: "yetiskin" as const, min: 1, max: 20 },
@@ -661,11 +697,11 @@ export function ReservationWizard({
                             }))
                           }
                           disabled={guestInfo[key] <= min}
-                          className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 text-lg text-slate-600 transition-all duration-200 hover:border-sky-400 hover:bg-sky-50 hover:shadow-md active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-30"
+                          className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 text-lg text-slate-600 transition-all duration-200 ease-in-out hover:border-slate-300 hover:bg-slate-50 active:brightness-95 disabled:cursor-not-allowed disabled:opacity-30"
                         >
                           −
                         </button>
-                        <span className="w-6 text-center font-normal text-slate-900">{guestInfo[key]}</span>
+                        <span className="w-8 text-center text-sm font-medium text-slate-900">{guestInfo[key]}</span>
                         <button
                           type="button"
                           onClick={() =>
@@ -675,7 +711,7 @@ export function ReservationWizard({
                             }))
                           }
                           disabled={guestInfo[key] >= max}
-                          className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 text-lg text-slate-600 transition-all duration-200 hover:border-sky-400 hover:bg-sky-50 hover:shadow-md active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-30"
+                          className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 text-lg text-slate-600 transition-all duration-200 ease-in-out hover:border-slate-300 hover:bg-slate-50 active:brightness-95 disabled:cursor-not-allowed disabled:opacity-30"
                         >
                           +
                         </button>
@@ -692,7 +728,7 @@ export function ReservationWizard({
                 <textarea
                   rows={3}
                   placeholder="Erken giriş, özel dilek, doğum günü vb."
-                  className="min-h-[80px] w-full resize-none rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 placeholder:text-slate-400 transition-all focus:border-sky-300 focus:bg-white focus:outline-none"
+                  className={`min-h-[80px] w-full resize-none bg-white ${INPUT_FOCUS} placeholder:text-slate-400`}
                   value={ozelIstek}
                   onChange={(e) => setOzelIstek(e.target.value)}
                 />
@@ -710,9 +746,10 @@ export function ReservationWizard({
                     }));
                     goToStep(2);
                   }}
-                  className="mt-8 flex w-full items-center justify-center gap-2 rounded-xl bg-sky-500 py-3.5 text-sm font-semibold text-white shadow-lg shadow-[#0e9aa7]/25 transition-all duration-200 hover:scale-[1.02] hover:bg-sky-600 active:scale-[0.98]"
+                  className={`${BTN_PRIMARY} mt-8 w-full shadow-sm shadow-sky-600/20`}
                 >
-                  Devam Et →
+                  Devam Et
+                  <ArrowRight className="h-4 w-4 shrink-0" aria-hidden />
                 </button>
                 {errorMessage ? (
                   <p className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{errorMessage}</p>
@@ -722,28 +759,28 @@ export function ReservationWizard({
           ) : null}
 
           {step === 2 ? (
-            <div className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-[0_24px_60px_-36px_rgba(15,23,42,0.45)] md:p-10">
-              <h2 className="mb-1 text-xl font-bold text-gray-900">Kişisel Bilgiler</h2>
-              <p className="mb-6 text-sm text-gray-500">Rezervasyon için iletişim bilgileriniz gereklidir</p>
+            <div className={STEP_CARD}>
+              <h2 className={STEP_TITLE}>Kişisel Bilgiler</h2>
+              <p className={`mb-6 ${STEP_SUB}`}>Rezervasyon için iletişim bilgileriniz gereklidir</p>
 
               <form className="space-y-4" onSubmit={infoForm.handleSubmit(submitInfo)}>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
-                    <label className="mb-1.5 block text-sm font-medium text-gray-700">Ad *</label>
+                    <label className="mb-1.5 block text-sm font-medium text-slate-700">Ad *</label>
                     <input
                       type="text"
                       placeholder="Adınız"
-                      className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-100"
+                      className={`w-full ${INPUT_FOCUS}`}
                       {...infoForm.register("ad")}
                     />
                     <p className="text-xs text-red-500">{infoForm.formState.errors.ad?.message}</p>
                   </div>
                   <div>
-                    <label className="mb-1.5 block text-sm font-medium text-gray-700">Soyad *</label>
+                    <label className="mb-1.5 block text-sm font-medium text-slate-700">Soyad *</label>
                     <input
                       type="text"
                       placeholder="Soyadınız"
-                      className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-100"
+                      className={`w-full ${INPUT_FOCUS}`}
                       {...infoForm.register("soyad")}
                     />
                     <p className="text-xs text-red-500">{infoForm.formState.errors.soyad?.message}</p>
@@ -751,27 +788,27 @@ export function ReservationWizard({
                 </div>
 
                 <div>
-                  <label className="mb-1.5 block text-sm font-medium text-gray-700">E-posta *</label>
+                  <label className="mb-1.5 block text-sm font-medium text-slate-700">E-posta *</label>
                   <input
                     type="email"
                     placeholder="ornek@email.com"
-                    className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-100"
+                    className={`w-full ${INPUT_FOCUS}`}
                     {...infoForm.register("email")}
                   />
-                  <p className="mt-1 text-xs text-gray-400">Onay e-postası bu adrese gönderilecek</p>
+                  <p className="mt-1.5 text-xs text-slate-500">Onay e-postası bu adrese gönderilecek</p>
                   <p className="text-xs text-red-500">{infoForm.formState.errors.email?.message}</p>
                 </div>
 
                 <div>
-                  <label className="mb-1.5 block text-sm font-medium text-gray-700">Telefon *</label>
-                  <div className="flex">
-                    <span className="inline-flex items-center rounded-l-xl border border-r-0 border-gray-200 bg-gray-50 px-3 text-sm text-gray-500">
+                  <label className="mb-1.5 block text-sm font-medium text-slate-700">Telefon *</label>
+                  <div className="flex overflow-hidden rounded-lg border border-slate-200 transition-[box-shadow,border-color] focus-within:border-sky-500 focus-within:ring-2 focus-within:ring-sky-400/35">
+                    <span className="inline-flex items-center border-r border-slate-200 bg-slate-50 px-3 text-sm text-slate-500">
                       🇹🇷 +90
                     </span>
                     <input
                       type="tel"
                       placeholder="5XX XXX XX XX"
-                      className="flex-1 rounded-r-xl border border-gray-200 px-4 py-3 text-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-100"
+                      className="min-w-0 flex-1 border-0 bg-white px-4 py-3 text-sm text-slate-800 outline-none focus:ring-0"
                       {...infoForm.register("telefon")}
                     />
                   </div>
@@ -779,31 +816,25 @@ export function ReservationWizard({
                 </div>
 
                 <div>
-                  <label className="mb-1.5 block text-sm font-medium text-gray-700">
-                    Özel İstek <span className="font-normal text-gray-400">(opsiyonel)</span>
+                  <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                    Özel İstek <span className="font-normal text-slate-400">(opsiyonel)</span>
                   </label>
                   <textarea
                     rows={3}
                     placeholder="Erken giriş, özel dilek, doğum günü vb."
-                    className="w-full resize-none rounded-xl border border-gray-200 px-4 py-3 text-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-100"
+                    className={`w-full resize-none ${INPUT_FOCUS}`}
                     value={ozelIstek}
                     onChange={(e) => setOzelIstek(e.target.value)}
                   />
                 </div>
 
-                <div className="flex flex-wrap gap-3 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => goToStep(1)}
-                    className="rounded-xl border-2 border-gray-200 px-4 py-3 text-sm font-semibold text-gray-700 transition-all duration-200 hover:bg-gray-50 hover:shadow-md active:scale-[0.98]"
-                  >
-                    ← Geri
+                <div className="flex flex-col gap-3 pt-2 sm:flex-row">
+                  <button type="button" onClick={() => goToStep(1)} className={`${BTN_WHITE} w-full sm:flex-[1]`}>
+                    Geri
                   </button>
-                  <button
-                    type="submit"
-                    className="rounded-xl bg-sky-500 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-[#0e9aa7]/25 transition-all duration-200 hover:scale-[1.02] hover:bg-sky-600 active:scale-[0.98]"
-                  >
-                    Ödeme adımına geç
+                  <button type="submit" className={`${BTN_PRIMARY} w-full shadow-sm shadow-sky-600/20 sm:flex-[2]`}>
+                    Ödeme Adımına Geç
+                    <ArrowRight className="h-4 w-4 shrink-0" aria-hidden />
                   </button>
                 </div>
               </form>
@@ -811,9 +842,9 @@ export function ReservationWizard({
           ) : null}
 
           {step === 3 ? (
-            <div className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-[0_24px_60px_-36px_rgba(15,23,42,0.45)] md:p-10">
-              <h2 className="mb-1 text-xl font-bold text-gray-900">Ödeme</h2>
-              <p className="mb-6 text-sm text-gray-500">Güvenli ödeme yönteminizi seçin</p>
+            <div className={STEP_CARD}>
+              <h2 className={STEP_TITLE}>Ödeme</h2>
+              <p className={`mb-6 ${STEP_SUB}`}>Güvenli ödeme yönteminizi seçin</p>
 
               <form className="space-y-4" onSubmit={paymentForm.handleSubmit(submitPayment)}>
                 <div className="mb-6 space-y-3">
@@ -823,38 +854,40 @@ export function ReservationWizard({
                         val: "kart" as const,
                         baslik: "Kredi / Banka Kartı",
                         aciklama: "Visa, Mastercard, Troy",
-                        ikon: "💳",
+                        Icon: CreditCard,
                       },
                       {
                         val: "havale" as const,
                         baslik: "Havale / EFT",
                         aciklama: "Banka transferiyle güvenli ödeme",
-                        ikon: "🏦",
+                        Icon: Landmark,
                       },
                     ] as const
-                  ).map(({ val, baslik, aciklama, ikon }) => (
+                  ).map(({ val, baslik, aciklama, Icon }) => (
                     <label
                       key={val}
-                      className={`flex cursor-pointer items-center gap-4 rounded-xl border-2 p-4 transition-all ${
+                      className={`flex cursor-pointer items-center gap-4 rounded-lg border p-4 transition-all duration-200 ease-in-out ${
                         selectedPaymentMethod === val
-                          ? "border-sky-500 bg-sky-50"
-                          : "border-gray-200 bg-white hover:border-gray-300"
+                          ? "border-2 border-sky-600 bg-sky-50/70 shadow-sm shadow-sky-500/10"
+                          : "border border-slate-200 bg-white hover:border-slate-300"
                       }`}
                     >
                       <input
                         type="radio"
                         value={val}
-                        className="h-4 w-4 accent-sky-500"
+                        className="sr-only"
                         {...paymentForm.register("odeme_yontemi")}
                       />
-                      <span className="text-2xl">{ikon}</span>
-                      <div className="flex-1">
-                        <div className="text-sm font-semibold text-gray-900">{baslik}</div>
-                        <div className="mt-0.5 text-xs text-gray-500">{aciklama}</div>
+                      <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-slate-50 text-sky-600">
+                        <Icon className="h-8 w-8" strokeWidth={1.75} aria-hidden />
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <div className="text-sm font-semibold text-slate-900">{baslik}</div>
+                        <div className="mt-0.5 text-xs text-slate-500">{aciklama}</div>
                       </div>
                       {selectedPaymentMethod === val ? (
-                        <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-sky-500">
-                          <Check size={12} className="text-white" strokeWidth={3} />
+                        <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-sky-600">
+                          <Check className="h-3.5 w-3.5 text-white" strokeWidth={3} aria-hidden />
                         </div>
                       ) : null}
                     </label>
@@ -885,35 +918,43 @@ export function ReservationWizard({
                 ) : null}
 
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                  {(
-                    [
-                      { ikon: "🔒", baslik: "SSL Güvenli", aciklama: "256-bit şifreleme" },
-                      { ikon: "✅", baslik: "TURSAB", aciklama: `Belge No: ${tursabNo}` },
-                      { ikon: "💯", baslik: "Güvenli", aciklama: "İade garantisi" },
-                    ] as const
-                  ).map(({ ikon, baslik, aciklama }) => (
-                    <div key={baslik} className="rounded-xl bg-gray-50 p-3 text-center">
-                      <div className="mb-1 text-xl">{ikon}</div>
-                      <div className="text-xs font-semibold text-gray-900">{baslik}</div>
-                      <div className="mt-0.5 text-xs text-gray-400">{aciklama}</div>
-                    </div>
-                  ))}
+                  <div className="flex items-start gap-3 rounded-lg bg-slate-100 px-3 py-3">
+                    <Lock className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" strokeWidth={2} aria-hidden />
+                    <p className="min-w-0 text-left text-xs font-medium leading-snug text-slate-800">
+                      SSL Güvenli / 256-bit şifreleme
+                    </p>
+                  </div>
+                  <div className="flex items-start gap-3 rounded-lg bg-slate-100 px-3 py-3">
+                    <Award className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" strokeWidth={2} aria-hidden />
+                    <p className="min-w-0 text-left text-xs font-medium leading-snug text-slate-800">
+                      TURSAB / Belge No: {tursabNo}
+                    </p>
+                  </div>
+                  <div className="flex items-start gap-3 rounded-lg bg-slate-100 px-3 py-3">
+                    <Shield className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" strokeWidth={2} aria-hidden />
+                    <p className="min-w-0 text-left text-xs font-medium leading-snug text-slate-800">
+                      Güvenli / İade garantisi
+                    </p>
+                  </div>
                 </div>
 
-                <div className="flex flex-wrap gap-3 pt-4">
-                  <button
-                    type="button"
-                    onClick={() => goToStep(2)}
-                    className="rounded-xl border-2 border-gray-200 px-4 py-3 text-sm font-semibold text-gray-700 transition-all duration-200 hover:bg-gray-50 hover:shadow-md active:scale-[0.98]"
-                  >
-                    ← Geri
+                <div className="flex flex-col gap-3 pt-4 sm:flex-row">
+                  <button type="button" onClick={() => goToStep(2)} className={`${BTN_WHITE} w-full sm:w-auto`}>
+                    Geri
                   </button>
                   <button
                     type="submit"
                     disabled={savingReservation}
-                    className="rounded-xl bg-sky-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-[#0e9aa7]/25 transition-all duration-200 hover:scale-[1.02] hover:bg-sky-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
+                    className={`${BTN_PRIMARY} w-full flex-1 shadow-sm shadow-sky-600/20 disabled:cursor-not-allowed disabled:opacity-60`}
                   >
-                    {savingReservation ? "Kaydediliyor…" : "Rezervasyonu tamamla"}
+                    {savingReservation ? (
+                      "Kaydediliyor…"
+                    ) : (
+                      <>
+                        <Check className="h-4 w-4 shrink-0" strokeWidth={2.5} aria-hidden />
+                        Rezervasyonu Tamamla
+                      </>
+                    )}
                   </button>
                 </div>
 
@@ -925,35 +966,37 @@ export function ReservationWizard({
           ) : null}
 
           {step === 4 ? (
-            <div className="rounded-3xl border border-slate-200/80 bg-white p-8 text-center shadow-[0_24px_60px_-36px_rgba(15,23,42,0.45)] md:p-12">
-              <div className="mx-auto mb-6 flex h-20 w-20 animate-bounce items-center justify-center rounded-full bg-green-100">
-                <Check size={36} className="text-green-600" strokeWidth={2.5} />
+            <div className={`${STEP_CARD} text-center`}>
+              <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500 shadow-md shadow-emerald-500/25">
+                <Check className="h-10 w-10 text-white" strokeWidth={2.5} aria-hidden />
               </div>
 
-              <h2 className="mb-2 text-2xl font-bold text-gray-900">Rezervasyonunuz Alındı! 🎉</h2>
-              <p className="mb-8 text-gray-500">
+              <h2 className={`${STEP_TITLE} mb-2`}>Rezervasyonunuz Alındı!</h2>
+              <p className={`mb-8 ${STEP_SUB}`}>
                 En kısa sürede sizi arayarak rezervasyonunuzu onaylayacağız.
               </p>
 
-              <div className="mb-6 rounded-2xl border-2 border-dashed border-sky-200 bg-sky-50 p-5">
-                <div className="mb-1 text-xs font-semibold uppercase tracking-wider text-sky-600">
-                  Referans Numaranız
+              <div className="mb-6 rounded-[12px] border border-sky-100/80 bg-gradient-to-br from-sky-50 via-white to-emerald-50/90 px-5 py-6 shadow-inner shadow-sky-100/50">
+                <div className="mb-1 text-xs font-medium uppercase tracking-wide text-sky-700/90">
+                  Referans numaranız
                 </div>
-                <div className="text-3xl font-black tracking-wider text-sky-700">{referansGoster}</div>
-                <div className="mt-2 text-xs text-sky-500">Bu numarayı kaydedin</div>
+                <div className="text-2xl font-bold tracking-wide text-sky-700 sm:text-3xl">{referansGoster}</div>
+                <p className="mt-2 text-xs text-slate-600">Bu numarayı kaydedin</p>
               </div>
 
-              <div className="mb-6 rounded-xl bg-gray-50 p-4 text-left">
-                <div className="mb-3 font-semibold text-gray-900">📋 Rezervasyon Detayları</div>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between gap-2">
-                    <span className="text-gray-500">{packageSummary ? "Paket" : "İlan"}</span>
-                    <span className="max-w-[60%] text-right font-medium text-gray-900">{listingTitle}</span>
+              <div className="mb-6 overflow-hidden rounded-[12px] border border-slate-200 text-left">
+                <div className="border-b border-slate-200 bg-slate-50/80 px-4 py-3 text-sm font-medium text-slate-900">
+                  Rezervasyon detayları
+                </div>
+                <div className="divide-y divide-slate-200 text-sm">
+                  <div className="flex justify-between gap-3 px-4 py-3">
+                    <span className="text-slate-500">{packageSummary ? "Paket" : "İlan"}</span>
+                    <span className="max-w-[58%] text-right font-medium text-slate-900">{listingTitle}</span>
                   </div>
                   {reservationInfo.giris_tarihi ? (
-                    <div className="flex justify-between gap-2">
-                      <span className="text-gray-500">Giriş</span>
-                      <span className="font-medium">
+                    <div className="flex justify-between gap-3 px-4 py-3">
+                      <span className="text-slate-500">Giriş</span>
+                      <span className="font-medium text-slate-900">
                         {format(dateFromYmdLocal(reservationInfo.giris_tarihi), "d MMMM yyyy", {
                           locale: tr,
                         })}
@@ -961,24 +1004,24 @@ export function ReservationWizard({
                     </div>
                   ) : null}
                   {reservationInfo.cikis_tarihi ? (
-                    <div className="flex justify-between gap-2">
-                      <span className="text-gray-500">Çıkış</span>
-                      <span className="font-medium">
+                    <div className="flex justify-between gap-3 px-4 py-3">
+                      <span className="text-slate-500">Çıkış</span>
+                      <span className="font-medium text-slate-900">
                         {format(dateFromYmdLocal(reservationInfo.cikis_tarihi), "d MMMM yyyy", {
                           locale: tr,
                         })}
                       </span>
                     </div>
                   ) : null}
-                  <div className="flex justify-between gap-2">
-                    <span className="text-gray-500">Misafir</span>
-                    <span className="font-medium">
+                  <div className="flex justify-between gap-3 px-4 py-3">
+                    <span className="text-slate-500">Misafir</span>
+                    <span className="font-medium text-slate-900">
                       {guestInfo.yetiskin} yetişkin{guestInfo.cocuk > 0 ? `, ${guestInfo.cocuk} çocuk` : ""}
                     </span>
                   </div>
-                  <div className="mt-2 flex justify-between border-t border-gray-200 pt-2">
-                    <span className="font-bold text-gray-900">Toplam</span>
-                    <span className="text-base font-bold text-sky-600">
+                  <div className="flex justify-between gap-3 bg-sky-50/50 px-4 py-4">
+                    <span className="text-base font-semibold text-sky-800">Toplam</span>
+                    <span className="text-lg font-bold text-sky-700">
                       ₺{totalPrice.total.toLocaleString("tr-TR")}
                     </span>
                   </div>
@@ -986,15 +1029,15 @@ export function ReservationWizard({
               </div>
 
               {ozelIstek ? (
-                <p className="mb-4 text-left text-sm text-gray-600">
-                  <span className="font-medium">Özel istek:</span> {ozelIstek}
+                <p className="mb-4 text-left text-sm text-slate-600">
+                  <span className="font-medium text-slate-800">Özel istek:</span> {ozelIstek}
                 </p>
               ) : null}
 
-              <div className="mb-6 text-xs text-gray-400">TURSAB Üyesidir — Belge No: {tursabNo}</div>
+              <div className="mb-4 text-xs text-slate-500">TURSAB Üyesidir — Belge No: {tursabNo}</div>
 
-              <p className="mb-4 text-sm text-gray-600">Onay e-postası gönderildi.</p>
-              {isPending ? <p className="mb-4 text-sm text-gray-500">Onay e-postası gönderiliyor…</p> : null}
+              <p className="mb-1 text-sm text-slate-600">Onay e-postası gönderildi.</p>
+              {isPending ? <p className="mb-4 text-sm text-slate-500">Onay e-postası gönderiliyor…</p> : null}
               {errorMessage ? <p className="mb-4 text-sm text-red-600">{errorMessage}</p> : null}
 
               <div className="flex flex-col gap-3 sm:flex-row">
@@ -1004,17 +1047,17 @@ export function ReservationWizard({
                     rezervasyonStore.clear();
                     aramaStore.clear();
                   }}
-                  className="flex-1 rounded-xl border-2 border-gray-200 py-3 text-center text-sm font-semibold text-gray-700 transition-all duration-200 hover:bg-gray-50 hover:shadow-md active:scale-[0.98]"
+                  className={`${BTN_WHITE} flex-1 text-center`}
                 >
-                  📅 Rezervasyonlarım
+                  Rezervasyonlarım
                 </Link>
                 <a
                   href={waHref}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex-1 rounded-xl bg-green-500 py-3 text-center text-sm font-semibold text-white transition hover:bg-green-600"
+                  className={`${BTN_BASE} flex-1 bg-[#1D9E75] text-white hover:brightness-[0.95] active:brightness-95`}
                 >
-                  💬 WhatsApp İletişim
+                  WhatsApp İletişim
                 </a>
               </div>
             </div>
@@ -1023,9 +1066,9 @@ export function ReservationWizard({
 
         <div className="min-w-0 w-full lg:col-span-4 lg:mt-0 lg:w-96 xl:col-span-3">
           {step === 4 ? (
-            <div className="rounded-3xl border border-slate-200/80 bg-white p-5 text-sm text-gray-600 shadow-[0_20px_55px_-30px_rgba(15,23,42,0.45)] lg:sticky lg:top-6">
-              <p className="font-medium text-gray-900">Özet</p>
-              <p className="mt-2">
+            <div className="rounded-[12px] border border-slate-200 bg-white px-6 py-6 text-sm text-slate-600 lg:sticky lg:top-6">
+              <p className="text-[22px] font-medium text-slate-900">Özet</p>
+              <p className="mt-2 text-sm leading-relaxed text-slate-500">
                 Rezervasyon kaydınız oluşturuldu. Panelden takip edebilir veya WhatsApp üzerinden bize
                 ulaşabilirsiniz.
               </p>
