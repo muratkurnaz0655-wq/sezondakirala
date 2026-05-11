@@ -275,10 +275,10 @@ export function SssPageClient() {
   return (
     <div className="w-full overflow-x-hidden bg-slate-50">
       <header
-        className="relative px-4 pb-14 pt-10 sm:pb-16 sm:pt-14"
+        className="relative w-full pb-14 pt-10 sm:pb-16 sm:pt-14"
         style={{ backgroundColor: BRAND_GREEN }}
       >
-        <div className="mx-auto max-w-3xl text-center">
+        <div className="mx-auto max-w-[860px] px-6 text-center">
           <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-4 py-1.5 text-sm font-medium text-white backdrop-blur-sm">
             <HelpCircle className="h-4 w-4 shrink-0 opacity-95" aria-hidden />
             Yardım Merkezi
@@ -312,12 +312,12 @@ export function SssPageClient() {
 
       <div
         className={[
-          "mx-auto max-w-3xl px-4 transition-opacity duration-700 ease-out",
+          "mx-auto max-w-[860px] px-6 py-12 transition-opacity duration-700 ease-out sm:px-6",
           mounted ? "opacity-100" : "opacity-0",
         ].join(" ")}
       >
         <nav
-          className="-mx-4 flex gap-2 overflow-x-auto px-4 py-6 sm:mx-0 sm:flex-wrap sm:justify-center sm:overflow-visible sm:px-0 sm:py-8"
+          className="flex gap-2 overflow-x-auto py-6 sm:flex-wrap sm:justify-center sm:overflow-visible sm:py-8"
           aria-label="Kategori filtreleri"
         >
           {CATEGORY_PILLS.map((pill) => {
@@ -408,11 +408,8 @@ export function SssPageClient() {
         </div>
       </div>
 
-      <section
-        className="px-4 py-14 sm:py-16"
-        style={{ backgroundColor: BRAND_GREEN }}
-      >
-        <div className="mx-auto max-w-3xl text-center">
+      <section className="w-full py-14 sm:py-16" style={{ backgroundColor: BRAND_GREEN }}>
+        <div className="mx-auto max-w-[860px] px-6 text-center">
           <h2 className="text-xl font-bold text-white sm:text-2xl">
             Sorunuzu bulamadınız mı?
           </h2>

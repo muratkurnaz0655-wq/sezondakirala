@@ -71,6 +71,7 @@ export default async function RootLayout({
   const headersList = await headers();
   const pathname = headersList.get("x-pathname") ?? "";
   const isAdmin = pathname.startsWith("/yonetim");
+  const isSssPage = pathname === "/sss" || pathname.startsWith("/sss/");
 
   return (
     <html
@@ -94,7 +95,13 @@ export default async function RootLayout({
         {isAdmin ? (
           children
         ) : (
-          <main className="page-fade-in flex w-full flex-1 px-4 pb-8 md:px-6 lg:px-8">
+          <main
+            className={
+              isSssPage
+                ? "page-fade-in flex w-full flex-1 px-0 pb-8"
+                : "page-fade-in flex w-full flex-1 px-4 pb-8 md:px-6 lg:px-8"
+            }
+          >
             {children}
           </main>
         )}
