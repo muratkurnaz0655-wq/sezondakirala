@@ -6,7 +6,9 @@ import "./globals.css";
 import { GlobalWhatsappWidget } from "@/components/global-whatsapp-widget";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
-import { SITE_FAVICON_PATH, SITE_NAME, SITE_URL } from "@/lib/constants";
+import { SITE_FAVICON_PATH } from "@/lib/constants";
+
+const SITE_CANONICAL_ORIGIN = "https://www.sezondakirala.com";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -25,26 +27,41 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export async function generateMetadata(): Promise<Metadata> {
-  return {
-    metadataBase: new URL(SITE_URL),
-    title: {
-      default: SITE_NAME,
-      template: `%s | ${SITE_NAME}`,
-    },
-    description: "Fethiye'de villa ve tekne kiralama platformu",
-    openGraph: {
-      title: SITE_NAME,
-      description: "Fethiye'de villa ve tekne kiralama platformu",
-      images: ["/og-image.jpg"],
-    },
-    icons: {
-      icon: SITE_FAVICON_PATH,
-      shortcut: SITE_FAVICON_PATH,
-      apple: SITE_FAVICON_PATH,
-    },
-  };
-}
+export const metadata: Metadata = {
+  metadataBase: new URL(SITE_CANONICAL_ORIGIN),
+  title: "Sezonda Kirala | Fethiye Villa ve Tekne Kiralama | Sezondakirala",
+  description:
+    "Fethiye'de sezonda kirala fırsatları. Sezondakirala ile lüks villa ve özel tekne kiralama. TURSAB güvencesiyle unutulmaz tatil deneyimi.",
+  keywords:
+    "sezonda kirala, sezondakirala, fethiye villa kiralama, fethiye tekne kiralama, fethiye kiralık villa, yazlık kiralama fethiye, sezon kiralama",
+  openGraph: {
+    title: "Sezonda Kirala | Fethiye Villa ve Tekne Kiralama",
+    description: "Fethiye'de sezonda kirala fırsatları. Lüks villa ve özel tekne kiralama.",
+    url: SITE_CANONICAL_ORIGIN,
+    siteName: "Sezondakirala",
+    locale: "tr_TR",
+    type: "website",
+    images: ["/og-image.jpg"],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Sezonda Kirala | Fethiye Villa ve Tekne Kiralama",
+    description: "Fethiye'de sezonda kirala fırsatları. Lüks villa ve özel tekne kiralama.",
+    images: ["/og-image.jpg"],
+  },
+  alternates: {
+    canonical: SITE_CANONICAL_ORIGIN,
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+  icons: {
+    icon: SITE_FAVICON_PATH,
+    shortcut: SITE_FAVICON_PATH,
+    apple: SITE_FAVICON_PATH,
+  },
+};
 
 export default async function RootLayout({
   children,

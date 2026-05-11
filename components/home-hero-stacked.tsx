@@ -57,7 +57,7 @@ export function HomeHeroStacked() {
               transition={{ duration: 0.45, delay: 0.05, ease: pageEase }}
             >
               <span className="h-2 w-2 shrink-0 animate-pulse rounded-full bg-[#22d3ee]" />
-              Fethiye&apos;nin En İyi Villa Ve Tekne Kiralama Platformu
+              Sezonda kirala · Fethiye&apos;nin en iyi villa ve tekne kiralama platformu
             </motion.span>
 
             <h1

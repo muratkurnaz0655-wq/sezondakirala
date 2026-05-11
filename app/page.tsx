@@ -1,6 +1,5 @@
 import Image from "next/image";
 import Link from "next/link";
-import type { Metadata } from "next";
 import {
   getHomeFeaturedPackages,
   getPublicCatalogCounts,
@@ -509,20 +508,3 @@ export default async function Home() {
   );
 }
 
-export async function generateMetadata(): Promise<Metadata> {
-  return {
-    title: `Fethiye Villa ve Tekne Kiralama | ${SITE_NAME} — TURSAB Onaylı`,
-    description: "Fethiye'de villa ve tekne kiralama seçenekleriyle tatilinizi planlayın.",
-    openGraph: {
-      title: `Fethiye Villa ve Tekne Kiralama | ${SITE_NAME} — TURSAB Onaylı`,
-      description: "Fethiye'de villa ve tekne kiralama seçenekleriyle tatilinizi planlayın.",
-      images: ["/og-image.jpg"],
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: `Fethiye Villa ve Tekne Kiralama | ${SITE_NAME} — TURSAB Onaylı`,
-      description: "Fethiye'de villa ve tekne kiralama seçenekleriyle tatilinizi planlayın.",
-      images: ["/og-image.jpg"],
-    },
-  };
-}
