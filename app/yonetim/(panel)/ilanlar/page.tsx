@@ -122,6 +122,12 @@ export default async function AdminListingsPage({ searchParams }: AdminListingsP
         </AdminActionButton>
       }
     >
+      <pre className="overflow-x-auto rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">
+        {JSON.stringify(debugIlanlarError, null, 2)}
+      </pre>
+      <pre className="overflow-x-auto rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">
+        {JSON.stringify(debugIlanlarData?.length, null, 2)}
+      </pre>
       <AdminStatsRow
         items={[
           { label: "Toplam", value: filteredListings.length, tone: "default" },
