@@ -42,6 +42,27 @@ function parseOptionalNumber(value: string | undefined) {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
+/** RSC → client: yalnızca JSON-güvenli alanlar (BigInt / ekstra view kolonları serileştirmeyi bozmasın). */
+function toClientListingRow(row: Record<string, unknown>): ListingTableRow {
+  const od = row.onay_durumu;
+  const onayDurumu =
+    od === "yayinda" || od === "onay_bekliyor" || od === "reddedildi" ? od : null;
+  return {
+    id: String(row.id ?? ""),
+    baslik: String(row.baslik ?? ""),
+    konum: String(row.konum ?? ""),
+    tip: String(row.tip ?? ""),
+    sahip_id: String(row.sahip_id ?? ""),
+    gunluk_fiyat: Number(row.gunluk_fiyat ?? 0),
+    aktif: Boolean(row.aktif),
+    onay_durumu: onayDurumu,
+    slug: row.slug != null && row.slug !== "" ? String(row.slug) : null,
+    olusturulma_tarihi: String(row.olusturulma_tarihi ?? ""),
+    ilan_medyalari: asMediaRows(row.ilan_medyalari),
+    aciklama: row.aciklama == null ? null : String(row.aciklama),
+  };
+}
+
 function asMediaRows(raw: unknown): { id: string; url: string; sira: number }[] {
   if (!Array.isArray(raw)) return [];
   const out: { id: string; url: string; sira: number }[] = [];
@@ -159,7 +180,9 @@ export default async function AdminListingsPage({ searchParams }: AdminListingsP
     };
   });
 
-  const userMap = new Map((users ?? []).map((user) => [user.id, user.ad_soyad ?? user.email ?? "-"]));
+  const userMap = new Map(
+    (users ?? []).map((user) => [String(user.id), user.ad_soyad ?? user.email ?? "-"]),
+  );
   const locationOptions = [...new Set(listingsWithMedia.map((row) => row.konum).filter(Boolean))].sort();
   const filteredListings = listingsWithMedia.filter((row) => {
     if (filtre === "villa") return row.tip === "villa";
@@ -170,7 +193,7 @@ export default async function AdminListingsPage({ searchParams }: AdminListingsP
     const owner =
       ownerDisplayName((row as { kullanicilar?: ListingOwner }).kullanicilar) !== "-"
         ? ownerDisplayName((row as { kullanicilar?: ListingOwner }).kullanicilar).toLowerCase()
-        : (userMap.get(row.sahip_id)?.toLowerCase() ?? "");
+        : (userMap.get(String(row.sahip_id ?? ""))?.toLowerCase() ?? "");
     return (
       String(row.baslik ?? "").toLowerCase().includes(q) ||
       String(row.konum ?? "").toLowerCase().includes(q) ||
@@ -223,7 +246,9 @@ export default async function AdminListingsPage({ searchParams }: AdminListingsP
           <AdminSelect name="konum" defaultValue={params.konum ?? ""}>
             <option value="">Tüm konumlar</option>
             {locationOptions.map((konum) => (
-              <option key={konum} value={konum}>{konum}</option>
+              <option key={String(konum)} value={String(konum)}>
+                {String(konum)}
+              </option>
             ))}
           </AdminSelect>
         </AdminFormField>
@@ -231,7 +256,9 @@ export default async function AdminListingsPage({ searchParams }: AdminListingsP
           <AdminSelect name="sahip" defaultValue={params.sahip ?? ""}>
             <option value="">Tüm sahipler</option>
             {(users ?? []).map((user) => (
-              <option key={user.id} value={user.id}>{user.ad_soyad ?? user.email ?? user.id}</option>
+              <option key={String(user.id)} value={String(user.id)}>
+                {user.ad_soyad ?? user.email ?? String(user.id)}
+              </option>
             ))}
           </AdminSelect>
         </AdminFormField>
@@ -278,9 +305,7 @@ export default async function AdminListingsPage({ searchParams }: AdminListingsP
 
       <AdminMobileCardList>
         {filteredListings.map((listing) => {
-          const row = listing as {
-            id: string; baslik: string; konum: string; tip: string; gunluk_fiyat: number; aktif: boolean; ilan_medyalari?: { id: string; url: string; sira: number }[] | null;
-          };
+          const row = toClientListingRow(listing as Record<string, unknown>);
           const kapak = listingCoverImageUrl(row.ilan_medyalari);
           return (
             <AdminMobileCard key={row.id}>
@@ -299,7 +324,9 @@ export default async function AdminListingsPage({ searchParams }: AdminListingsP
               <p className="text-sm font-semibold text-slate-800">{row.baslik}</p>
               <p className="mt-1 text-xs text-slate-500">{row.konum}</p>
               <p className="mt-2 text-sm font-semibold text-[#0e9aa7]">{formatCurrency(Number(row.gunluk_fiyat ?? 0))}</p>
-              <div className="mt-3"><ListingActions listing={row as never} /></div>
+              <div className="mt-3">
+                <ListingActions listing={row} />
+              </div>
                 </div>
               </div>
             </AdminMobileCard>
@@ -307,7 +334,9 @@ export default async function AdminListingsPage({ searchParams }: AdminListingsP
         })}
       </AdminMobileCardList>
       {filteredListings.length ? (
-        <ListingsBulkTable listings={filteredListings as ListingTableRow[]} />
+        <ListingsBulkTable
+          listings={filteredListings.map((r) => toClientListingRow(r as Record<string, unknown>))}
+        />
       ) : (
         <AdminEmptyState message="Henüz kayıt yok" actionHref="/yonetim/ilanlar/yeni" actionLabel="İlk ilanı ekle →" />
       )}

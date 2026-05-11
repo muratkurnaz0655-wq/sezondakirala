@@ -26,6 +26,7 @@ export type ListingTableRow = {
   onay_durumu?: "yayinda" | "onay_bekliyor" | "reddedildi" | null;
   slug?: string | null;
   olusturulma_tarihi: string;
+  aciklama?: string | null;
   ilan_medyalari?: { id: string; url: string; sira: number }[] | null;
 };
 
