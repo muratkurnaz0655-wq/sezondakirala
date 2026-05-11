@@ -40,8 +40,8 @@ export function AdminSidebar({ onNavigate, className = "", pendingReservationCou
   };
 
   return (
-    <aside className={`flex h-full w-64 flex-col border-r border-slate-800 bg-slate-900 ${className}`}>
-      <div className="border-b border-slate-800 px-6 py-5">
+    <aside className={`flex h-full w-64 flex-col border-r border-slate-800/80 bg-[#0F172A] ${className}`}>
+      <div className="border-b border-[#1D9E75]/35 px-6 py-5">
         <div className="flex items-center gap-3">
           <Image
             src="/logo-clean.png"
@@ -65,10 +65,10 @@ export function AdminSidebar({ onNavigate, className = "", pendingReservationCou
               key={href}
               href={href}
               onClick={() => onNavigate?.()}
-              className={`mx-2 flex cursor-pointer items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-medium transition-all ${
+              className={`mx-2 flex cursor-pointer items-center gap-3 border-l-[3px] py-2.5 pl-[13px] pr-4 text-sm font-medium transition-colors ${
                 aktif
-                  ? "bg-blue-600 text-white shadow-lg shadow-blue-600/25"
-                  : "text-slate-400 hover:bg-slate-800 hover:text-white"
+                  ? "border-[#1D9E75] bg-white/[0.08] text-white"
+                  : "border-transparent text-slate-400 hover:bg-white/[0.06] hover:text-white"
               }`}
             >
               <Icon className="h-[18px] w-[18px] shrink-0" />
@@ -83,12 +83,12 @@ export function AdminSidebar({ onNavigate, className = "", pendingReservationCou
         })}
       </nav>
 
-      <div className="mt-auto space-y-1 border-t border-slate-800 p-4">
+      <div className="mt-auto space-y-1 border-t border-white/10 p-4">
         <a
           href="/"
           target="_blank"
           rel="noreferrer"
-          className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs text-slate-400 transition-all hover:bg-slate-800 hover:text-white"
+          className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2.5 text-xs font-medium text-slate-200 transition-all hover:bg-white/[0.08] hover:text-white"
         >
           <ExternalLink className="h-4 w-4" />
           Siteyi Görüntüle
@@ -96,7 +96,7 @@ export function AdminSidebar({ onNavigate, className = "", pendingReservationCou
         <button
           type="button"
           onClick={() => void handleCikis()}
-          className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs text-red-400 transition-all hover:bg-red-500/10 hover:text-red-300"
+          className="flex w-full items-center gap-2 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2.5 text-xs font-medium text-red-300 transition-all hover:bg-red-500/15 hover:text-red-200"
         >
           <LogOut className="h-4 w-4" />
           Çıkış Yap

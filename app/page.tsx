@@ -426,47 +426,48 @@ export default async function Home() {
 
       <section className="-mx-4 bg-white py-16 text-slate-900 md:-mx-6 lg:-mx-8">
         <MotionFadeIn className="w-full" delay={0.3}>
-          <div className="mb-10 text-center">
-            <h2 className="mb-3 text-2xl font-semibold tracking-tight sm:text-3xl md:text-4xl">Fethiye&apos;yi Keşfedin</h2>
-            <p className="mx-auto max-w-2xl text-base text-slate-600 sm:text-lg">
-              Eşsiz güzellikleriyle her bölge farklı bir tatil vaat ediyor
-            </p>
-          </div>
-          <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-            {regionShowcase.map((bolge) => (
-              <Link
-                key={bolge.slug}
-                href={`/konaklama?konum=${encodeURIComponent(bolge.slug)}`}
-                className="group relative h-[160px] cursor-pointer overflow-hidden rounded-2xl md:h-[200px]"
-              >
-                <Image
-                  src={bolge.gorsel}
-                  alt={bolge.isim}
-                  fill
-                  className="object-cover transition-transform duration-500 ease-out motion-safe:group-hover:scale-105"
-                  sizes="(max-width: 1024px) 50vw, 25vw"
-                />
-                <div
-                  className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_top,rgba(0,0,0,0.7)_0%,rgba(0,0,0,0)_60%)]"
-                  aria-hidden
-                />
-                <div
-                  className="pointer-events-none absolute inset-0 bg-black/0 transition-colors duration-300 group-hover:bg-black/25"
-                  aria-hidden
-                />
-                <div className="absolute inset-x-0 bottom-0 z-[1] flex flex-col gap-2 p-4">
-                  <div>
-                    <div className="text-base font-medium leading-snug text-white">{bolge.isim}</div>
-                    <div className="mt-0.5 text-[13px] text-white/75">{bolge.ilanSayisi} Villa</div>
+          <div className="mx-auto max-w-[1200px] overflow-hidden px-6">
+            <div className="mb-10 text-center">
+              <h2 className="mb-3 text-2xl font-semibold tracking-tight sm:text-3xl md:text-4xl">Fethiye&apos;yi Keşfedin</h2>
+              <p className="mx-auto max-w-2xl text-base text-slate-600 sm:text-lg">
+                Eşsiz güzellikleriyle her bölge farklı bir tatil vaat ediyor
+              </p>
+            </div>
+            <div className="grid min-w-0 grid-cols-2 gap-4 md:grid-cols-4">
+              {regionShowcase.map((bolge) => (
+                <Link
+                  key={bolge.slug}
+                  href={`/konaklama?konum=${encodeURIComponent(bolge.slug)}`}
+                  className="group relative min-h-0 w-full cursor-pointer overflow-hidden rounded-2xl h-[180px] md:h-[220px]"
+                >
+                  <Image
+                    src={bolge.gorsel}
+                    alt={bolge.isim}
+                    fill
+                    className="object-cover transition-transform duration-[400ms] ease-out motion-safe:group-hover:scale-105"
+                    sizes="(max-width: 768px) 50vw, 25vw"
+                  />
+                  <div
+                    className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_top,rgba(0,0,0,0.75)_0%,rgba(0,0,0,0.2)_50%,rgba(0,0,0,0)_100%)]"
+                    aria-hidden
+                  />
+                  <div className="absolute bottom-4 left-4 z-[1] max-w-[calc(100%-2rem)]">
+                    <p
+                      className="text-base font-semibold leading-snug text-white"
+                      style={{ textShadow: "0 1px 3px rgba(0,0,0,0.5)" }}
+                    >
+                      {bolge.isim}
+                    </p>
+                    <p className="mt-0.5 text-[13px] text-white/[0.85]">{bolge.ilanSayisi} Villa</p>
+                    <div className="mt-2 translate-y-2 opacity-0 transition-all duration-[250ms] ease-in-out motion-safe:group-hover:translate-y-0 motion-safe:group-hover:opacity-100">
+                      <span className="inline-flex rounded-full border border-white/40 bg-white/20 px-3.5 py-1.5 text-[13px] font-medium text-white backdrop-blur-[4px]">
+                        Villalara Bak →
+                      </span>
+                    </div>
                   </div>
-                  <div className="translate-y-full transition-transform duration-300 ease-out motion-safe:group-hover:translate-y-0">
-                    <span className="inline-flex rounded-full bg-white/95 px-3 py-1.5 text-sm font-semibold text-slate-900 shadow-md ring-1 ring-black/5">
-                      Villalara Bak →
-                    </span>
-                  </div>
-                </div>
-              </Link>
-            ))}
+                </Link>
+              ))}
+            </div>
           </div>
         </MotionFadeIn>
       </section>

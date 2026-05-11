@@ -110,7 +110,7 @@ export default async function AdminDashboard() {
               <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-500">Onay Bekleyen İlanlar</h3>
               <Link
                 href="/yonetim/ilanlar?durum=onay_bekliyor"
-                className="text-sm font-medium text-blue-600 transition-all duration-200 hover:text-blue-700"
+                className="text-sm font-medium text-[#185FA5] transition-all duration-200 hover:underline"
               >
                 Tümünü Gör →
               </Link>
@@ -122,7 +122,7 @@ export default async function AdminDashboard() {
               <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-500">Son Rezervasyonlar</h3>
               <Link
                 href="/yonetim/rezervasyonlar"
-                className="text-sm font-medium text-blue-600 transition-all duration-200 hover:text-blue-700"
+                className="text-sm font-medium text-[#185FA5] transition-all duration-200 hover:underline"
               >
                 Tümünü Gör →
               </Link>

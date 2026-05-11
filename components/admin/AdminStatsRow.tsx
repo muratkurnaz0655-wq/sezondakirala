@@ -9,25 +9,29 @@ type StatItem = {
   tone?: StatTone;
 };
 
-const toneClasses: Record<StatTone, string> = {
-  default: "border-slate-200 bg-white text-slate-900",
-  success: "border-emerald-200 bg-emerald-50 text-emerald-800",
-  warning: "border-amber-200 bg-amber-50 text-amber-800",
-  danger: "border-rose-200 bg-rose-50 text-rose-800",
-  info: "border-sky-200 bg-sky-50 text-sky-800",
-  purple: "border-purple-200 bg-purple-50 text-purple-800",
+/** Sol kenar vurgusu — admin_panel_kapsamli_prompt.md tasarım sistemi */
+const toneBorder: Record<StatTone, string> = {
+  default: "border-l-[#185FA5]",
+  success: "border-l-[#1D9E75]",
+  warning: "border-l-[#F59E0B]",
+  danger: "border-l-[#EF4444]",
+  info: "border-l-[#8B5CF6]",
+  purple: "border-l-[#8B5CF6]",
 };
 
 export function AdminStatsRow({ items }: { items: StatItem[] }) {
   return (
-    <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-5 2xl:grid-cols-9">
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
       {items.map((item) => {
         const tone = item.tone ?? "default";
         return (
-          <div key={item.label} className={`rounded-2xl border p-4 shadow-sm ${toneClasses[tone]}`}>
-            <p className="text-xs font-semibold uppercase tracking-wide opacity-80">{item.label}</p>
-            <p className="mt-1 text-2xl font-bold">{item.value}</p>
-            {item.subtitle ? <p className="mt-1 text-xs opacity-80">{item.subtitle}</p> : null}
+          <div
+            key={item.label}
+            className={`rounded-xl border border-[#E2E8F0] border-l-4 bg-white px-6 py-5 shadow-sm transition-shadow duration-200 hover:shadow-md ${toneBorder[tone]}`}
+          >
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-[#64748B]">{item.label}</p>
+            <p className="mt-1 text-[28px] font-semibold leading-tight text-[#1E293B]">{item.value}</p>
+            {item.subtitle ? <p className="mt-1 text-xs text-[#64748B]">{item.subtitle}</p> : null}
           </div>
         );
       })}

@@ -50,9 +50,9 @@ export function AdminPanelChrome({
         </div>
       ) : null}
 
-      <div className="ml-0 min-h-screen bg-slate-50 lg:ml-64">
+      <div className="ml-0 min-h-screen bg-[#F8FAFC] lg:ml-64">
         <AdminTopbar kullanici={kullanici} notifications={notifications} unreadCount={unreadCount} onMenuClick={() => setMobileOpen(true)} />
-        <main className="admin-main min-h-[calc(100vh-64px)] bg-slate-50 px-4 py-5 pb-12 sm:px-6 lg:px-8">{children}</main>
+        <main className="admin-main min-h-[calc(100vh-64px)] bg-[#F8FAFC] px-4 py-5 pb-12 sm:px-6 lg:px-8">{children}</main>
       </div>
     </div>
   );

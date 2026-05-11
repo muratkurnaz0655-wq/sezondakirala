@@ -35,11 +35,11 @@ function classesFor(variant: Variant, size: Size) {
   const bySize =
     size === "sm" ? "px-3 py-1.5 text-xs" : "px-4 py-2 text-sm";
   const byVariant: Record<Variant, string> = {
-    primary: "bg-blue-600 text-white hover:bg-blue-700",
-    secondary: "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50",
-    danger: "bg-red-50 text-red-700 hover:bg-red-100",
-    success: "bg-emerald-50 text-emerald-700 hover:bg-emerald-100",
-    ghost: "text-slate-600 hover:bg-slate-100",
+    primary: "bg-[#185FA5] text-white transition-[filter] duration-200 hover:brightness-[0.92]",
+    secondary: "border border-[#E2E8F0] bg-white text-[#1E293B] hover:bg-slate-50",
+    danger: "bg-[#EF4444] text-white transition-[filter] duration-200 hover:brightness-[0.92]",
+    success: "bg-[#1D9E75] text-white transition-[filter] duration-200 hover:brightness-[0.92]",
+    ghost: "text-[#64748B] hover:bg-slate-100",
   };
   return `${base} ${bySize} ${byVariant[variant]}`;
 }
