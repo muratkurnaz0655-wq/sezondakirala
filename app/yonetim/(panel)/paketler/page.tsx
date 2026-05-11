@@ -1,6 +1,7 @@
+import Link from "next/link";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { formatCurrency } from "@/lib/utils/format";
-import { Plus } from "lucide-react";
+import { CalendarDays, Plus } from "lucide-react";
 import { PackageEditButton } from "./PackageEditButton";
 import { AdminStatsRow } from "@/components/admin/AdminStatsRow";
 import { AdminFilterBar } from "@/components/admin/AdminFilterBar";
@@ -18,6 +19,10 @@ import {
 } from "@/components/admin/AdminDataTable";
 import { PackageDeleteButton, PackageStatusToggle } from "./PackageRowActions";
 import { AdminEmptyState } from "@/components/admin/AdminEmptyState";
+import { AdminBadge, adminPackageCategoryVariant } from "@/components/admin/AdminBadge";
+
+const calendarIconBtn =
+  "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-[6px] border-[0.5px] border-[#7C3AED]/55 text-[#7C3AED] transition-colors hover:bg-[#7C3AED]/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2";
 
 type AdminPackagesPageProps = {
   searchParams?: Promise<{ durum?: string; q?: string }>;
@@ -79,6 +84,27 @@ export default async function AdminPackagesPage({ searchParams }: AdminPackagesP
     current.push(media);
     packageMediaMap.set(media.paket_id, current);
   });
+  const packageKapakMap = new Map<string, string>();
+  packageMediaMap.forEach((medias, pid) => {
+    const kapak = [...medias]
+      .filter((m) => m.tip === "kapak" && m.url)
+      .sort((a, b) => (a.sira ?? 0) - (b.sira ?? 0))[0];
+    if (kapak?.url) packageKapakMap.set(pid, kapak.url);
+  });
+
+  function packageThumbnailUrl(row: (typeof filteredPackages)[number]): string | null {
+    if (row.gorsel_url) return row.gorsel_url;
+    const fromKapak = packageKapakMap.get(row.id);
+    if (fromKapak) return fromKapak;
+    const ids = Array.isArray(row.ilan_idleri) ? row.ilan_idleri : [];
+    for (const lid of ids) {
+      const u = firstImageMap.get(lid);
+      if (u) return u;
+    }
+    return null;
+  }
+
+  const temizleHref = durum === "tumu" ? "/yonetim/paketler" : `/yonetim/paketler?durum=${durum}`;
 
   return (
     <AdminPageLayout
@@ -98,19 +124,31 @@ export default async function AdminPackagesPage({ searchParams }: AdminPackagesP
         items={[
           { label: "Toplam Paket", value: filteredPackages.length, tone: "default" },
           { label: "Aktif / Pasif", value: `${aktifCount} / ${pasifCount}`, tone: "success" },
-          { label: "Toplam Fiyat Hacmi", value: formatCurrency(totalRevenue), tone: "info" },
+          { label: "Toplam Fiyat Hacmi", value: formatCurrency(totalRevenue), tone: "purple" },
         ]}
       />
-      <AdminFilterBar>
-        <AdminFormField label="Arama">
-          <AdminInput
-            name="q"
-            defaultValue={resolvedSearchParams?.q ?? ""}
-            placeholder="Paket adı, paket ID, kategori..."
-          />
-        </AdminFormField>
+      <AdminFilterBar className="mb-6 flex flex-col gap-4 lg:flex-row lg:flex-wrap lg:items-end">
+        {durum !== "tumu" ? <input type="hidden" name="durum" value={durum} /> : null}
+        <div className="min-w-0 flex-1 lg:max-w-md">
+          <AdminFormField label="Arama">
+            <AdminInput
+              name="q"
+              defaultValue={resolvedSearchParams?.q ?? ""}
+              placeholder="Paket adı, paket ID, kategori..."
+            />
+          </AdminFormField>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <AdminActionButton type="submit" variant="primary" size="md" className="w-full sm:w-auto">
+            Filtrele
+          </AdminActionButton>
+          <AdminActionButton href={temizleHref} variant="secondary" size="md" className="w-full sm:w-auto">
+            Temizle
+          </AdminActionButton>
+        </div>
       </AdminFilterBar>
       <AdminSegmentedTabs
+        className="mb-4"
         activeKey={durum}
         items={[
           { key: "tumu", label: "Tümü", href: "/yonetim/paketler" },
@@ -145,15 +183,14 @@ export default async function AdminPackagesPage({ searchParams }: AdminPackagesP
           </AdminMobileCard>
         ))}
       </AdminMobileCardList>
-      <AdminDataTable minWidthClass="min-w-[720px]">
+      <AdminDataTable minWidthClass="min-w-[900px]">
             <AdminTableHead>
               <tr>
                 <AdminTableHeaderCell>Başlık</AdminTableHeaderCell>
-                <AdminTableHeaderCell>Kategori</AdminTableHeaderCell>
+                <AdminTableHeaderCell>Görsel</AdminTableHeaderCell>
                 <AdminTableHeaderCell>Fiyat</AdminTableHeaderCell>
                 <AdminTableHeaderCell>İlan</AdminTableHeaderCell>
                 <AdminTableHeaderCell>Kombinasyon</AdminTableHeaderCell>
-                <AdminTableHeaderCell>Görseller</AdminTableHeaderCell>
                 <AdminTableHeaderCell>Durum</AdminTableHeaderCell>
                 <AdminTableHeaderCell>İşlem</AdminTableHeaderCell>
               </tr>
@@ -163,50 +200,54 @@ export default async function AdminPackagesPage({ searchParams }: AdminPackagesP
                 const ids = Array.isArray(row.ilan_idleri) ? row.ilan_idleri : [];
                 const villaCount = ids.filter((id: string) => listingTypeMap.get(id) === "villa").length;
                 const tekneCount = ids.filter((id: string) => listingTypeMap.get(id) === "tekne").length;
+                const thumb = packageThumbnailUrl(row);
                 return (
                   <AdminTableRow key={row.id}>
-                  <AdminTableCell>{row.baslik}</AdminTableCell>
-                  <AdminTableCell>{row.kategori}</AdminTableCell>
-                  <AdminTableCell className="font-semibold text-slate-800">{formatCurrency(row.fiyat)}</AdminTableCell>
                   <AdminTableCell>
-                    {ids.length}
-                  </AdminTableCell>
-                  <AdminTableCell>
-                    <span className="inline-flex items-center gap-1 rounded-lg bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-600">
-                      {villaCount} Villa + {tekneCount} Tekne
-                    </span>
-                  </AdminTableCell>
-                  <AdminTableCell>
-                    {row.gorsel_url ? (
-                      <div className="h-8 w-8 overflow-hidden rounded-lg border border-slate-200 bg-slate-200">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={row.gorsel_url} alt="" className="h-full w-full object-cover" />
-                      </div>
-                    ) : (
-                      <div className="flex gap-1">
-                        {ids.slice(0, 3)
-                          .map((listingId: string) => (
-                            <div key={listingId} className="h-8 w-8 overflow-hidden rounded-lg border border-slate-200 bg-slate-200">
-                              {firstImageMap.get(listingId) ? (
-                                // eslint-disable-next-line @next/next/no-img-element
-                                <img src={firstImageMap.get(listingId)} alt="" className="h-full w-full object-cover" />
-                              ) : null}
-                            </div>
-                          ))}
-                      </div>
-                    )}
-                  </AdminTableCell>
-                  <AdminTableCell>
-                    <div className="flex items-center gap-2">
-                      <span className={`rounded-full border px-2.5 py-0.5 text-xs font-medium ${row.aktif ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-slate-200 bg-slate-100 text-slate-600"}`}>
-                        {row.aktif ? "Aktif" : "Pasif"}
-                      </span>
-                      <PackageStatusToggle id={row.id} active={Boolean(row.aktif)} title={row.baslik} />
+                    <p className="font-semibold text-[#1E293B]">{row.baslik}</p>
+                    <div className="mt-1.5">
+                      <AdminBadge variant={adminPackageCategoryVariant(row.kategori)}>
+                        {row.kategori ?? "—"}
+                      </AdminBadge>
                     </div>
                   </AdminTableCell>
                   <AdminTableCell>
-                    <div className="flex items-center gap-2">
+                    {thumb ? (
+                      <div className="h-11 w-11 overflow-hidden rounded-lg border border-[#E2E8F0] bg-[#F1F5F9]">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={thumb} alt="" className="h-full w-full object-cover" />
+                      </div>
+                    ) : (
+                      <div
+                        className="flex h-11 w-11 items-center justify-center rounded-lg border border-[#E2E8F0] bg-[#F1F5F9] text-[10px] font-medium text-[#94A3B8]"
+                        title="Görsel yok"
+                      >
+                        —
+                      </div>
+                    )}
+                  </AdminTableCell>
+                  <AdminTableCell className="text-right font-semibold text-[#1E293B]">{formatCurrency(row.fiyat)}</AdminTableCell>
+                  <AdminTableCell className="tabular-nums text-[#1E293B]">{ids.length}</AdminTableCell>
+                  <AdminTableCell>
+                    <div className="flex flex-wrap gap-1">
+                      <span className="inline-flex rounded-full border border-[#E2E8F0] bg-[#F8FAFC] px-2 py-0.5 text-[11px] font-medium text-[#475569]">
+                        {villaCount} villa
+                      </span>
+                      <span className="inline-flex rounded-full border border-[#E2E8F0] bg-[#F8FAFC] px-2 py-0.5 text-[11px] font-medium text-[#475569]">
+                        {tekneCount} tekne
+                      </span>
+                    </div>
+                  </AdminTableCell>
+                  <AdminTableCell>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <PackageStatusToggle id={row.id} active={Boolean(row.aktif)} title={row.baslik ?? ""} />
+                      <span className="text-xs font-medium text-[#64748B]">{row.aktif ? "Aktif" : "Pasif"}</span>
+                    </div>
+                  </AdminTableCell>
+                  <AdminTableCell>
+                    <div className="flex flex-wrap items-center gap-1.5">
                       <PackageEditButton
+                        iconOnly
                         pkg={{
                           ...row,
                           paket_medyalari: packageMediaMap.get(row.id) ?? [],
@@ -218,13 +259,15 @@ export default async function AdminPackagesPage({ searchParams }: AdminPackagesP
                           imageUrl: firstImageMap.get(listing.id) ?? null,
                         }))}
                       />
-                      <AdminActionButton
+                      <Link
                         href={`/yonetim/paketler/${row.id}/takvim`}
-                        variant="secondary"
+                        title="Müsaitlik"
+                        aria-label="Müsaitlik takvimi"
+                        className={calendarIconBtn}
                       >
-                        Müsaitlik Takvimi
-                      </AdminActionButton>
-                      <PackageDeleteButton id={row.id} title={row.baslik} />
+                        <CalendarDays className="h-4 w-4" strokeWidth={2} aria-hidden />
+                      </Link>
+                      <PackageDeleteButton id={row.id} title={row.baslik ?? ""} iconOnly />
                     </div>
                   </AdminTableCell>
                   </AdminTableRow>

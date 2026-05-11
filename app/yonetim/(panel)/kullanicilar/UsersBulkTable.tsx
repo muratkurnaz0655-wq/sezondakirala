@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { useMemo, useState, useTransition } from "react";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Check } from "lucide-react";
 import { updateUserRole, updateUsersRoleBulk } from "@/app/actions/admin";
 import { AdminActionButton } from "@/components/admin/AdminActionButton";
+import { AdminBadge, type AdminBadgeVariant } from "@/components/admin/AdminBadge";
 import { AdminSelect } from "@/components/admin/AdminFormControls";
 import {
   AdminDataTable,
@@ -24,11 +25,17 @@ export type UserTableRow = {
   hesap_durumu?: string | null;
 };
 
-function rolBadge(rol: string) {
-  const base = "inline-flex rounded-full border px-2.5 py-0.5 text-xs font-medium";
-  if (rol === "admin") return `${base} bg-purple-50 text-purple-700 border-purple-200`;
-  if (rol === "ilan_sahibi") return `${base} bg-blue-50 text-blue-700 border-blue-200`;
-  return `${base} bg-slate-100 text-slate-600 border-slate-200`;
+function userRolBadgeVariant(rol: string): AdminBadgeVariant {
+  if (rol === "admin") return "purple";
+  if (rol === "ilan_sahibi") return "blue";
+  return "neutral";
+}
+
+function avatarBackground(id: string) {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = id.charCodeAt(i) + ((h << 5) - h);
+  const hue = Math.abs(h) % 360;
+  return `hsl(${hue} 52% 46%)`;
 }
 
 export function UsersBulkTable({
@@ -78,54 +85,91 @@ export function UsersBulkTable({
               <input type="checkbox" checked={allSelected} onChange={toggleAll} aria-label="Tümünü seç" />
             </AdminTableHeaderCell>
             <AdminTableHeaderCell>Avatar</AdminTableHeaderCell>
-            <AdminTableHeaderCell>Ad</AdminTableHeaderCell>
-            <AdminTableHeaderCell>E-posta</AdminTableHeaderCell>
+            <AdminTableHeaderCell>Kullanıcı</AdminTableHeaderCell>
             <AdminTableHeaderCell>Rol</AdminTableHeaderCell>
             <AdminTableHeaderCell>Kayıt</AdminTableHeaderCell>
-            <AdminTableHeaderCell>Rez.</AdminTableHeaderCell>
-            <AdminTableHeaderCell>İlan</AdminTableHeaderCell>
+            <AdminTableHeaderCell className="text-right">Rez.</AdminTableHeaderCell>
+            <AdminTableHeaderCell className="text-right">İlan</AdminTableHeaderCell>
             <AdminTableHeaderCell>İşlem</AdminTableHeaderCell>
           </tr>
         </AdminTableHead>
         <tbody>
           {users.map((user) => {
             const initial = (user.ad_soyad?.[0] ?? user.email?.[0] ?? "?").toUpperCase();
-            const duplicateName = user.ad_soyad && duplicateNames.includes(user.ad_soyad.toLocaleLowerCase("tr"));
+            const nameKey = user.ad_soyad?.trim().toLocaleLowerCase("tr") ?? "";
+            const duplicateName = Boolean(nameKey) && duplicateNames.includes(nameKey);
+            const rez = reservationCountMap[user.id] ?? 0;
+            const ilan = listingCountMap[user.id] ?? 0;
+            const kayit = user.olusturulma_tarihi
+              ? new Date(user.olusturulma_tarihi).toLocaleDateString("tr-TR", {
+                  day: "2-digit",
+                  month: "2-digit",
+                  year: "numeric",
+                })
+              : "-";
             return (
               <AdminTableRow key={user.id}>
                 <AdminTableCell>
-                  <input type="checkbox" checked={selectedIds.includes(user.id)} onChange={() => toggleOne(user.id)} aria-label={`${user.ad_soyad ?? user.email} seç`} />
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.includes(user.id)}
+                    onChange={() => toggleOne(user.id)}
+                    aria-label={`${user.ad_soyad ?? user.email} seç`}
+                  />
                 </AdminTableCell>
                 <AdminTableCell>
-                  <div className="flex h-9 w-9 items-center justify-center rounded-xl text-sm font-bold text-white" style={{ background: "linear-gradient(135deg, #0EA5E9, #22C55E)" }}>
+                  <div
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-semibold text-white"
+                    style={{ backgroundColor: avatarBackground(user.id) }}
+                  >
                     {initial}
                   </div>
                 </AdminTableCell>
                 <AdminTableCell>
-                  <Link href={`/yonetim/kullanicilar/${user.id}`} className="inline-flex items-center gap-1 font-medium text-sky-700 hover:underline">
-                    {user.ad_soyad ?? "-"}
-                    {duplicateName ? <AlertTriangle className="h-4 w-4 text-amber-500" aria-label="Bu isimde başka bir kullanıcı mevcut" /> : null}
-                  </Link>
-                  {duplicateName ? <p className="text-xs text-amber-600">Bu isimde başka bir kullanıcı mevcut</p> : null}
+                  <div className="flex min-w-0 items-start gap-1.5">
+                    <Link
+                      href={`/yonetim/kullanicilar/${user.id}`}
+                      className="min-w-0 font-semibold text-[#1E293B] hover:underline"
+                    >
+                      {user.ad_soyad ?? "-"}
+                    </Link>
+                    {duplicateName ? (
+                      <span className="inline-flex shrink-0" title="Bu isimde başka kullanıcı var">
+                        <AlertTriangle className="h-4 w-4 text-amber-500" aria-hidden />
+                      </span>
+                    ) : null}
+                  </div>
+                  <p className="text-[11px] text-[#94A3B8]">{user.email ?? "-"}</p>
+                  <p className="text-[11px] text-[#94A3B8]">{user.telefon?.trim() ? user.telefon : "—"}</p>
                 </AdminTableCell>
-                <AdminTableCell className="text-slate-500">{user.email}</AdminTableCell>
                 <AdminTableCell>
-                  <span className={rolBadge(String(user.rol))}>{user.rol}</span>
+                  <AdminBadge variant={userRolBadgeVariant(String(user.rol))}>{user.rol}</AdminBadge>
                 </AdminTableCell>
-                <AdminTableCell className="text-slate-500">
-                  {user.olusturulma_tarihi ? new Date(user.olusturulma_tarihi).toLocaleDateString("tr-TR") : "-"}
+                <AdminTableCell className="text-[#64748B]">{kayit}</AdminTableCell>
+                <AdminTableCell className={`text-right tabular-nums ${rez === 0 ? "text-[#94A3B8]" : "font-medium text-[#1E293B]"}`}>
+                  {rez}
                 </AdminTableCell>
-                <AdminTableCell className="text-slate-500">{reservationCountMap[user.id] ?? 0}</AdminTableCell>
-                <AdminTableCell className="text-slate-500">{listingCountMap[user.id] ?? 0}</AdminTableCell>
+                <AdminTableCell className={`text-right tabular-nums ${ilan === 0 ? "text-[#94A3B8]" : "font-medium text-[#1E293B]"}`}>
+                  {ilan}
+                </AdminTableCell>
                 <AdminTableCell>
-                  <form action={updateUserRole} className="flex items-center gap-2">
+                  <form action={updateUserRole} className="flex flex-wrap items-center gap-2">
                     <input type="hidden" name="id" value={user.id} />
-                    <AdminSelect name="rol" defaultValue={user.rol ?? "ziyaretci"} className="w-32">
+                    <AdminSelect name="rol" defaultValue={user.rol ?? "ziyaretci"} className="min-w-[7.5rem] max-w-[10rem]">
                       <option value="ziyaretci">ziyaretci</option>
                       <option value="ilan_sahibi">ilan_sahibi</option>
                       <option value="admin">admin</option>
                     </AdminSelect>
-                    <AdminActionButton type="submit" variant="success">✓ Kaydet</AdminActionButton>
+                    <AdminActionButton
+                      type="submit"
+                      variant="success"
+                      size="sm"
+                      title="Kaydet"
+                      className="h-8 w-8 shrink-0 gap-0 p-0"
+                    >
+                      <Check className="h-4 w-4" strokeWidth={2.5} aria-hidden />
+                      <span className="sr-only">Kaydet</span>
+                    </AdminActionButton>
                   </form>
                 </AdminTableCell>
               </AdminTableRow>
@@ -138,10 +182,7 @@ export function UsersBulkTable({
         <div className="sticky bottom-4 z-20 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-xl">
           <span className="text-sm font-semibold text-slate-700">{selectedIds.length} kullanıcı seçildi</span>
           <div className="flex flex-wrap items-center gap-2">
-            <AdminActionButton
-              href={`mailto:${selectedEmails.join(",")}`}
-              variant="secondary"
-            >
+            <AdminActionButton href={`mailto:${selectedEmails.join(",")}`} variant="secondary">
               Seçilenlere E-posta Gönder
             </AdminActionButton>
             <AdminSelect value={bulkRole} onChange={(event) => setBulkRole(event.target.value)} className="w-36">

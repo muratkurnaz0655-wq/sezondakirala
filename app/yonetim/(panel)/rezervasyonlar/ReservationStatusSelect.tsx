@@ -38,7 +38,8 @@ export function ReservationStatusSelect({
         value={status}
         onChange={(e) => handleChange(e.target.value)}
         disabled={isPending}
-        className={`cursor-pointer rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 transition-all duration-200 hover:shadow-md active:scale-[0.98] focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${
+        title="Rezervasyon durumunu güncelle"
+        className={`min-w-[8.5rem] cursor-pointer rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-2.5 py-1.5 text-sm text-[#1E293B] transition-all focus:border-[#185FA5] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#185FA5]/20 ${
           isPending ? "opacity-60" : ""
         }`}
       >

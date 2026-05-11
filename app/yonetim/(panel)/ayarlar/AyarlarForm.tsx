@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { Save } from "lucide-react";
 import { ayarlariKaydet } from "./actions";
+import { AdminFormField, AdminInput } from "@/components/admin/AdminFormControls";
+import { AdminActionButton } from "@/components/admin/AdminActionButton";
 
 export type AyarlarFormMevcut = {
   tursab_no: string;
@@ -32,72 +34,51 @@ export function AyarlarForm({ mevcutAyarlar }: AyarlarFormProps) {
   }
 
   return (
-    <form onSubmit={(ev) => void handleSubmit(ev)} className="space-y-6">
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h3 className="mb-5 flex items-center gap-2 border-b border-slate-100 pb-4 text-base font-semibold text-slate-800">📞 İletişim Bilgileri</h3>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-slate-600">WhatsApp Numarası</label>
-            <input
-              name="whatsapp_number"
-              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-800 transition-all placeholder:text-slate-400 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-              defaultValue={mevcutAyarlar.whatsapp_number}
-            />
-          </div>
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-slate-600">İletişim Telefonu</label>
-            <input
-              name="iletisim_telefon"
-              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-800 transition-all placeholder:text-slate-400 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-              defaultValue={mevcutAyarlar.iletisim_telefon}
-            />
-          </div>
-          <div className="col-span-2">
-            <label className="mb-1.5 block text-sm font-medium text-slate-400">E-posta</label>
-            <input
-              name="iletisim_email"
-              type="email"
-              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-800 transition-all placeholder:text-slate-400 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-              defaultValue={mevcutAyarlar.iletisim_email}
-            />
-          </div>
+    <form onSubmit={(ev) => void handleSubmit(ev)} className="space-y-8">
+      <div>
+        <h3 className="mb-4 border-b border-[#F1F5F9] pb-3 text-sm font-semibold text-[#1E293B]">İletişim Bilgileri</h3>
+        <div className="grid gap-5 md:grid-cols-2">
+          <AdminFormField label="WhatsApp Numarası">
+            <AdminInput name="whatsapp_number" defaultValue={mevcutAyarlar.whatsapp_number} />
+          </AdminFormField>
+          <AdminFormField label="İletişim Telefonu">
+            <AdminInput name="iletisim_telefon" defaultValue={mevcutAyarlar.iletisim_telefon} />
+          </AdminFormField>
+          <AdminFormField label="E-posta" className="md:col-span-2">
+            <AdminInput name="iletisim_email" type="email" defaultValue={mevcutAyarlar.iletisim_email} />
+          </AdminFormField>
         </div>
       </div>
 
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h3 className="mb-5 flex items-center gap-2 border-b border-slate-100 pb-4 text-base font-semibold text-slate-800">🏢 Platform Bilgileri</h3>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-slate-600">TURSAB Belge No</label>
-            <input name="tursab_no" className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-800 transition-all placeholder:text-slate-400 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20" defaultValue={mevcutAyarlar.tursab_no} />
-          </div>
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-slate-600">Komisyon Oranı (%)</label>
-            <input
+      <div>
+        <h3 className="mb-4 border-b border-[#F1F5F9] pb-3 text-sm font-semibold text-[#1E293B]">Platform Bilgileri</h3>
+        <div className="grid gap-5 md:grid-cols-2">
+          <AdminFormField label="TURSAB Belge No">
+            <AdminInput name="tursab_no" defaultValue={mevcutAyarlar.tursab_no} />
+          </AdminFormField>
+          <AdminFormField label="Komisyon Oranı (%)">
+            <AdminInput
               name="komisyon_orani"
               type="number"
               min={0}
               max={100}
-              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-800 transition-all placeholder:text-slate-400 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
               defaultValue={Math.round((mevcutAyarlar.komisyon_orani ?? 0.1) * 100)}
             />
-          </div>
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-slate-600">Site Adı</label>
-            <input name="site_adi" className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-800 transition-all placeholder:text-slate-400 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20" defaultValue={mevcutAyarlar.site_adi} />
-          </div>
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-slate-400">Slogan</label>
-            <input name="site_slogan" className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-800 transition-all placeholder:text-slate-400 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20" defaultValue={mevcutAyarlar.site_slogan} />
-          </div>
+          </AdminFormField>
+          <AdminFormField label="Site Adı">
+            <AdminInput name="site_adi" defaultValue={mevcutAyarlar.site_adi} />
+          </AdminFormField>
+          <AdminFormField label="Slogan">
+            <AdminInput name="site_slogan" defaultValue={mevcutAyarlar.site_slogan} />
+          </AdminFormField>
         </div>
       </div>
 
-      <div className="mt-6 flex justify-end">
-        <button type="submit" disabled={yukleniyor} className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-lg shadow-[#0e9aa7]/25 transition-all duration-200 hover:scale-[1.02] hover:bg-blue-700 active:scale-[0.98] disabled:opacity-50">
-          <Save className="h-4 w-4" />
-          {yukleniyor ? "Kaydediliyor..." : "💾 Değişiklikleri Kaydet"}
-        </button>
+      <div className="flex justify-end border-t border-[#F1F5F9] pt-6">
+        <AdminActionButton type="submit" disabled={yukleniyor} variant="success" size="md">
+          <Save className="h-4 w-4" aria-hidden />
+          {yukleniyor ? "Kaydediliyor..." : "Değişiklikleri Kaydet"}
+        </AdminActionButton>
       </div>
       {durum ? (
         <span
@@ -105,7 +86,6 @@ export function AyarlarForm({ mevcutAyarlar }: AyarlarFormProps) {
             durum.toLowerCase().includes("kaydedildi") ? "text-emerald-600" : "text-red-600"
           }`}
         >
-          {durum.toLowerCase().includes("kaydedildi") ? "✅ " : "❌ "}
           {durum}
         </span>
       ) : null}

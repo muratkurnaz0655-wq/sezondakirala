@@ -73,7 +73,7 @@ export default async function AdminSettingsPage() {
     >
       <AdminStatsRow
         items={[
-          { label: "TURSAB No", value: mevcutAyarlar.tursab_no, tone: "info" },
+          { label: "TURSAB No", value: mevcutAyarlar.tursab_no, tone: "default" },
           { label: "Komisyon", value: `%${Math.round((mevcutAyarlar.komisyon_orani ?? 0) * 100)}`, tone: "warning" },
           { label: "WhatsApp", value: formatWhatsappTrDisplay(mevcutAyarlar.whatsapp_number), tone: "success" },
           {
@@ -81,7 +81,7 @@ export default async function AdminSettingsPage() {
             value: ayarlar?.olusturulma_tarihi
               ? new Date(ayarlar.olusturulma_tarihi).toLocaleString("tr-TR")
               : "-",
-            tone: "default",
+            tone: "muted",
           },
         ]}
       />

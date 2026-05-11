@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, useTransition } from "react";
+import { Pencil } from "lucide-react";
 import {
   deletePackageMedia,
   reorderPackageDetailMedia,
@@ -30,7 +31,19 @@ type PackageRow = {
   paket_medyalari?: { id: string; url: string; tip: string; sira: number }[] | null;
 };
 
-export function PackageEditButton({ pkg, listings }: { pkg: PackageRow; listings: ListingItem[] }) {
+const iconTriggerClass =
+  "inline-flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-[6px] border-[0.5px] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 border-[#185FA5]/60 text-[#185FA5] hover:bg-[#185FA5]/12";
+
+export function PackageEditButton({
+  pkg,
+  listings,
+  iconOnly = false,
+}: {
+  pkg: PackageRow;
+  listings: ListingItem[];
+  /** Tablo satırı: kalem ikonu */
+  iconOnly?: boolean;
+}) {
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [mediaPending, startMediaTransition] = useTransition();
@@ -120,15 +133,30 @@ export function PackageEditButton({ pkg, listings }: { pkg: PackageRow; listings
 
   return (
     <>
-      <AdminActionButton
-        onClick={() => {
-          setMediaRows((pkg.paket_medyalari ?? []) as NonNullable<PackageRow["paket_medyalari"]>);
-          setOpen(true);
-        }}
-        variant="secondary"
-      >
-        Düzenle
-      </AdminActionButton>
+      {iconOnly ? (
+        <button
+          type="button"
+          title="Düzenle"
+          aria-label="Düzenle"
+          onClick={() => {
+            setMediaRows((pkg.paket_medyalari ?? []) as NonNullable<PackageRow["paket_medyalari"]>);
+            setOpen(true);
+          }}
+          className={iconTriggerClass}
+        >
+          <Pencil className="h-4 w-4" strokeWidth={2} aria-hidden />
+        </button>
+      ) : (
+        <AdminActionButton
+          onClick={() => {
+            setMediaRows((pkg.paket_medyalari ?? []) as NonNullable<PackageRow["paket_medyalari"]>);
+            setOpen(true);
+          }}
+          variant="secondary"
+        >
+          Düzenle
+        </AdminActionButton>
+      )}
       {open && (
         <div
           onClick={() => setOpen(false)}

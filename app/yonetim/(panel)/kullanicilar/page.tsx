@@ -7,16 +7,16 @@ import { AdminActionButton } from "@/components/admin/AdminActionButton";
 import { AdminMobileCard, AdminMobileCardList } from "@/components/admin/AdminMobileCardList";
 import { UsersBulkTable, type UserTableRow } from "./UsersBulkTable";
 import { AdminEmptyState } from "@/components/admin/AdminEmptyState";
+import { AdminBadge, type AdminBadgeVariant } from "@/components/admin/AdminBadge";
 
 type AdminUsersPageProps = {
   searchParams: Promise<{ q?: string; siralama?: string }>;
 };
 
-function rolBadge(rol: string) {
-  const base = "inline-flex rounded-full border px-2.5 py-0.5 text-xs font-medium";
-  if (rol === "admin") return `${base} bg-purple-50 text-purple-700 border-purple-200`;
-  if (rol === "ilan_sahibi") return `${base} bg-blue-50 text-blue-700 border-blue-200`;
-  return `${base} bg-slate-100 text-slate-600 border-slate-200`;
+function userRolBadgeVariant(rol: string): AdminBadgeVariant {
+  if (rol === "admin") return "purple";
+  if (rol === "ilan_sahibi") return "blue";
+  return "neutral";
 }
 
 export default async function AdminUsersPage({ searchParams }: AdminUsersPageProps) {
@@ -73,12 +73,12 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
         items={[
           { label: "Toplam", value: totalUsers, tone: "default" },
           { label: "Admin", value: adminCount, tone: "purple" },
-          { label: "İlan Sahibi", value: ownerCount, tone: "info" },
+          { label: "İlan Sahibi", value: ownerCount, tone: "success" },
           { label: "Ziyaretçi", value: visitorCount, tone: "warning" },
         ]}
       />
 
-      <AdminFilterBar className="mb-6 flex flex-col items-stretch gap-3 sm:flex-row sm:items-end" method="get">
+      <AdminFilterBar className="mb-6 flex flex-col items-stretch gap-4 sm:flex-row sm:items-end" method="get">
         <div className="min-w-0 flex-1">
           <AdminFormField label="Ara">
             <AdminInput
@@ -117,7 +117,9 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
           <AdminMobileCard key={user.id}>
             <p className="text-sm font-semibold text-slate-800">{user.ad_soyad ?? "-"}</p>
             <p className="mt-1 text-xs text-slate-500">{user.email}</p>
-            <div className="mt-2"><span className={rolBadge(String(user.rol))}>{user.rol}</span></div>
+            <div className="mt-2">
+              <AdminBadge variant={userRolBadgeVariant(String(user.rol))}>{user.rol}</AdminBadge>
+            </div>
           </AdminMobileCard>
         ))}
       </AdminMobileCardList>

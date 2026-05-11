@@ -229,7 +229,7 @@ export default async function AdminListingsPage({ searchParams }: AdminListingsP
           { label: "Villa / Tekne", value: `${villaCount} / ${tekneCount}`, tone: "info" },
         ]}
       />
-      <AdminFilterBar className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-6">
+      <AdminFilterBar className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-6">
         <AdminFormField label="Arama">
           <AdminInput
             name="q"
@@ -278,26 +278,27 @@ export default async function AdminListingsPage({ searchParams }: AdminListingsP
       </AdminFilterBar>
       <p className="text-sm text-slate-500">{filteredListings.length} ilan</p>
 
-      <AdminSegmentedTabs
-        activeKey={filtre}
-        items={[
-          { key: "tumu", label: "Tümü", href: "/yonetim/ilanlar?filtre=tumu" },
-          { key: "villa", label: "Villa", href: "/yonetim/ilanlar?filtre=villa" },
-          { key: "tekne", label: "Tekne", href: "/yonetim/ilanlar?filtre=tekne" },
-          { key: "aktif", label: "Aktif", href: "/yonetim/ilanlar?filtre=aktif" },
-          { key: "pasif", label: "Pasif", href: "/yonetim/ilanlar?filtre=pasif" },
-        ]}
-      />
-
-      <AdminSegmentedTabs
-        activeKey={durum || "tum_durumlar"}
-        items={[
-          { key: "tum_durumlar", label: "Tüm Durumlar", href: "/yonetim/ilanlar" },
-          { key: "onay_bekliyor", label: "Onay Bekleyen", href: "/yonetim/ilanlar?durum=onay_bekliyor" },
-          { key: "yayinda", label: "Yayında", href: "/yonetim/ilanlar?durum=yayinda" },
-          { key: "reddedildi", label: "Reddedildi", href: "/yonetim/ilanlar?durum=reddedildi" },
-        ]}
-      />
+      <div className="space-y-3">
+        <AdminSegmentedTabs
+          activeKey={filtre}
+          items={[
+            { key: "tumu", label: "Tümü", href: "/yonetim/ilanlar?filtre=tumu" },
+            { key: "villa", label: "Villa", href: "/yonetim/ilanlar?filtre=villa" },
+            { key: "tekne", label: "Tekne", href: "/yonetim/ilanlar?filtre=tekne" },
+            { key: "aktif", label: "Aktif", href: "/yonetim/ilanlar?filtre=aktif" },
+            { key: "pasif", label: "Pasif", href: "/yonetim/ilanlar?filtre=pasif" },
+          ]}
+        />
+        <AdminSegmentedTabs
+          activeKey={durum || "tum_durumlar"}
+          items={[
+            { key: "tum_durumlar", label: "Tüm Durumlar", href: "/yonetim/ilanlar" },
+            { key: "onay_bekliyor", label: "Onay Bekleyen", href: "/yonetim/ilanlar?durum=onay_bekliyor" },
+            { key: "yayinda", label: "Yayında", href: "/yonetim/ilanlar?durum=yayinda" },
+            { key: "reddedildi", label: "Reddedildi", href: "/yonetim/ilanlar?durum=reddedildi" },
+          ]}
+        />
+      </div>
       {listingsResult.error ? (
         <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
           İlanlar listelenirken sorgu hatası oluştu: {listingsResult.error.message}

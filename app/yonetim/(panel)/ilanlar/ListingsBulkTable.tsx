@@ -3,6 +3,7 @@
 import { useMemo, useState, useTransition } from "react";
 import { Home } from "lucide-react";
 import { AdminActionButton } from "@/components/admin/AdminActionButton";
+import { AdminBadge, type AdminBadgeVariant } from "@/components/admin/AdminBadge";
 import {
   AdminDataTable,
   AdminTableCell,
@@ -32,6 +33,20 @@ export type ListingTableRow = {
 };
 
 export { listingCoverImageUrl } from "./listing-cover";
+
+function onayBadgeVariant(onay: ListingTableRow["onay_durumu"]): AdminBadgeVariant {
+  if (onay === "yayinda") return "success";
+  if (onay === "onay_bekliyor") return "warning";
+  if (onay === "reddedildi") return "danger";
+  return "neutral";
+}
+
+function onayLabel(onay: ListingTableRow["onay_durumu"]) {
+  if (onay === "yayinda") return "Yayında";
+  if (onay === "onay_bekliyor") return "Onay Bekliyor";
+  if (onay === "reddedildi") return "Reddedildi";
+  return "Taslak";
+}
 
 export function ListingsBulkTable({ listings }: { listings: ListingTableRow[] }) {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -73,7 +88,7 @@ export function ListingsBulkTable({ listings }: { listings: ListingTableRow[] })
             <AdminTableHeaderCell className="w-[64px]">Kapak</AdminTableHeaderCell>
             <AdminTableHeaderCell>İlan</AdminTableHeaderCell>
             <AdminTableHeaderCell>Tip</AdminTableHeaderCell>
-            <AdminTableHeaderCell>Fiyat</AdminTableHeaderCell>
+            <AdminTableHeaderCell align="right">Fiyat</AdminTableHeaderCell>
             <AdminTableHeaderCell>Durum</AdminTableHeaderCell>
             <AdminTableHeaderCell align="right">İşlemler</AdminTableHeaderCell>
           </tr>
@@ -92,52 +107,34 @@ export function ListingsBulkTable({ listings }: { listings: ListingTableRow[] })
                   />
                 </AdminTableCell>
                 <AdminTableCell className="w-[64px]">
-                  <div className="h-12 w-12 shrink-0 overflow-hidden rounded-[8px] bg-slate-200">
+                  <div className="h-11 w-11 shrink-0 overflow-hidden rounded-lg border border-[#E2E8F0] bg-[#F8FAFC]">
                     {url ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={url} alt="" className="h-full w-full object-cover" width={48} height={48} />
+                      <img src={url} alt="" className="h-full w-full object-cover" width={44} height={44} />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center">
-                        <Home className="h-5 w-5 text-slate-500" aria-hidden />
+                        <Home className="h-5 w-5 text-[#94A3B8]" aria-hidden />
                       </div>
                     )}
                   </div>
                 </AdminTableCell>
                 <AdminTableCell>
                   <div>
-                    <p className="line-clamp-1 text-sm font-semibold text-slate-800">{row.baslik}</p>
-                    <p className="mt-0.5 text-xs text-slate-400">{row.konum}</p>
+                    <p className="line-clamp-1 text-sm font-semibold text-[#1E293B]">{row.baslik}</p>
+                    <p className="mt-0.5 text-xs text-[#64748B]">{row.konum}</p>
                   </div>
                 </AdminTableCell>
                 <AdminTableCell>
-                  <span className="rounded-md bg-slate-100 px-2 py-1 text-xs font-medium capitalize text-slate-600">
+                  <span className="rounded-md border border-[#E2E8F0] bg-[#F8FAFC] px-2 py-1 text-xs font-medium capitalize text-[#64748B]">
                     {row.tip}
                   </span>
                 </AdminTableCell>
-                <AdminTableCell>
-                  <span className="font-semibold text-slate-800">{formatCurrency(Number(row.gunluk_fiyat ?? 0))}</span>
-                  <span className="text-xs text-slate-500"> /gece</span>
+                <AdminTableCell className="text-right">
+                  <span className="font-semibold text-[#1E293B]">{formatCurrency(Number(row.gunluk_fiyat ?? 0))}</span>
+                  <span className="text-xs text-[#94A3B8]"> /gece</span>
                 </AdminTableCell>
                 <AdminTableCell>
-                  <span
-                    className={`rounded-full border px-2.5 py-0.5 text-xs font-medium ${
-                      row.onay_durumu === "yayinda"
-                        ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                        : row.onay_durumu === "onay_bekliyor"
-                          ? "border-amber-200 bg-amber-50 text-amber-700"
-                          : row.onay_durumu === "reddedildi"
-                            ? "border-red-200 bg-red-50 text-red-700"
-                            : "border-slate-200 bg-slate-100 text-slate-600"
-                    }`}
-                  >
-                    {row.onay_durumu === "yayinda"
-                      ? "Yayında"
-                      : row.onay_durumu === "onay_bekliyor"
-                        ? "Onay Bekliyor"
-                        : row.onay_durumu === "reddedildi"
-                          ? "Reddedildi"
-                          : "Taslak"}
-                  </span>
+                  <AdminBadge variant={onayBadgeVariant(row.onay_durumu)}>{onayLabel(row.onay_durumu)}</AdminBadge>
                 </AdminTableCell>
                 <AdminTableCell className="text-right">
                   <div className="flex items-center justify-end">
@@ -151,8 +148,8 @@ export function ListingsBulkTable({ listings }: { listings: ListingTableRow[] })
       </AdminDataTable>
 
       {selectedCount > 0 ? (
-        <div className="sticky bottom-4 z-20 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-xl">
-          <span className="text-sm font-semibold text-slate-700">{selectedTitle}</span>
+        <div className="sticky bottom-4 z-20 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#E2E8F0] bg-white px-4 py-3 shadow-xl">
+          <span className="text-sm font-semibold text-[#1E293B]">{selectedTitle}</span>
           <div className="flex flex-wrap gap-2">
             <AdminActionButton variant="secondary" onClick={() => setConfirmAction("deactivate")} disabled={isPending}>
               Seçilenleri Pasife Al

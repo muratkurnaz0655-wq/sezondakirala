@@ -3,6 +3,15 @@
 import { useState } from "react";
 import { Bell, Globe, History } from "lucide-react";
 import { AdminActionButton } from "@/components/admin/AdminActionButton";
+import { AdminBadge, type AdminBadgeVariant } from "@/components/admin/AdminBadge";
+import { AdminFormField, AdminInput } from "@/components/admin/AdminFormControls";
+import {
+  AdminDataTable,
+  AdminTableCell,
+  AdminTableHead,
+  AdminTableHeaderCell,
+  AdminTableRow,
+} from "@/components/admin/AdminDataTable";
 import { AyarlarForm, type AyarlarFormMevcut } from "./AyarlarForm";
 import { bildirimTercihleriniKaydet, topluBildirimGonder } from "./actions";
 
@@ -14,6 +23,51 @@ type LogRow = {
   entity_tip: string | null;
   entity_baslik: string | null;
 };
+
+function adminLogBadgeVariant(islem: string): AdminBadgeVariant {
+  switch (islem) {
+    case "ilan_eklendi":
+      return "success";
+    case "ilan_silindi":
+    case "rezervasyon_iptal":
+      return "danger";
+    case "ilan_pasife_alindi":
+      return "warning";
+    case "rezervasyon_onaylandi":
+      return "info";
+    case "kullanici_rol_degistirdi":
+      return "purple";
+    default:
+      return "neutral";
+  }
+}
+
+const bildirimSatirlari: {
+  key: "yeni_rezervasyonda_bildir" | "yeni_kullanicida_bildir" | "beklemede_24saat_bildir" | "iptal_edildiginde_bildir";
+  baslik: string;
+  aciklama: string;
+}[] = [
+  {
+    key: "yeni_rezervasyonda_bildir",
+    baslik: "Yeni rezervasyonda bildir",
+    aciklama: "Yeni bir rezervasyon oluştuğunda yönetici bildirimi alırsınız.",
+  },
+  {
+    key: "yeni_kullanicida_bildir",
+    baslik: "Yeni kullanıcı kaydında bildir",
+    aciklama: "Siteye yeni kullanıcı kaydı geldiğinde haberdar olun.",
+  },
+  {
+    key: "beklemede_24saat_bildir",
+    baslik: "24 saat beklemedeki rezervasyonlarda uyar",
+    aciklama: "Uzun süre onay bekleyen rezervasyonlar için uyarı.",
+  },
+  {
+    key: "iptal_edildiginde_bildir",
+    baslik: "İptal edildiğinde bildir",
+    aciklama: "Rezervasyon iptallerinde bildirim gönderilir.",
+  },
+];
 
 export function AyarlarTabs({
   mevcutAyarlar,
@@ -39,99 +93,150 @@ export function AyarlarTabs({
     iptal_edildiginde_bildir: preferences?.iptal_edildiginde_bildir ?? true,
   });
 
+  const tabs: { id: typeof activeTab; label: string; icon: typeof Globe }[] = [
+    { id: "genel", label: "Genel Ayarlar", icon: Globe },
+    { id: "log", label: "İşlem Geçmişi", icon: History },
+    { id: "bildirim", label: "Bildirim Tercihleri", icon: Bell },
+  ];
+
   return (
-    <section className="w-full max-w-5xl rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-      <div className="mb-5 flex flex-wrap gap-2 border-b border-slate-100 pb-4">
-        <AdminActionButton variant={activeTab === "genel" ? "primary" : "secondary"} onClick={() => setActiveTab("genel")}>
-          <Globe className="h-4 w-4" />
-          Genel Ayarlar
-        </AdminActionButton>
-        <AdminActionButton variant={activeTab === "log" ? "primary" : "secondary"} onClick={() => setActiveTab("log")}>
-          <History className="h-4 w-4" />
-          İşlem Geçmişi
-        </AdminActionButton>
-        <AdminActionButton variant={activeTab === "bildirim" ? "primary" : "secondary"} onClick={() => setActiveTab("bildirim")}>
-          <Bell className="h-4 w-4" />
-          Bildirim Tercihleri
-        </AdminActionButton>
+    <section className="w-full max-w-5xl overflow-hidden rounded-xl border border-[#E2E8F0] bg-white shadow-sm">
+      <div
+        role="tablist"
+        aria-label="Ayarlar sekmeleri"
+        className="flex flex-wrap gap-0 rounded-t-xl border-b border-[#E2E8F0] bg-white px-1 pt-1"
+      >
+        {tabs.map((tab) => {
+          const active = activeTab === tab.id;
+          const Icon = tab.icon;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              role="tab"
+              aria-selected={active}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-2 rounded-t-lg px-4 py-3 text-sm transition-colors duration-150 ${
+                active
+                  ? "border-b-2 border-[#185FA5] bg-white font-medium text-[#185FA5]"
+                  : "border-b-2 border-transparent font-normal text-[#64748B] hover:text-[#1E293B]"
+              }`}
+            >
+              <Icon className="h-4 w-4 shrink-0 opacity-90" aria-hidden />
+              {tab.label}
+            </button>
+          );
+        })}
       </div>
 
-      {activeTab === "genel" ? <AyarlarForm mevcutAyarlar={mevcutAyarlar} /> : null}
+      <div className="p-5 md:p-6">
+        {activeTab === "genel" ? <AyarlarForm mevcutAyarlar={mevcutAyarlar} /> : null}
 
-      {activeTab === "log" ? (
-        <div className="overflow-hidden rounded-2xl border border-slate-200">
-          <table className="w-full min-w-[760px] text-sm">
-            <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+        {activeTab === "log" ? (
+          <AdminDataTable minWidthClass="min-w-[720px]">
+            <AdminTableHead>
               <tr>
-                <th className="px-4 py-3 text-left">Tarih</th>
-                <th className="px-4 py-3 text-left">Kullanıcı</th>
-                <th className="px-4 py-3 text-left">İşlem</th>
-                <th className="px-4 py-3 text-left">Etkilenen kayıt</th>
+                <AdminTableHeaderCell>Tarih</AdminTableHeaderCell>
+                <AdminTableHeaderCell>Kullanıcı</AdminTableHeaderCell>
+                <AdminTableHeaderCell>İşlem</AdminTableHeaderCell>
+                <AdminTableHeaderCell>Etkilenen</AdminTableHeaderCell>
               </tr>
-            </thead>
+            </AdminTableHead>
             <tbody>
               {logs.length ? (
                 logs.map((log) => (
-                  <tr key={log.id} className="border-t border-slate-100 hover:bg-slate-50">
-                    <td className="px-4 py-3">{new Date(log.olusturulma_tarihi).toLocaleString("tr-TR")}</td>
-                    <td className="px-4 py-3">{log.kullanici_email ?? "-"}</td>
-                    <td className="px-4 py-3">{log.islem}</td>
-                    <td className="px-4 py-3">{log.entity_baslik ?? log.entity_tip ?? "-"}</td>
-                  </tr>
+                  <AdminTableRow key={log.id}>
+                    <AdminTableCell className="whitespace-nowrap text-[#64748B]">
+                      {new Date(log.olusturulma_tarihi).toLocaleString("tr-TR")}
+                    </AdminTableCell>
+                    <AdminTableCell className="text-[#1E293B]">{log.kullanici_email ?? "-"}</AdminTableCell>
+                    <AdminTableCell>
+                      <AdminBadge variant={adminLogBadgeVariant(log.islem)}>{log.islem}</AdminBadge>
+                    </AdminTableCell>
+                    <AdminTableCell className="text-[#64748B]">{log.entity_baslik ?? log.entity_tip ?? "-"}</AdminTableCell>
+                  </AdminTableRow>
                 ))
               ) : (
-                <tr>
-                  <td colSpan={4} className="px-4 py-8 text-center text-slate-500">Henüz kayıt yok</td>
-                </tr>
+                <AdminTableRow>
+                  <AdminTableCell colSpan={4} className="py-10 text-center text-[#64748B]">
+                    Henüz kayıt yok
+                  </AdminTableCell>
+                </AdminTableRow>
               )}
             </tbody>
-          </table>
-        </div>
-      ) : null}
+          </AdminDataTable>
+        ) : null}
 
-      {activeTab === "bildirim" ? (
-        <div className="space-y-6">
-          <form action={topluBildirimGonder} className="space-y-3 rounded-2xl border border-slate-200 p-4">
-            <h3 className="text-sm font-semibold text-slate-800">Tüm Kullanıcılara Duyuru Gönder</h3>
-            <input
-              name="baslik"
-              required
-              placeholder="Bildirim başlığı"
-              className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-700 outline-none focus:border-blue-500"
-            />
-            <textarea
-              name="mesaj"
-              required
-              rows={4}
-              placeholder="Kullanıcıların zilden göreceği duyuru mesajı..."
-              className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-700 outline-none focus:border-blue-500"
-            />
-            <AdminActionButton type="submit" variant="primary">Bildirim Gönder</AdminActionButton>
-          </form>
-
-          <form action={bildirimTercihleriniKaydet} className="space-y-3">
-            <input type="hidden" name="id" value={localPreferences.id} />
-            {[
-              ["yeni_rezervasyonda_bildir", "Yeni rezervasyonda bildir"],
-              ["yeni_kullanicida_bildir", "Yeni kullanıcı kaydında bildir"],
-              ["beklemede_24saat_bildir", "24 saat beklemedeki rezervasyonlarda uyar"],
-              ["iptal_edildiginde_bildir", "İptal edildiğinde bildir"],
-            ].map(([key, label]) => (
-              <label key={key} className="flex items-center justify-between rounded-xl border border-slate-200 px-4 py-3 text-sm font-medium text-slate-700">
-                {label}
-                <input
-                  name={key}
-                  type="checkbox"
-                  checked={localPreferences[key as keyof typeof localPreferences] as boolean}
-                  onChange={(event) => setLocalPreferences((current) => ({ ...current, [key]: event.target.checked }))}
-                  className="h-5 w-5 accent-blue-600"
+        {activeTab === "bildirim" ? (
+          <div className="space-y-8">
+            <form action={topluBildirimGonder} className="space-y-4 rounded-xl border border-[#E2E8F0] bg-[#F8FAFC]/40 p-5">
+              <h3 className="text-sm font-semibold text-[#1E293B]">Tüm Kullanıcılara Duyuru Gönder</h3>
+              <AdminFormField label="Başlık">
+                <AdminInput name="baslik" required placeholder="Bildirim başlığı" />
+              </AdminFormField>
+              <AdminFormField label="Mesaj">
+                <textarea
+                  name="mesaj"
+                  required
+                  rows={4}
+                  placeholder="Kullanıcıların göreceği duyuru metni..."
+                  className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3.5 py-2.5 text-sm text-[#1E293B] transition-all placeholder:text-[#94A3B8] focus:border-[#185FA5] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#185FA5]/20"
                 />
-              </label>
-            ))}
-            <AdminActionButton type="submit" variant="primary">Tercihleri Kaydet</AdminActionButton>
-          </form>
-        </div>
-      ) : null}
+              </AdminFormField>
+              <AdminActionButton type="submit" variant="primary" size="md">
+                Bildirim Gönder
+              </AdminActionButton>
+            </form>
+
+            <form action={bildirimTercihleriniKaydet} className="space-y-0">
+              <input type="hidden" name="id" value={localPreferences.id} />
+              {bildirimSatirlari.map((row, idx) => {
+                const on = localPreferences[row.key];
+                return (
+                  <div
+                    key={row.key}
+                    className={`flex flex-col gap-4 border-[#F1F5F9] py-4 sm:flex-row sm:items-center sm:justify-between ${
+                      idx < bildirimSatirlari.length - 1 ? "border-b" : ""
+                    }`}
+                  >
+                    <div className="min-w-0 flex-1 pr-4">
+                      <p className="text-sm font-medium text-[#1E293B]">{row.baslik}</p>
+                      <p className="mt-1 text-xs leading-relaxed text-[#64748B]">{row.aciklama}</p>
+                    </div>
+                    <input type="hidden" name={row.key} value={on ? "on" : ""} />
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={on}
+                      title={on ? "Açık" : "Kapalı"}
+                      onClick={() =>
+                        setLocalPreferences((prev) => ({
+                          ...prev,
+                          [row.key]: !prev[row.key],
+                        }))
+                      }
+                      className={`relative h-7 w-12 shrink-0 rounded-full transition-colors ${
+                        on ? "bg-[#1D9E75]" : "bg-[#E2E8F0]"
+                      }`}
+                    >
+                      <span
+                        className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow transition-all ${
+                          on ? "left-6" : "left-1"
+                        }`}
+                      />
+                    </button>
+                  </div>
+                );
+              })}
+              <div className="flex justify-end border-t border-[#F1F5F9] pt-6">
+                <AdminActionButton type="submit" variant="success" size="md">
+                  Kaydet
+                </AdminActionButton>
+              </div>
+            </form>
+          </div>
+        ) : null}
+      </div>
     </section>
   );
 }

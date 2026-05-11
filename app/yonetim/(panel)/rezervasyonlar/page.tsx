@@ -22,6 +22,8 @@ import { normalizeReservationStatus, STATUS_MAP } from "@/lib/reservation-status
 import { ReservationExportButton } from "./ReservationExportButton";
 import { ReservationsCalendarView } from "./ReservationsCalendarView";
 import { AdminEmptyState } from "@/components/admin/AdminEmptyState";
+import { AdminBadge, type AdminBadgeVariant } from "@/components/admin/AdminBadge";
+import { AdminUnderlineTabs } from "@/components/admin/AdminUnderlineTabs";
 
 type AdminReservationsProps = {
   searchParams: Promise<{
@@ -158,12 +160,47 @@ export default async function AdminReservationsPage({ searchParams }: AdminReser
     cikisTarihi: row.cikis_tarihi,
     durum: String(row.durum),
   }));
-  const quickFilterLinks = [
-    { label: "Bugün Oluşan", query: toQueryString(params, { tarih: new Date().toISOString().slice(0, 10) }) },
-    { label: "Beklemede", query: toQueryString(params, { durum: "pending" }) },
-    { label: "Onaylananlar", query: toQueryString(params, { durum: "approved" }) },
-    { label: "Paket Rezervasyonları", query: toQueryString(params, { q: "paket" }) },
+  const todayIso = new Date().toISOString().slice(0, 10);
+  const quickTabs = [
+    {
+      key: "bugun",
+      label: "Bugün Oluşan",
+      href: `/yonetim/rezervasyonlar?${toQueryString(params, { tarih: todayIso })}`,
+    },
+    {
+      key: "beklemede",
+      label: "Beklemede",
+      href: `/yonetim/rezervasyonlar?${toQueryString(params, { durum: "pending" })}`,
+    },
+    {
+      key: "onay",
+      label: "Onaylananlar",
+      href: `/yonetim/rezervasyonlar?${toQueryString(params, { durum: "approved" })}`,
+    },
+    {
+      key: "paket",
+      label: "Paket Rezervasyonları",
+      href: `/yonetim/rezervasyonlar?${toQueryString(params, { q: "paket" })}`,
+    },
   ];
+  const qLower = (params.q ?? "").trim().toLowerCase();
+  const quickActiveKey =
+    params.durum === "pending"
+      ? "beklemede"
+      : params.durum === "approved"
+        ? "onay"
+        : qLower === "paket"
+          ? "paket"
+          : params.tarih === todayIso && !params.baslangic && !params.bitis
+            ? "bugun"
+            : null;
+
+  function rezDurumBadgeVariant(status: string): AdminBadgeVariant {
+    const n = normalizeReservationStatus(status);
+    if (n === "approved") return "success";
+    if (n === "cancelled") return "danger";
+    return "warning";
+  }
 
   return (
     <AdminPageLayout
@@ -176,11 +213,11 @@ export default async function AdminReservationsPage({ searchParams }: AdminReser
           { label: "Beklemede", value: pendingCount, tone: "warning" },
           { label: "Onaylandı", value: approvedCount, tone: "success" },
           { label: "İptal", value: canceledCount, tone: "danger" },
-          { label: "Filtrelenmiş Ciro", value: formatCurrency(filteredRevenue), tone: "info" },
+          { label: "Filtrelenmiş Ciro", value: formatCurrency(filteredRevenue), tone: "purple" },
         ]}
       />
 
-      <AdminFilterBar className="mb-6 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-6">
+      <AdminFilterBar className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-6">
         <AdminFormField label="Arama" className="xl:col-span-2">
           <AdminInput
             name="q"
@@ -247,28 +284,28 @@ export default async function AdminReservationsPage({ searchParams }: AdminReser
           </AdminActionButton>
         </div>
       </AdminFilterBar>
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap gap-2">
-        {quickFilterLinks.map((item) => (
-          <Link
-            key={item.label}
-            href={item.query ? `/yonetim/rezervasyonlar?${item.query}` : "/yonetim/rezervasyonlar"}
-            className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 transition-all duration-200 hover:bg-slate-50 hover:shadow-md active:scale-[0.98]"
-          >
-            {item.label}
-          </Link>
-        ))}
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div className="min-w-0 flex-1">
+          <AdminUnderlineTabs items={quickTabs} activeKey={quickActiveKey} />
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-shrink-0 flex-wrap items-center justify-end gap-2">
           <Link
             href={`/yonetim/rezervasyonlar?${toQueryString(params, { gorunum: "liste" })}`}
-            className={`rounded-lg border px-3 py-2 text-sm font-semibold ${view === "liste" ? "border-blue-200 bg-blue-50 text-blue-700" : "border-slate-200 bg-white text-slate-600"}`}
+            className={`rounded-lg border px-3 py-2 text-sm font-semibold transition-colors duration-150 ${
+              view === "liste"
+                ? "border-[#185FA5] bg-[#185FA5] text-white shadow-sm"
+                : "border-[#E2E8F0] bg-white text-[#64748B] hover:bg-[#F8FAFC]"
+            }`}
           >
             Liste
           </Link>
           <Link
             href={`/yonetim/rezervasyonlar?${toQueryString(params, { gorunum: "takvim" })}`}
-            className={`rounded-lg border px-3 py-2 text-sm font-semibold ${view === "takvim" ? "border-blue-200 bg-blue-50 text-blue-700" : "border-slate-200 bg-white text-slate-600"}`}
+            className={`rounded-lg border px-3 py-2 text-sm font-semibold transition-colors duration-150 ${
+              view === "takvim"
+                ? "border-[#185FA5] bg-[#185FA5] text-white shadow-sm"
+                : "border-[#E2E8F0] bg-white text-[#64748B] hover:bg-[#F8FAFC]"
+            }`}
           >
             Takvim
           </Link>
@@ -326,11 +363,11 @@ export default async function AdminReservationsPage({ searchParams }: AdminReser
               {filteredReservations.map((row) => (
                 <AdminTableRow key={row.id}>
                   <AdminTableCell className="whitespace-nowrap">
-                    <p className="text-sm text-slate-700">
+                    <p className="text-sm font-semibold text-[#1E293B]">
                       {format(new Date(`${row.giris_tarihi}T00:00:00`), "dd.MM.yyyy", { locale: tr })} →{" "}
                       {format(new Date(`${row.cikis_tarihi}T00:00:00`), "dd.MM.yyyy", { locale: tr })}
                     </p>
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-[#64748B]">
                       {Math.max(
                         0,
                         Math.ceil(
@@ -351,12 +388,12 @@ export default async function AdminReservationsPage({ searchParams }: AdminReser
                   <AdminTableCell>
                     <Link
                       href={`/yonetim/kullanicilar?q=${encodeURIComponent(userMap.get(row.kullanici_id) ?? row.kullanici_id)}`}
-                      className="font-medium text-sky-700 hover:underline"
+                      className="font-semibold text-[#185FA5] hover:underline"
                     >
                       {userMap.get(row.kullanici_id) ?? "-"}
                     </Link>
-                    <p className="text-xs text-slate-500">{userDetailMap.get(row.kullanici_id)?.email ?? "-"}</p>
-                    <p className="text-xs text-slate-400">{userDetailMap.get(row.kullanici_id)?.telefon ?? "-"}</p>
+                    <p className="text-[11px] text-[#94A3B8]">{userDetailMap.get(row.kullanici_id)?.email ?? "-"}</p>
+                    <p className="text-[11px] text-[#94A3B8]">{userDetailMap.get(row.kullanici_id)?.telefon ?? "-"}</p>
                   </AdminTableCell>
                   <AdminTableCell>
                     {row.paket_id
@@ -364,42 +401,36 @@ export default async function AdminReservationsPage({ searchParams }: AdminReser
                         <div>
                           <Link
                             href={`/yonetim/paketler/${row.paket_id}/takvim`}
-                            className="font-medium text-sky-700 hover:underline"
+                            className="font-semibold text-[#185FA5] hover:underline"
                           >
                             {packageMap.get(row.paket_id)?.baslik ?? "Paket rezervasyonu"}
                           </Link>
-                          <p className="text-xs text-slate-500">Kategori: {packageMap.get(row.paket_id)?.kategori ?? "-"}</p>
+                          <p className="text-xs text-[#64748B]">Kategori: {packageMap.get(row.paket_id)?.kategori ?? "-"}</p>
                         </div>
                       )
                       : (
                         <div>
                           <Link
                             href={`/yonetim/ilanlar/${row.ilan_id}/takvim`}
-                            className="font-medium text-sky-700 hover:underline"
+                            className="font-semibold text-[#185FA5] hover:underline"
                           >
                             {listingMap.get(row.ilan_id)?.baslik ?? "-"}
                           </Link>
-                          <p className="text-xs text-slate-500">{listingMap.get(row.ilan_id)?.konum ?? "-"}</p>
+                          <p className="text-xs text-[#64748B]">{listingMap.get(row.ilan_id)?.konum ?? "-"}</p>
                         </div>
                       )}
                   </AdminTableCell>
                   <AdminTableCell className="text-slate-500">{row.misafir_sayisi}</AdminTableCell>
-                  <AdminTableCell className="font-semibold text-slate-800">{formatCurrency(row.toplam_fiyat)}</AdminTableCell>
+                  <AdminTableCell className="text-right font-semibold text-[#1D9E75]">{formatCurrency(row.toplam_fiyat)}</AdminTableCell>
                   <AdminTableCell>
                     {(() => {
                       const normalized = normalizeReservationStatus(String(row.durum));
                       const status = STATUS_MAP[normalized];
-                      return (
-                        <span
-                          className={`inline-flex rounded-full border px-2.5 py-0.5 text-xs font-medium ${status.color} ${status.bg}`}
-                        >
-                          {status.label}
-                        </span>
-                      );
+                      return <AdminBadge variant={rezDurumBadgeVariant(String(row.durum))}>{status.label}</AdminBadge>;
                     })()}
                   </AdminTableCell>
                   <AdminTableCell>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <ReservationStatusSelect
                         reservationId={row.id}
                         initialStatus={normalizeReservationStatus(String(row.durum))}

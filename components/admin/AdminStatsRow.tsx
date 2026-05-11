@@ -1,6 +1,6 @@
 "use client";
 
-type StatTone = "default" | "success" | "warning" | "danger" | "info" | "purple";
+type StatTone = "default" | "success" | "warning" | "danger" | "info" | "purple" | "muted";
 
 type StatItem = {
   label: string;
@@ -17,6 +17,7 @@ const toneBorder: Record<StatTone, string> = {
   danger: "border-l-[#EF4444]",
   info: "border-l-[#8B5CF6]",
   purple: "border-l-[#8B5CF6]",
+  muted: "border-l-[#94A3B8]",
 };
 
 export function AdminStatsRow({ items }: { items: StatItem[] }) {

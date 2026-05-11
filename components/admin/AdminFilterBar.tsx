@@ -10,7 +10,7 @@ export function AdminFilterBar({ children, method = "get", className = "" }: Adm
   return (
     <form
       method={method}
-      className={`rounded-2xl border border-slate-200 bg-white p-4 shadow-sm ${className}`.trim()}
+      className={`rounded-xl border border-[#E2E8F0] bg-white p-5 shadow-sm ${className}`.trim()}
     >
       {children}
     </form>
