@@ -397,6 +397,7 @@ export function ReservationWizard({
         return;
       }
 
+      toast.success("Rezervasyonunuz alındı!");
       setConfirmationRef(referenceNo);
       setReservationInfo((prev) => ({ ...prev, misafir_sayisi: misafirSayisi }));
       goToStep(4);

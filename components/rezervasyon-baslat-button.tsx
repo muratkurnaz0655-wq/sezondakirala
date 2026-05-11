@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { toast } from "sonner";
 import { aramaStore, rezervasyonStore } from "@/lib/arama-store";
 
 type Props = {
@@ -49,7 +48,6 @@ export function RezervasyonBaslatButton({
       bebek: arama?.bebek ?? bebek,
       adim: 1,
     });
-    toast.success("Rezervasyonunuz alındı!");
   };
 
   return (
