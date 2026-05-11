@@ -23,7 +23,8 @@ export function AdminGirisForm() {
           credentials: "include",
           cache: "no-store",
         });
-        if (!cancelled && res.ok) {
+        const body = (await res.json().catch(() => ({}))) as { basarili?: boolean };
+        if (!cancelled && res.ok && body.basarili === true) {
           router.replace("/yonetim");
           router.refresh();
           return;
@@ -58,14 +59,16 @@ export function AdminGirisForm() {
 
     const res = await fetch("/api/admin/giris", {
       method: "POST",
+      credentials: "include",
+      cache: "no-store",
     });
+    const data = (await res.json().catch(() => ({}))) as { basarili?: boolean; hata?: string };
 
-    if (res.ok) {
+    if (res.ok && data.basarili === true) {
       router.push("/yonetim");
       router.refresh();
     } else {
-      const data = (await res.json().catch(() => ({}))) as { hata?: string };
-      setHata(data.hata ?? "Admin girişi başarısız.");
+      setHata(data.hata ?? (res.status === 401 ? "Oturum geçersiz." : "Admin girişi başarısız."));
       await supabase.auth.signOut();
       setYukleniyor(false);
     }

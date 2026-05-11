@@ -59,7 +59,12 @@ export async function POST(request: NextRequest) {
     attempts.count += 1;
     ipAttemptStore.set(ip, attempts);
     await supabase.auth.signOut();
-    return NextResponse.json({ hata: "Bu hesap admin paneline erisemiyor." }, { status: 403 });
+    /** 403 yerine 200: tarayıcı "failed request" göstermesin; istemci `basarili` ile ayırır. */
+    return NextResponse.json({
+      basarili: false,
+      hata: "Bu hesap admin paneline erisemiyor.",
+      kod: "ADMIN_DEGIL",
+    });
   }
 
   ipAttemptStore.delete(ip);

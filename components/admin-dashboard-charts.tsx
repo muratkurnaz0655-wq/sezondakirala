@@ -27,18 +27,18 @@ export function AdminDashboardCharts({
 }: AdminDashboardChartsProps) {
   return (
     <div className="grid gap-4 lg:grid-cols-2">
-      <section className="h-80 rounded-2xl border border-slate-200 bg-white p-4">
-        <h2 className="mb-3 text-sm font-semibold text-slate-900">
-          Son 6 Aylık Ciro
-        </h2>
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={monthlyRevenueData}>
-            <XAxis dataKey="month" />
-            <YAxis allowDecimals={false} />
-            <Tooltip formatter={(value) => [`₺${currencyFormatter.format(Number(value))}`, "Ciro"]} />
-            <Bar dataKey="revenue" fill="#0ea5e9" radius={[8, 8, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
+      <section className="flex h-80 min-h-[20rem] flex-col rounded-2xl border border-slate-200 bg-white p-4">
+        <h2 className="mb-3 shrink-0 text-sm font-semibold text-slate-900">Son 6 Aylık Ciro</h2>
+        <div className="min-h-0 min-w-0 flex-1">
+          <ResponsiveContainer width="100%" height="100%" minHeight={200}>
+            <BarChart data={monthlyRevenueData}>
+              <XAxis dataKey="month" />
+              <YAxis allowDecimals={false} />
+              <Tooltip formatter={(value) => [`₺${currencyFormatter.format(Number(value))}`, "Ciro"]} />
+              <Bar dataKey="revenue" fill="#0ea5e9" radius={[8, 8, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
       </section>
       <section className="rounded-2xl border border-slate-200 bg-white p-4">
         <h2 className="mb-3 text-sm font-semibold text-slate-900">Bu Ay Durum Özeti</h2>

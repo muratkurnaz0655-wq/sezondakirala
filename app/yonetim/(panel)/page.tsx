@@ -12,25 +12,34 @@ import { formatCurrency } from "@/lib/utils/format";
 export default async function AdminDashboard() {
   const supabase = createAdminClient();
 
-  const [
-    { count: toplamIlan },
-    { count: aktifIlan },
-    { count: onayBekleyenIlan },
-    { count: toplamKullanici },
-    { count: toplamRezervasyonlar },
-    { count: bekleyenRezervasyon },
-    { data: monthlyStats },
-    { data: dashboardCurrentMonth },
-  ] = await Promise.all([
+  const [rIlan, rAktifIlan, rKullanici, rBekleyenRez, rAylik, rBuAy] = await Promise.all([
     supabase.from("ilanlar").select("id", { count: "exact", head: true }),
     supabase.from("ilanlar").select("id", { count: "exact", head: true }).eq("aktif", true),
-    supabase.from("ilanlar").select("id", { count: "exact", head: true }).eq("onay_durumu", "onay_bekliyor"),
     supabase.from("kullanicilar").select("id", { count: "exact", head: true }),
-    supabase.from("rezervasyonlar").select("id", { count: "exact", head: true }),
     supabase.from("rezervasyonlar").select("id", { count: "exact", head: true }).eq("durum", "pending"),
     supabase.from("dashboard_aylik_istatistik").select("*").order("ay", { ascending: false }).limit(6),
     supabase.from("dashboard_bu_ay").select("*").limit(1).maybeSingle(),
   ]);
+
+  for (const [label, res] of [
+    ["ilanlar", rIlan],
+    ["ilanlar aktif", rAktifIlan],
+    ["kullanicilar", rKullanici],
+    ["rezervasyonlar pending", rBekleyenRez],
+    ["dashboard_aylik_istatistik", rAylik],
+    ["dashboard_bu_ay", rBuAy],
+  ] as const) {
+    if (res.error) console.error(`[admin-dashboard] ${label}:`, res.error);
+  }
+
+  const safeCount = (n: unknown) => Number(n ?? 0);
+  const toplamIlan = safeCount(rIlan.count);
+  const aktifIlan = safeCount(rAktifIlan.count);
+  const toplamKullanici = safeCount(rKullanici.count);
+  const bekleyenRezervasyon = safeCount(rBekleyenRez.count);
+  const monthlyStats = rAylik.data;
+  const dashboardCurrentMonth = rBuAy.data;
+
   const monthlyRevenueData = [...(monthlyStats ?? [])]
     .reverse()
     .map((row) => ({ month: String(row.ay_label ?? row.ay), revenue: Number(row.toplam_ciro ?? 0) }));
@@ -55,10 +64,10 @@ export default async function AdminDashboard() {
     >
       <AdminStatsRow
         items={[
-          { label: "Toplam İlan", value: toplamIlan ?? 0, tone: "default" },
-          { label: "Yayındaki İlan", value: aktifIlan ?? 0, tone: "success" },
-          { label: "Toplam Kullanıcı", value: toplamKullanici ?? 0, tone: "purple" },
-          { label: "Beklemedeki Rezervasyon", value: bekleyenRezervasyon ?? 0, tone: "warning" },
+          { label: "Toplam İlan", value: toplamIlan, tone: "default" },
+          { label: "Yayındaki İlan", value: aktifIlan, tone: "success" },
+          { label: "Toplam Kullanıcı", value: toplamKullanici, tone: "purple" },
+          { label: "Beklemedeki Rezervasyon", value: bekleyenRezervasyon, tone: "warning" },
           { label: "Bu Ay Ciro", value: formatCurrency(Number(dashboardCurrentMonth?.bu_ay_ciro ?? 0)), tone: "success" },
           { label: "Bu Ay Komisyon", value: formatCurrency(Number(dashboardCurrentMonth?.bu_ay_komisyon ?? 0)), tone: "info" },
         ]}
