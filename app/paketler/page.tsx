@@ -55,9 +55,6 @@ export default async function PackagesPage({ searchParams }: PackagesPageProps) 
           <div className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-100/80">
             <div className="border-b border-slate-100 bg-slate-50/80 px-4 py-4 md:px-6">
               <p className="text-xs font-semibold uppercase tracking-wide text-[#185FA5]">Kategori</p>
-              <p className="mt-1 text-sm text-slate-500">
-                Sekmeler URL&apos;yi günceller; paylaşılabilir ve geri dönüşü kolaydır.
-              </p>
             </div>
             <div className="p-4 md:p-6">
               <PaketlerCategoryTabs activeCategory={category} />
