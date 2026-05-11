@@ -9,7 +9,8 @@ import { AdminPageLayout } from "@/components/admin/AdminPageLayout";
 import { AdminMobileCard, AdminMobileCardList } from "@/components/admin/AdminMobileCardList";
 import { AdminSegmentedTabs } from "@/components/admin/AdminSegmentedTabs";
 import { AdminActionButton } from "@/components/admin/AdminActionButton";
-import { ListingsBulkTable, listingCoverImageUrl, type ListingTableRow } from "./ListingsBulkTable";
+import { listingCoverImageUrl } from "./listing-cover";
+import { ListingsBulkTable, type ListingTableRow } from "./ListingsBulkTable";
 import { AdminEmptyState } from "@/components/admin/AdminEmptyState";
 
 type AdminListingsPageProps = {

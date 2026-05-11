@@ -14,6 +14,7 @@ import { ConfirmModal } from "@/components/admin/ConfirmModal";
 import { formatCurrency } from "@/lib/utils/format";
 import { ListingActions } from "./ListingActions";
 import { bulkDeactivateListings, bulkDeleteListings } from "./actions";
+import { listingCoverImageUrl } from "./listing-cover";
 
 export type ListingTableRow = {
   id: string;
@@ -30,15 +31,7 @@ export type ListingTableRow = {
   ilan_medyalari?: { id: string; url: string; sira: number }[] | null;
 };
 
-/** Kapak: sira=1 varsa o; yoksa en küçük sıradaki görsel (ORDER BY sira ASC LIMIT 1). */
-export function listingCoverImageUrl(
-  medias: { url: string; sira: number }[] | null | undefined,
-): string | null {
-  if (!Array.isArray(medias) || medias.length === 0) return null;
-  const sorted = [...medias].sort((a, b) => (Number(a.sira) || 0) - (Number(b.sira) || 0));
-  const siraBir = sorted.find((m) => Number(m.sira) === 1);
-  return (siraBir ?? sorted[0])?.url ?? null;
-}
+export { listingCoverImageUrl } from "./listing-cover";
 
 export function ListingsBulkTable({ listings }: { listings: ListingTableRow[] }) {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
