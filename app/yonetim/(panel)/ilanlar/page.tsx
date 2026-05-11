@@ -25,6 +25,13 @@ type AdminListingsPageProps = {
   }>;
 };
 
+type ListingOwner = { ad_soyad: string | null; email: string | null } | { ad_soyad: string | null; email: string | null }[] | null;
+
+function ownerDisplayName(owner: ListingOwner) {
+  const row = Array.isArray(owner) ? owner[0] : owner;
+  return row?.ad_soyad ?? row?.email ?? "-";
+}
+
 export default async function AdminListingsPage({ searchParams }: AdminListingsPageProps) {
   const params = await searchParams;
   const durum = params.durum ?? "";
@@ -37,10 +44,10 @@ export default async function AdminListingsPage({ searchParams }: AdminListingsP
     let query = withMedia
       ? supabase
           .from("ilanlar")
-          .select("id,baslik,konum,tip,sahip_id,gunluk_fiyat,aktif,onay_durumu,slug,olusturulma_tarihi,ilan_medyalari(id,url,sira)")
+          .select("id,baslik,konum,tip,sahip_id,gunluk_fiyat,aktif,onay_durumu,slug,olusturulma_tarihi,kullanicilar!ilanlar_sahip_id_fkey(ad_soyad,email),ilan_medyalari(id,url,sira)")
       : supabase
           .from("ilanlar")
-          .select("id,baslik,konum,tip,sahip_id,gunluk_fiyat,aktif,onay_durumu,slug,olusturulma_tarihi");
+          .select("id,baslik,konum,tip,sahip_id,gunluk_fiyat,aktif,onay_durumu,slug,olusturulma_tarihi,kullanicilar!ilanlar_sahip_id_fkey(ad_soyad,email)");
 
     if (durum === "onay_bekliyor" || durum === "yayinda" || durum === "reddedildi") {
       query = query.eq("onay_durumu", durum);
@@ -72,9 +79,7 @@ export default async function AdminListingsPage({ searchParams }: AdminListingsP
     Promise.resolve(listingsResult),
     supabase.from("kullanicilar").select("id,ad_soyad,email"),
   ]);
-  const userMap = new Map(
-    (users ?? []).map((user) => [user.id, user.ad_soyad ?? user.email ?? "-"]),
-  );
+  const userMap = new Map((users ?? []).map((user) => [user.id, user.ad_soyad ?? user.email ?? "-"]));
   const locationOptions = [...new Set((listings ?? []).map((row) => row.konum).filter(Boolean))].sort();
   const filteredListings = (listings ?? []).filter((row) => {
     if (filtre === "villa") return row.tip === "villa";
@@ -82,7 +87,10 @@ export default async function AdminListingsPage({ searchParams }: AdminListingsP
     if (filtre === "aktif") return row.aktif === true;
     if (filtre === "pasif") return row.aktif === false;
     if (!q) return true;
-    const owner = userMap.get(row.sahip_id)?.toLowerCase() ?? "";
+    const owner =
+      ownerDisplayName((row as { kullanicilar?: ListingOwner }).kullanicilar) !== "-"
+        ? ownerDisplayName((row as { kullanicilar?: ListingOwner }).kullanicilar).toLowerCase()
+        : (userMap.get(row.sahip_id)?.toLowerCase() ?? "");
     return (
       row.baslik?.toLowerCase().includes(q) ||
       row.konum?.toLowerCase().includes(q) ||
