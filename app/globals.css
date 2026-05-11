@@ -631,6 +631,30 @@ small {
   font-weight: 600;
 }
 
+@keyframes catalogWaveDrift {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(-40px);
+  }
+}
+
+.catalog-hero-wave-inner {
+  width: calc(100% + 80px);
+  margin-left: -40px;
+  animation: catalogWaveDrift 12s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .catalog-hero-wave-inner {
+    animation: none;
+    margin-left: 0;
+    width: 100%;
+  }
+}
+
 @keyframes fadeInUp {
   from {
     opacity: 0;

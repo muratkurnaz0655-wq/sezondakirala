@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { CatalogHeroWave } from "@/components/catalog-hero-wave";
+import { ListingReveal } from "@/components/listing-reveal";
 import { TekneFiltreSidebar } from "@/components/tekne-filtre-sidebar";
 import { TekneKarti } from "@/components/tekne-karti";
 import { Search, SlidersHorizontal, X } from "lucide-react";
@@ -33,6 +35,17 @@ function parseEtiketler(ozellikler: unknown): string[] {
   }
   return Object.keys(row).filter((key) => row[key] === true);
 }
+
+const SkeletonTekne = () => (
+  <div className="overflow-hidden rounded-xl border border-slate-100 bg-white shadow-sm">
+    <div className="skeleton h-[220px] w-full rounded-none" />
+    <div className="space-y-3 p-4">
+      <div className="skeleton h-4 w-3/4" />
+      <div className="skeleton h-3 w-1/2" />
+      <div className="skeleton mt-4 h-8 w-28 rounded-lg" />
+    </div>
+  </div>
+);
 
 export default function TeknelerPage() {
   const [tekneler, setTekneler] = useState<TekneRow[]>([]);
@@ -100,42 +113,72 @@ export default function TeknelerPage() {
     ...(filtre.minKapasite > 1 ? ["kapasite"] : []),
   ].length;
 
+  const kartAnahtari = [
+    filtre.liman.join(","),
+    filtre.tekne_tipi.join(","),
+    filtre.sure.join(","),
+    filtre.ozellikler.join(","),
+    filtre.siralama,
+    filtre.minFiyat,
+    filtre.maxFiyat,
+    filtre.minKapasite,
+  ].join("|");
+
   return (
     <div className="min-h-0 w-full space-y-6 overflow-x-hidden py-6">
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#0e9aa7] to-[#06b6d4] px-6 py-10 text-white md:px-10">
-        <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10" />
-        <div className="absolute -bottom-8 -left-8 h-32 w-32 rounded-full bg-white/10" />
-        <p className="mb-2 text-sm text-white/70">Ana Sayfa / Tekneler</p>
-        <h1 className="mb-2 text-3xl font-bold md:text-4xl">Fethiye Tekne Kiralama</h1>
-        <p className="mb-6 max-w-xl text-white/80">{tekneler.length}+ tekne ile hayalinizdeki deniz tatilini bulun</p>
-        <div className="flex flex-wrap gap-2">
-          {["Günlük / Haftalık", "Mürettebatlı Seçenekler", "TURSAB Güvencesi"].map((chip) => (
-            <span key={chip} className="rounded-full bg-white/20 px-3 py-1 text-sm text-white backdrop-blur-sm">
-              {chip}
-            </span>
-          ))}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#0e9aa7] via-[#0b8f9c] to-[#185FA5] px-6 py-10 text-white shadow-lg md:px-10 md:py-12">
+        <div className="absolute -right-10 -top-10 h-44 w-44 rounded-full bg-white/10 blur-2xl" aria-hidden />
+        <div className="absolute -bottom-12 -left-12 h-40 w-40 rounded-full bg-cyan-300/15 blur-2xl" aria-hidden />
+        <div className="relative z-[1] max-w-3xl">
+          <p className="mb-2 text-[13px] text-white/75">Ana Sayfa / Tekneler</p>
+          <h1 className="mb-3 text-3xl font-medium tracking-tight md:text-5xl md:leading-tight">Fethiye Tekne Kiralama</h1>
+          <p className="mb-8 max-w-xl text-base leading-relaxed text-white/85 md:text-lg">
+            {tekneler.length}+ tekne ile hayalinizdeki deniz tatilini bulun
+          </p>
+          <div className="flex flex-wrap gap-2 md:gap-3">
+            {["Günlük / Haftalık", "Mürettebatlı Seçenekler", "TURSAB Güvencesi"].map((chip) => (
+              <span
+                key={chip}
+                className="rounded-full border border-white/25 bg-white/15 px-4 py-2 text-sm font-medium text-white shadow-sm backdrop-blur-md"
+              >
+                {chip}
+              </span>
+            ))}
+          </div>
+        </div>
+        <div className="relative z-[1] mt-4 md:mt-6">
+          <CatalogHeroWave fillBottom="#ffffff" />
         </div>
       </div>
 
-      <div className="overflow-visible rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">TARİH VE KİŞİ SAYISI</p>
-        <div className="flex flex-col gap-3 md:flex-row md:items-stretch">
-          <div className="flex-1 rounded-xl border border-slate-200 px-4 py-3">
-            <p className="mb-1 text-xs text-slate-400">BAŞLANGIÇ TARİHİ</p>
+      <section
+        className="overflow-visible rounded-2xl px-4 py-5 shadow-lg md:px-6 md:py-6"
+        style={{
+          background: "linear-gradient(120deg, #0F6E56 0%, #0c4a6e 55%, #185FA5 100%)",
+        }}
+      >
+        <p className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-white/75">Tarih ve kiralama</p>
+        <div className="flex flex-col gap-3 md:flex-row md:items-stretch md:gap-3">
+          <div
+            className={`flex min-h-[52px] flex-1 flex-col justify-center rounded-xl border border-white/80 bg-white px-4 py-3 shadow-md ${
+              baslangicTarihi ? "ring-2 ring-[#1D9E75]/75 ring-offset-2 ring-offset-transparent" : ""
+            }`}
+          >
+            <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">Başlangıç tarihi</p>
             <input
               type="date"
               value={baslangicTarihi}
               min={bugunIso}
               onChange={(e) => setBaslangicTarihi(e.target.value)}
-              className="w-full bg-transparent text-sm font-medium text-slate-800 outline-none"
+              className="mt-1 w-full bg-transparent text-[15px] font-medium text-slate-900 outline-none"
             />
           </div>
-          <div className="flex-1 rounded-xl border border-slate-200 px-4 py-3">
-            <p className="mb-1 text-xs text-slate-400">KİRALAMA SÜRESİ</p>
+          <div className="flex min-h-[52px] flex-1 flex-col justify-center rounded-xl border border-white/80 bg-white px-4 py-3 shadow-md">
+            <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">Kiralama süresi</p>
             <select
               value={sure}
               onChange={(e) => setSure(e.target.value)}
-              className="w-full cursor-pointer bg-transparent text-sm font-medium text-slate-800 outline-none"
+              className="mt-1 w-full cursor-pointer bg-transparent text-[15px] font-medium text-slate-900 outline-none"
             >
               <option value="1">Günlük</option>
               <option value="3">3 Günlük</option>
@@ -143,12 +186,12 @@ export default function TeknelerPage() {
               <option value="14">2 Haftalık</option>
             </select>
           </div>
-          <div className="flex-1 rounded-xl border border-slate-200 px-4 py-3">
-            <p className="mb-1 text-xs text-slate-400">KİŞİ SAYISI</p>
+          <div className="flex min-h-[52px] flex-1 flex-col justify-center rounded-xl border border-white/80 bg-white px-4 py-3 shadow-md">
+            <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">Kişi sayısı</p>
             <select
               value={kisiSayisi}
               onChange={(e) => setKisiSayisi(Number(e.target.value))}
-              className="w-full cursor-pointer bg-transparent text-sm font-medium text-slate-800 outline-none"
+              className="mt-1 w-full cursor-pointer bg-transparent text-[15px] font-medium text-slate-900 outline-none"
             >
               {[2, 4, 6, 8, 10, 12, 15].map((n) => (
                 <option key={n} value={n}>
@@ -166,28 +209,29 @@ export default function TeknelerPage() {
                 sure: sure === "7" || sure === "14" ? ["haftalik"] : ["gunluk"],
               })
             }
-            className="flex items-center gap-2 whitespace-nowrap rounded-xl bg-gradient-to-r from-[#0e9aa7] to-[#06b6d4] px-8 py-3 font-semibold text-white shadow-lg shadow-[#0e9aa7]/25 transition-all hover:from-[#0f4c5c] hover:to-[#0e9aa7] active:scale-95"
+            className="inline-flex min-h-[52px] w-full shrink-0 items-center justify-center gap-2 rounded-xl bg-[#1D9E75] px-8 py-3.5 text-base font-semibold text-white shadow-lg shadow-emerald-900/20 transition-transform hover:brightness-110 active:scale-[0.98] md:w-auto md:min-w-[160px] md:self-stretch"
           >
-            <Search className="h-4 w-4" />
+            <Search className="h-5 w-5" aria-hidden />
             Tekne Ara
           </button>
         </div>
-      </div>
+      </section>
 
-      <div className="flex flex-col gap-6 lg:flex-row">
-      <button
-        type="button"
-        onClick={() => setMobilFiltre(true)}
-        className="flex w-full items-center justify-center gap-2 rounded-xl border border-[#0e9aa7] px-4 py-2.5 text-sm font-semibold text-[#0e9aa7] lg:hidden"
-      >
-        <SlidersHorizontal className="h-4 w-4" />
-        Filtrele
-        {aktifFiltreSayisi > 0 ? (
-          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#0e9aa7] text-xs text-white">{aktifFiltreSayisi}</span>
-        ) : null}
-      </button>
+      <div className="flex flex-col gap-8 lg:flex-row lg:items-start">
+        <button
+          type="button"
+          onClick={() => setMobilFiltre(true)}
+          className="flex w-full items-center justify-center gap-2 rounded-xl border border-[#1D9E75]/40 bg-white px-4 py-3 text-sm font-semibold text-[#1D9E75] shadow-sm lg:hidden"
+        >
+          <SlidersHorizontal className="h-4 w-4" />
+          Filtrele
+          {aktifFiltreSayisi > 0 ? (
+            <span className="flex h-6 min-w-6 items-center justify-center rounded-full bg-[#1D9E75] px-1.5 text-xs text-white">
+              {aktifFiltreSayisi}
+            </span>
+          ) : null}
+        </button>
 
-      <div className="w-full lg:w-72 lg:flex-shrink-0">
         <div className="hidden lg:block">
           <TekneFiltreSidebar
             filtre={filtre}
@@ -196,84 +240,81 @@ export default function TeknelerPage() {
             sonucSayisi={tekneler.length}
           />
         </div>
-      </div>
 
-      {mobilFiltre ? (
-        <div className="fixed inset-0 z-50 lg:hidden">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setMobilFiltre(false)} />
-          <div className="absolute right-0 top-0 bottom-0 w-80 overflow-y-auto bg-white p-4">
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="font-bold text-slate-800">Filtreler</h3>
-              <button type="button" onClick={() => setMobilFiltre(false)}>
-                <X className="h-5 w-5 text-slate-500" />
-              </button>
-            </div>
-            <TekneFiltreSidebar
-              filtre={filtre}
-              onChange={(f) => setFiltre(f)}
-              onTemizle={() => setFiltre(defaultTekneFiltre)}
-              sonucSayisi={tekneler.length}
-            />
-          </div>
-        </div>
-      ) : null}
-
-      <div className="min-w-0 flex-1">
-        <div className="mb-5 flex items-center justify-between">
-          <p className="text-sm text-slate-500">
-            <span className="font-semibold text-slate-800">{tekneler.length}</span> tekne listeleniyor
-          </p>
-          <select
-            value={filtre.siralama}
-            onChange={(e) => setFiltre({ ...filtre, siralama: e.target.value as TekneFiltre["siralama"] })}
-            className="cursor-pointer rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none focus:border-[#0e9aa7]"
-          >
-            <option value="onerilen">Önerilen Sıra</option>
-            <option value="fiyat_artan">Fiyat: Düşükten Yükseğe</option>
-            <option value="fiyat_azalan">Fiyat: Yüksekten Düşüğe</option>
-            <option value="kapasite_buyuk">En Büyük Kapasite</option>
-          </select>
-        </div>
-
-        {yukleniyor ? (
-          <div className="grid grid-cols-1 gap-5">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="flex animate-pulse overflow-hidden rounded-2xl border border-slate-100">
-                <div className="h-48 w-52 flex-shrink-0 bg-slate-200" />
-                <div className="flex-1 space-y-3 p-4">
-                  <div className="h-4 w-3/4 rounded-full bg-slate-200" />
-                  <div className="h-3 w-1/2 rounded-full bg-slate-200" />
-                </div>
+        {mobilFiltre ? (
+          <div className="fixed inset-0 z-50 lg:hidden">
+            <button type="button" className="absolute inset-0 bg-black/45 backdrop-blur-[2px]" onClick={() => setMobilFiltre(false)} aria-label="Kapat" />
+            <div className="absolute right-0 top-0 bottom-0 flex w-[min(100%,22rem)] flex-col overflow-y-auto rounded-l-2xl border-l border-slate-200 bg-white p-5 shadow-2xl">
+              <div className="mb-4 flex items-center justify-between border-b border-slate-100 pb-3">
+                <h3 className="font-semibold text-slate-900">Filtreler</h3>
+                <button type="button" onClick={() => setMobilFiltre(false)} className="rounded-full p-2 hover:bg-slate-100">
+                  <X className="h-5 w-5 text-slate-500" />
+                </button>
               </div>
-            ))}
-          </div>
-        ) : null}
-
-        {!yukleniyor && tekneler.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center">
-            <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-2xl bg-[#f0fdfd]">
-              <span className="text-4xl">⚓</span>
+              <TekneFiltreSidebar
+                filtre={filtre}
+                onChange={(f) => setFiltre(f)}
+                onTemizle={() => setFiltre(defaultTekneFiltre)}
+                sonucSayisi={tekneler.length}
+              />
             </div>
-            <h3 className="mb-2 text-lg font-semibold text-slate-700">Tekne bulunamadı</h3>
-            <p className="mb-4 text-sm text-slate-500">Farklı filtre kriterleri deneyin</p>
-            <button
-              type="button"
-              onClick={() => setFiltre(defaultTekneFiltre)}
-              className="text-sm font-semibold text-[#0e9aa7] hover:underline"
-            >
-              Filtreleri temizle
-            </button>
           </div>
         ) : null}
 
-        {!yukleniyor && tekneler.length > 0 ? (
-          <div className="grid grid-cols-1 gap-5">
-            {tekneler.map((tekne) => (
-              <TekneKarti key={tekne.id} tekne={tekne} />
-            ))}
+        <div className="min-w-0 flex-1">
+          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-[13px] text-slate-500">
+              <span className="font-semibold text-slate-800">{tekneler.length}</span> tekne listeleniyor
+            </p>
+            <select
+              value={filtre.siralama}
+              onChange={(e) => setFiltre({ ...filtre, siralama: e.target.value as TekneFiltre["siralama"] })}
+              className="w-full cursor-pointer rounded-xl border border-[#185FA5]/25 bg-white px-4 py-2.5 text-sm text-slate-700 shadow-sm outline-none transition-shadow focus:border-[#185FA5]/50 focus:ring-2 focus:ring-[#185FA5]/15 sm:w-auto sm:min-w-[220px]"
+            >
+              <option value="onerilen">Önerilen Sıra</option>
+              <option value="fiyat_artan">Fiyat: Düşükten Yükseğe</option>
+              <option value="fiyat_azalan">Fiyat: Yüksekten Düşüğe</option>
+              <option value="kapasite_buyuk">En Büyük Kapasite</option>
+            </select>
           </div>
-        ) : null}
-      </div>
+
+          <div className={`transition-opacity duration-300 ${yukleniyor ? "opacity-90" : "opacity-100"}`} key={kartAnahtari}>
+            {yukleniyor ? (
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                {[...Array(4)].map((_, i) => (
+                  <SkeletonTekne key={i} />
+                ))}
+              </div>
+            ) : null}
+
+            {!yukleniyor && tekneler.length === 0 ? (
+              <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 py-20 text-center">
+                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-slate-100">
+                  <span className="text-3xl" aria-hidden>
+                    ⚓
+                  </span>
+                </div>
+                <h3 className="mb-2 text-lg font-medium text-slate-800">Tekne bulunamadı</h3>
+                <p className="mb-5 text-sm text-slate-500">Farklı filtre kriterleri deneyin</p>
+                <button
+                  type="button"
+                  onClick={() => setFiltre(defaultTekneFiltre)}
+                  className="rounded-xl border-2 border-[#1D9E75] bg-white px-6 py-2.5 text-sm font-semibold text-[#1D9E75] transition-colors hover:bg-[#1D9E75] hover:text-white"
+                >
+                  Filtreleri temizle
+                </button>
+              </div>
+            ) : null}
+
+            {!yukleniyor && tekneler.length > 0 ? (
+              <ListingReveal className="grid grid-cols-1 gap-6 md:grid-cols-2" staggerMs={50}>
+                {tekneler.map((tekne) => (
+                  <TekneKarti key={tekne.id} tekne={tekne} />
+                ))}
+              </ListingReveal>
+            ) : null}
+          </div>
+        </div>
       </div>
     </div>
   );

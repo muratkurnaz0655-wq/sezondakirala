@@ -28,19 +28,24 @@ export function PaketlerCategoryTabs({ activeCategory }: PaketlerCategoryTabsPro
   }
 
   return (
-    <div className="flex flex-wrap">
-      {TABS.map((tab) => (
-        <button
-          key={tab}
-          type="button"
-          onClick={() => setTab(tab)}
-          className={`mr-2 mt-2 rounded-full px-3 py-1.5 text-sm font-semibold transition-colors ${
-            activeCategory === tab ? "bg-green-500 text-white shadow-sm" : "bg-slate-100 text-slate-700 hover:border-sky-300"
-          } ${activeCategory === tab ? "" : "border border-slate-200"}`}
-        >
-          {LABELS[tab]}
-        </button>
-      ))}
+    <div className="flex flex-wrap gap-2 md:gap-3">
+      {TABS.map((tab) => {
+        const active = activeCategory === tab;
+        return (
+          <button
+            key={tab}
+            type="button"
+            onClick={() => setTab(tab)}
+            className={`rounded-full border px-5 py-2.5 text-base font-medium transition-all duration-300 motion-safe:hover:scale-[1.02] ${
+              active
+                ? "border-transparent bg-[#1D9E75] text-white shadow-md shadow-[#1D9E75]/25"
+                : "border-slate-200 bg-slate-50 text-slate-700 hover:border-[#1D9E75]/35 hover:bg-emerald-50"
+            }`}
+          >
+            {LABELS[tab]}
+          </button>
+        );
+      })}
     </div>
   );
 }

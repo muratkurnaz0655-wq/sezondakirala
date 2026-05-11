@@ -5,7 +5,8 @@ import {
   CatalogProseSection,
   CatalogTrustStrip,
 } from "@/components/catalog-page-blocks";
-import { PackageCard } from "@/components/package-card";
+import { CatalogHeroWave } from "@/components/catalog-hero-wave";
+import { PaketlerAnimatedGrid } from "@/components/paketler-animated-grid";
 import { PaketlerCategoryTabs } from "@/components/paketler-category-tabs";
 import { formatWhatsappTrDisplay, whatsappHref } from "@/lib/constants";
 import { getFeaturedPackages } from "@/lib/data/phase2";
@@ -23,10 +24,10 @@ export default async function PackagesPage({ searchParams }: PackagesPageProps) 
   return (
     <div className="w-full overflow-x-hidden">
       <div
-        className="relative overflow-hidden text-white"
+        className="relative overflow-hidden pb-0 text-white"
         style={{
-          background: "linear-gradient(135deg, #0f4c5c 0%, #0e9aa7 42%, #22d3ee 100%)",
-          padding: "18px 0 24px",
+          background: "linear-gradient(135deg, #0f4c5c 0%, #0e9aa7 42%, #185FA5 100%)",
+          padding: "28px 0 0",
         }}
       >
         <div
@@ -37,34 +38,23 @@ export default async function PackagesPage({ searchParams }: PackagesPageProps) 
           className="pointer-events-none absolute bottom-0 left-1/3 h-48 w-48 rounded-full bg-[#4a7c7e]/35 blur-3xl"
           aria-hidden
         />
-        <div className="relative z-10 mx-auto w-full max-w-7xl px-4 md:px-6">
-          <h1 className="max-w-3xl text-2xl font-bold tracking-tight md:text-3xl">
+        <div className="relative z-10 mx-auto w-full max-w-7xl px-4 pb-6 md:px-6 md:pb-8">
+          <h1 className="max-w-3xl text-3xl font-medium tracking-tight md:text-4xl lg:text-[2.5rem] lg:leading-tight">
             Fethiye tatil paketleri
           </h1>
-          <p className="mt-1 text-xs text-sky-50 md:text-sm">{paketSayisi} paket listeleniyor</p>
+          <p className="mt-3 max-w-2xl text-sm font-normal leading-relaxed text-white/85 md:text-base">
+            Fethiye&apos;nin en özel villa ve tekne deneyimlerini bir arada keşfedin
+          </p>
+          <p className="mt-2 text-xs text-sky-100/90 md:text-sm">{paketSayisi} paket listeleniyor</p>
         </div>
-      </div>
-
-      <div className="-mt-px bg-[#f0fdfd]" style={{ lineHeight: 0 }}>
-        <svg
-          viewBox="0 0 1440 56"
-          xmlns="http://www.w3.org/2000/svg"
-          className="block w-full text-[#22d3ee]/20"
-          preserveAspectRatio="none"
-          aria-hidden
-        >
-          <path d="M0,28 C360,56 1080,0 1440,28 L1440,56 L0,56 Z" fill="currentColor" />
-          <path d="M0,36 C480,8 960,52 1440,24 L1440,56 L0,56 Z" fill="#f0fdfd" />
-        </svg>
+        <CatalogHeroWave fillBottom="#ffffff" />
       </div>
 
       <div className="w-full bg-white py-10 md:py-12">
         <div className="w-full space-y-6">
-          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-            <div className="border-b border-slate-200 bg-[#f0fdfd] px-4 py-4 md:px-6">
-              <p className="text-xs font-semibold uppercase tracking-wide text-[#0e9aa7]">
-                Kategori
-              </p>
+          <div className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-100/80">
+            <div className="border-b border-slate-100 bg-slate-50/80 px-4 py-4 md:px-6">
+              <p className="text-xs font-semibold uppercase tracking-wide text-[#185FA5]">Kategori</p>
               <p className="mt-1 text-sm text-slate-500">
                 Sekmeler URL&apos;yi günceller; paylaşılabilir ve geri dönüşü kolaydır.
               </p>
@@ -99,11 +89,7 @@ export default async function PackagesPage({ searchParams }: PackagesPageProps) 
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {packages.map((paket) => (
-                <PackageCard key={paket.id} paket={paket} />
-              ))}
-            </div>
+            <PaketlerAnimatedGrid packages={packages} />
           )}
         </div>
       </div>

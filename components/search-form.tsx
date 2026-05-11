@@ -14,6 +14,8 @@ type SearchFormProps = {
   /** İstanbul takvim günü YYYY-MM-DD (sunucu ile aynı üretilmeli) */
   bugunIso: string;
   className?: string;
+  /** Katalog sayfaları: koyu şerit üzerinde beyaz kartlar + tersine hover arama butonu */
+  catalogBar?: boolean;
   /** Beyaz kartın dışında (ör. ana sayfa stacked hero) kullanım — çift kutu ve backdrop kaldırılır */
   embedded?: boolean;
   initialGiris?: string;
@@ -107,6 +109,7 @@ function GuestSteppers({
 export function SearchForm({
   bugunIso,
   className,
+  catalogBar = false,
   embedded = false,
   initialGiris,
   initialCikis,
@@ -282,11 +285,19 @@ export function SearchForm({
     router.push("/konaklama");
   }
 
-  const shellClass = embedded
-    ? "relative z-[1] rounded-2xl border border-slate-200 bg-white p-2 text-slate-800 shadow-2xl shadow-black/15 md:p-2.5"
-    : "relative z-[100] rounded-2xl border border-slate-200 bg-white p-3 text-slate-800 shadow-2xl shadow-black/15 md:bg-white/95 md:p-2 md:backdrop-blur-xl";
+  const shellClass = catalogBar
+    ? "relative z-40 rounded-2xl border-0 bg-transparent p-0 text-slate-800 shadow-none"
+    : embedded
+      ? "relative z-[1] rounded-2xl border border-slate-200 bg-white p-2 text-slate-800 shadow-2xl shadow-black/15 md:p-2.5"
+      : "relative z-[100] rounded-2xl border border-slate-200 bg-white p-3 text-slate-800 shadow-2xl shadow-black/15 md:bg-white/95 md:p-2 md:backdrop-blur-xl";
 
-  const shellStyle = embedded ? { isolation: "isolate" as const } : { zIndex: 100 as const };
+  const shellStyle = catalogBar
+    ? { isolation: "isolate" as const }
+    : embedded
+      ? { isolation: "isolate" as const }
+      : { zIndex: 100 as const };
+
+  const dateSecili = searchPath === "/tekneler" ? Boolean(giris) : Boolean(giris && cikis);
   const dayPickerClassNames = {
     months: "flex flex-row gap-4",
   } as const;
@@ -351,7 +362,7 @@ export function SearchForm({
   return (
     <div className={className}>
       <div ref={formRef} className={shellClass} style={shellStyle}>
-        {!embedded ? (
+        {!embedded && !catalogBar ? (
           <>
             <div className="pointer-events-none absolute -left-16 -top-16 hidden h-40 w-40 rounded-full bg-sky-200/30 blur-2xl md:block" />
             <div className="pointer-events-none absolute -bottom-16 -right-16 hidden h-40 w-40 rounded-full bg-emerald-200/25 blur-2xl md:block" />
@@ -360,7 +371,7 @@ export function SearchForm({
 
         <div
           className={`search-form-inner relative z-[1] flex flex-col gap-3 border ${
-            forceVertical ? "" : "md:flex-row md:items-stretch md:gap-0"
+            catalogBar ? "md:flex-row md:items-stretch md:gap-3" : forceVertical ? "" : "md:flex-row md:items-stretch md:gap-0"
           } ${
             dateError ? "border-red-400 ring-1 ring-red-400" : "border-transparent"
           } ${embedded ? "rounded-2xl border border-slate-200 bg-white px-1.5 py-1.5" : ""}`}
@@ -370,17 +381,41 @@ export function SearchForm({
             type="button"
             onClick={openCalendar}
             className={`flex min-h-[48px] flex-1 cursor-pointer touch-manipulation flex-col items-start rounded-xl px-3 py-2 text-left transition-colors ${
-              forceVertical ? "" : "md:min-h-0 md:rounded-none md:border-r md:px-4 md:py-3"
+              catalogBar
+                ? "border border-slate-100 bg-white px-4 py-3 shadow-sm md:min-h-0 md:rounded-xl md:border md:px-4 md:py-3"
+                : forceVertical
+                  ? ""
+                  : "md:min-h-0 md:rounded-none md:border-r md:px-4 md:py-3"
             } ${
-              embedded
-                ? "border border-slate-200 bg-slate-50 hover:bg-white md:border-r-0"
-                : "hover:bg-slate-50 md:border-slate-200"
+              catalogBar
+                ? dateSecili
+                  ? "ring-2 ring-[#1D9E75]/80 ring-offset-2 ring-offset-transparent"
+                  : "text-slate-600 ring-0"
+                : embedded
+                  ? "border border-slate-200 bg-slate-50 hover:bg-white md:border-r-0"
+                  : "hover:bg-slate-50 md:border-slate-200"
             }`}
           >
-            <div className={`text-xs ${embedded ? "font-medium text-slate-500" : "font-semibold uppercase text-slate-500"}`}>
+            <div
+              className={`text-xs ${
+                catalogBar
+                  ? "font-medium text-slate-500"
+                  : embedded
+                    ? "font-medium text-slate-500"
+                    : "font-semibold uppercase text-slate-500"
+              }`}
+            >
               Tarihler
             </div>
-            <div className={`mt-0.5 ${embedded ? "text-[17px] font-medium text-slate-800" : "text-sm font-medium text-slate-800 md:text-base"}`}>
+            <div
+              className={`mt-0.5 ${
+                catalogBar
+                  ? `text-[15px] font-medium ${dateSecili ? "text-slate-900" : "text-slate-500"} md:text-base`
+                  : embedded
+                    ? "text-[17px] font-medium text-slate-800"
+                    : "text-sm font-medium text-slate-800 md:text-base"
+              }`}
+            >
               {searchPath === "/tekneler"
                 ? giris
                   ? format(giris, "d MMM yyyy", { locale: tr })
@@ -396,18 +431,16 @@ export function SearchForm({
             ) : null}
           </button>
 
-          <div
-            className={`hidden w-px shrink-0 self-stretch ${
-              forceVertical ? "" : "md:block"
-            } ${
-              embedded ? "bg-slate-200" : "bg-slate-200"
-            }`}
-            aria-hidden
-          />
+          {!catalogBar ? (
+            <div
+              className={`hidden w-px shrink-0 self-stretch ${forceVertical ? "" : "md:block"} ${embedded ? "bg-slate-200" : "bg-slate-200"}`}
+              aria-hidden
+            />
+          ) : null}
 
           <div
             className={`flex w-full flex-col gap-3 ${
-              forceVertical ? "" : "sm:flex-row md:flex-1 md:items-stretch"
+              catalogBar ? "md:flex-1 md:flex-row md:items-stretch md:gap-3" : forceVertical ? "" : "sm:flex-row md:flex-1 md:items-stretch"
             }`}
           >
             <div ref={guestWrapRef} className="relative w-full min-w-0 flex-1 sm:flex-1">
@@ -415,23 +448,35 @@ export function SearchForm({
                 type="button"
                 onClick={openGuestPanel}
                 className={`min-h-[48px] w-full cursor-pointer touch-manipulation rounded-xl px-3 py-2 text-left transition-colors ${
-                  forceVertical ? "" : "md:min-h-0 md:rounded-none md:border-r md:px-4 md:py-3"
+                  catalogBar
+                    ? "border border-slate-100 bg-white px-4 py-3 shadow-sm md:min-h-0 md:rounded-xl md:border md:px-4 md:py-3"
+                    : forceVertical
+                      ? ""
+                      : "md:min-h-0 md:rounded-none md:border-r md:px-4 md:py-3"
                 } ${
-                  embedded
-                    ? "border border-slate-200 bg-slate-50 hover:bg-white md:border-r-0"
-                    : "hover:bg-slate-50 md:border-slate-200"
+                  catalogBar
+                    ? "ring-2 ring-transparent hover:ring-[#1D9E75]/25"
+                    : embedded
+                      ? "border border-slate-200 bg-slate-50 hover:bg-white md:border-r-0"
+                      : "hover:bg-slate-50 md:border-slate-200"
                 }`}
               >
                 <div
                   className={`flex items-center gap-2 text-xs ${
-                    embedded ? "font-medium text-slate-500" : "font-semibold uppercase text-slate-500"
+                    catalogBar
+                      ? "font-medium text-slate-500"
+                      : embedded
+                        ? "font-medium text-slate-500"
+                        : "font-semibold uppercase text-slate-500"
                   }`}
                 >
-                  <Users size={12} className="shrink-0 text-[#0e9aa7]" aria-hidden />
+                  <Users size={12} className={`shrink-0 ${catalogBar ? "text-[#1D9E75]" : "text-[#0e9aa7]"}`} aria-hidden />
                   Kişi
                 </div>
                 <div
-                  className={`mt-0.5 text-left leading-snug ${embedded ? "text-[17px] font-medium text-slate-800" : "text-sm font-medium text-slate-800"}`}
+                  className={`mt-0.5 text-left leading-snug ${
+                    catalogBar ? "text-[15px] font-medium text-slate-800 md:text-base" : embedded ? "text-[17px] font-medium text-slate-800" : "text-sm font-medium text-slate-800"
+                  }`}
                 >
                   {searchPath === "/tekneler" ? `${yetiskin} kişi` : misafirOzeti}
                 </div>
@@ -450,22 +495,24 @@ export function SearchForm({
             <button
               type="button"
               onClick={submitSearch}
-              className={`inline-flex min-h-12 w-full min-w-0 shrink-0 touch-manipulation items-center justify-center whitespace-nowrap rounded-xl px-8 py-3.5 text-sm font-bold text-[#0d1117] shadow-lg shadow-[#0e9aa7]/30 transition-all duration-200 hover:from-[#22d3ee] hover:to-[#0e9aa7] active:scale-95 ${
-                forceVertical ? "" : "sm:w-auto md:m-1"
-              } ${
-                embedded ? "" : "btn-primary"
+              className={`inline-flex min-h-12 w-full min-w-0 shrink-0 touch-manipulation items-center justify-center gap-2 whitespace-nowrap rounded-xl px-8 py-3.5 text-sm font-bold transition-all duration-200 active:scale-[0.98] ${
+                catalogBar
+                  ? "border-2 border-white bg-white font-semibold text-[#1D9E75] shadow-md hover:border-[#1D9E75] hover:bg-[#1D9E75] hover:text-white md:m-0 md:w-auto md:min-w-[140px] md:self-stretch"
+                  : `text-[#0d1117] shadow-lg shadow-[#0e9aa7]/30 hover:from-[#22d3ee] hover:to-[#0e9aa7] ${forceVertical ? "" : "sm:w-auto md:m-1"} ${embedded ? "" : "btn-primary"}`
               }`}
               style={
-                embedded
-                  ? {
-                      background: "linear-gradient(to right, #0e9aa7, #22d3ee)",
-                      minWidth: "112px",
-                      borderRadius: "16px",
-                    }
-                  : undefined
+                catalogBar
+                  ? undefined
+                  : embedded
+                    ? {
+                        background: "linear-gradient(to right, #0e9aa7, #22d3ee)",
+                        minWidth: "112px",
+                        borderRadius: "16px",
+                      }
+                    : undefined
               }
             >
-              <Search size={16} className="inline opacity-90" aria-hidden />
+              <Search size={16} className={`inline ${catalogBar ? "text-current" : "opacity-90"}`} aria-hidden />
               <span>{submitLabel}</span>
             </button>
           </div>

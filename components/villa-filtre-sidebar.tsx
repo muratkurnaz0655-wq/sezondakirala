@@ -5,6 +5,8 @@ import { ChevronDown, ChevronUp, SlidersHorizontal } from "lucide-react";
 import { BOLGELER, KATEGORILER, OZELLIKLER } from "@/lib/villa-sabitleri";
 import type { VillaFiltre } from "@/types/filtre";
 
+const ACCENT = "#1D9E75";
+
 function FiltreSection({
   title,
   children,
@@ -16,9 +18,9 @@ function FiltreSection({
 }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className="mb-5 border-b border-slate-100 pb-5 last:border-0">
-      <button onClick={() => setOpen(!open)} className="mb-3 flex w-full items-center justify-between" type="button">
-        <span className="text-sm font-semibold uppercase tracking-wider text-slate-700">{title}</span>
+    <div className="mb-5 border-b border-slate-100 pb-5 last:mb-0 last:border-0 last:pb-0">
+      <button onClick={() => setOpen(!open)} className="mb-3 flex w-full items-center justify-between rounded-lg py-0.5" type="button">
+        <span className="text-xs font-semibold uppercase tracking-wider text-slate-600">{title}</span>
         {open ? <ChevronUp className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
       </button>
       {open ? children : null}
@@ -43,24 +45,35 @@ export function VillaFiltreSidebar({
   const maxFiyatLimit = toplamModu ? 200000 : 50000;
   const fiyatStep = toplamModu ? 1000 : 500;
 
-  return (
-    <aside className="w-full shrink-0 lg:w-72">
-      <div className="mb-5 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <SlidersHorizontal className="h-4 w-4 text-[#0e9aa7]" />
-          <span className="font-bold text-slate-800">Filtreler</span>
-          <span className="text-xs text-slate-400">({sonucSayisi} sonuç)</span>
-        </div>
-        <button onClick={onTemizle} className="text-xs font-medium text-[#0e9aa7] hover:underline" type="button">
-          Temizle
-        </button>
-      </div>
+  const minSliderMax = Math.max(fiyatStep, filtre.maxFiyat - fiyatStep);
+  const maxSliderMin = Math.min(maxFiyatLimit - fiyatStep, filtre.minFiyat + fiyatStep);
 
-      <div className="sticky top-24 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+  return (
+    <aside className="w-full shrink-0 lg:w-72 lg:sticky lg:top-24 lg:self-start">
+      <div className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-5 shadow-md ring-1 ring-slate-100/80">
+        <div className="mb-5 flex items-center justify-between gap-2 border-b border-slate-100 pb-4">
+          <div className="flex min-w-0 flex-1 items-center gap-2">
+            <SlidersHorizontal className="h-4 w-4 shrink-0" style={{ color: ACCENT }} aria-hidden />
+            <span className="truncate font-semibold text-slate-900">Filtreler</span>
+            <span
+              className="shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold text-white shadow-sm"
+              style={{ backgroundColor: ACCENT }}
+            >
+              {sonucSayisi}
+            </span>
+          </div>
+          <button onClick={onTemizle} className="shrink-0 text-xs font-medium hover:underline" style={{ color: ACCENT }} type="button">
+            Temizle
+          </button>
+        </div>
+
         <FiltreSection title="Bölge">
           <div className="space-y-2">
             {BOLGELER.map((bolge) => (
-              <label key={bolge} className="group flex cursor-pointer items-center gap-2.5">
+              <label
+                key={bolge}
+                className="flex min-h-[48px] cursor-pointer items-center gap-3 rounded-xl border border-slate-100 px-3 py-2.5 transition-colors hover:border-[#1D9E75]/30 hover:bg-emerald-50/40"
+              >
                 <input
                   type="checkbox"
                   checked={filtre.bolge.includes(bolge)}
@@ -68,42 +81,52 @@ export function VillaFiltreSidebar({
                     const yeni = e.target.checked ? [...filtre.bolge, bolge] : filtre.bolge.filter((b) => b !== bolge);
                     onChange({ ...filtre, bolge: yeni });
                   }}
-                  className="h-4 w-4 cursor-pointer rounded border-slate-300 accent-[#0e9aa7] text-[#0e9aa7]"
+                  className="h-4 w-4 shrink-0 cursor-pointer rounded border-slate-300"
+                  style={{ accentColor: ACCENT }}
                 />
-                <span className="text-sm text-slate-600 transition-colors group-hover:text-slate-900">{bolge}</span>
+                <span className="text-sm font-medium text-slate-700">{bolge}</span>
               </label>
             ))}
           </div>
         </FiltreSection>
 
         <FiltreSection title={toplamModu ? `Toplam Fiyat (${geceSayisi} gece)` : "Gecelik Fiyat"}>
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <div className="flex-1">
-                <label className="mb-1 block text-xs text-slate-400">Min ₺</label>
-                <input
-                  type="number"
-                  value={filtre.minFiyat}
-                  min={0}
-                  max={filtre.maxFiyat}
-                  step={fiyatStep}
-                  onChange={(e) => onChange({ ...filtre, minFiyat: Number(e.target.value) })}
-                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 outline-none focus:border-[#0e9aa7] focus:ring-1 focus:ring-[#0e9aa7]/20"
-                />
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <div className="flex justify-between text-[11px] font-medium text-slate-500">
+                <span>Min</span>
+                <span>₺{filtre.minFiyat.toLocaleString("tr-TR")}</span>
               </div>
-              <span className="mt-4 text-slate-300">-</span>
-              <div className="flex-1">
-                <label className="mb-1 block text-xs text-slate-400">Max ₺</label>
-                <input
-                  type="number"
-                  value={filtre.maxFiyat}
-                  min={filtre.minFiyat}
-                  max={maxFiyatLimit}
-                  step={fiyatStep}
-                  onChange={(e) => onChange({ ...filtre, maxFiyat: Number(e.target.value) })}
-                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 outline-none focus:border-[#0e9aa7] focus:ring-1 focus:ring-[#0e9aa7]/20"
-                />
+              <input
+                type="range"
+                min={0}
+                max={minSliderMax}
+                step={fiyatStep}
+                value={Math.min(filtre.minFiyat, minSliderMax)}
+                onChange={(e) => {
+                  const v = Number(e.target.value);
+                  onChange({ ...filtre, minFiyat: Math.min(v, filtre.maxFiyat - fiyatStep) });
+                }}
+                className="h-2 w-full cursor-pointer rounded-full bg-slate-100 accent-[#1D9E75]"
+                aria-label="Minimum fiyat"
+              />
+              <div className="flex justify-between text-[11px] font-medium text-slate-500">
+                <span>Max</span>
+                <span>₺{filtre.maxFiyat.toLocaleString("tr-TR")}</span>
               </div>
+              <input
+                type="range"
+                min={maxSliderMin}
+                max={maxFiyatLimit}
+                step={fiyatStep}
+                value={Math.max(filtre.maxFiyat, maxSliderMin)}
+                onChange={(e) => {
+                  const v = Number(e.target.value);
+                  onChange({ ...filtre, maxFiyat: Math.max(v, filtre.minFiyat + fiyatStep) });
+                }}
+                className="h-2 w-full cursor-pointer rounded-full bg-slate-100 accent-[#1D9E75]"
+                aria-label="Maksimum fiyat"
+              />
             </div>
             <div className="flex flex-wrap gap-1.5">
               {[
@@ -116,11 +139,14 @@ export function VillaFiltreSidebar({
                   key={r.label}
                   type="button"
                   onClick={() => onChange({ ...filtre, minFiyat: r.min, maxFiyat: r.max })}
-                  className={`rounded-full border px-2.5 py-1 text-xs transition-all ${
+                  className={`rounded-full border px-2.5 py-1 text-xs font-medium transition-all ${
                     filtre.minFiyat === r.min && filtre.maxFiyat === r.max
-                      ? "border-[#0e9aa7] bg-[#0e9aa7] text-white"
-                      : "border-slate-200 text-slate-600 hover:border-[#0e9aa7]"
+                      ? "border-transparent text-white shadow-sm"
+                      : "border-slate-200 text-slate-600 hover:border-[#1D9E75]/40"
                   }`}
+                  style={
+                    filtre.minFiyat === r.min && filtre.maxFiyat === r.max ? { backgroundColor: ACCENT, borderColor: ACCENT } : undefined
+                  }
                 >
                   {r.label}
                 </button>
@@ -136,11 +162,10 @@ export function VillaFiltreSidebar({
                 key={n}
                 type="button"
                 onClick={() => onChange({ ...filtre, minKisi: n })}
-                className={`h-10 w-10 rounded-xl border text-sm font-medium transition-all ${
-                  filtre.minKisi === n
-                    ? "border-[#0e9aa7] bg-[#0e9aa7] text-white shadow-sm"
-                    : "border-slate-200 text-slate-600 hover:border-[#0e9aa7]"
+                className={`h-10 min-w-[2.5rem] rounded-xl border px-2 text-sm font-semibold transition-all ${
+                  filtre.minKisi === n ? "border-transparent text-white shadow-md" : "border-slate-200 text-slate-600 hover:border-[#1D9E75]/50"
                 }`}
+                style={filtre.minKisi === n ? { backgroundColor: ACCENT, borderColor: ACCENT } : undefined}
               >
                 {n}+
               </button>
@@ -155,11 +180,10 @@ export function VillaFiltreSidebar({
                 key={n}
                 type="button"
                 onClick={() => onChange({ ...filtre, minYatakOdasi: n })}
-                className={`h-10 w-10 rounded-xl border text-sm font-medium transition-all ${
-                  filtre.minYatakOdasi === n
-                    ? "border-[#0e9aa7] bg-[#0e9aa7] text-white shadow-sm"
-                    : "border-slate-200 text-slate-600 hover:border-[#0e9aa7]"
+                className={`h-10 min-w-[2.5rem] rounded-xl border px-2 text-sm font-semibold transition-all ${
+                  filtre.minYatakOdasi === n ? "border-transparent text-white shadow-md" : "border-slate-200 text-slate-600 hover:border-[#1D9E75]/50"
                 }`}
+                style={filtre.minYatakOdasi === n ? { backgroundColor: ACCENT, borderColor: ACCENT } : undefined}
               >
                 {n}+
               </button>
@@ -170,40 +194,44 @@ export function VillaFiltreSidebar({
         <FiltreSection title="Tatil Türü">
           <div className="space-y-2">
             {KATEGORILER.map((kat) => (
-              <label key={kat.value} className="group flex cursor-pointer items-center gap-2.5">
+              <label
+                key={kat.value}
+                className="flex min-h-[44px] cursor-pointer items-center gap-3 rounded-xl border border-slate-100 px-3 py-2 transition-colors hover:border-[#1D9E75]/30 hover:bg-emerald-50/40"
+              >
                 <input
                   type="checkbox"
                   checked={filtre.kategori.includes(kat.value)}
                   onChange={(e) => {
-                    const yeni = e.target.checked
-                      ? [...filtre.kategori, kat.value]
-                      : filtre.kategori.filter((k) => k !== kat.value);
+                    const yeni = e.target.checked ? [...filtre.kategori, kat.value] : filtre.kategori.filter((k) => k !== kat.value);
                     onChange({ ...filtre, kategori: yeni });
                   }}
-                  className="h-4 w-4 cursor-pointer rounded accent-[#0e9aa7]"
+                  className="h-4 w-4 shrink-0 cursor-pointer rounded"
+                  style={{ accentColor: ACCENT }}
                 />
-                <span className="text-sm text-slate-600 group-hover:text-slate-900">{kat.label}</span>
+                <span className="text-sm font-medium text-slate-700">{kat.label}</span>
               </label>
             ))}
           </div>
         </FiltreSection>
 
         <FiltreSection title="Özellikler">
-          <div className="max-h-64 space-y-2 overflow-y-auto">
+          <div className="max-h-64 space-y-2 overflow-y-auto pr-1">
             {OZELLIKLER.map((oz) => (
-              <label key={oz.value} className="group flex cursor-pointer items-center gap-2.5">
+              <label
+                key={oz.value}
+                className="flex min-h-[44px] cursor-pointer items-center gap-3 rounded-xl border border-slate-100 px-3 py-2 transition-colors hover:border-[#1D9E75]/30 hover:bg-emerald-50/40"
+              >
                 <input
                   type="checkbox"
                   checked={filtre.ozellikler.includes(oz.value)}
                   onChange={(e) => {
-                    const yeni = e.target.checked
-                      ? [...filtre.ozellikler, oz.value]
-                      : filtre.ozellikler.filter((o) => o !== oz.value);
+                    const yeni = e.target.checked ? [...filtre.ozellikler, oz.value] : filtre.ozellikler.filter((o) => o !== oz.value);
                     onChange({ ...filtre, ozellikler: yeni });
                   }}
-                  className="h-4 w-4 cursor-pointer rounded accent-[#0e9aa7]"
+                  className="h-4 w-4 shrink-0 cursor-pointer rounded"
+                  style={{ accentColor: ACCENT }}
                 />
-                <span className="text-sm text-slate-600 group-hover:text-slate-900">{oz.label}</span>
+                <span className="text-sm font-medium text-slate-700">{oz.label}</span>
               </label>
             ))}
           </div>

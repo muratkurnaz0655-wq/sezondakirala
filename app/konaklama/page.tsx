@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { Search, SlidersHorizontal, X } from "lucide-react";
 import { IlanListeKarti } from "@/components/ilan-liste-karti";
+import { ListingReveal } from "@/components/listing-reveal";
 import { SearchForm } from "@/components/search-form";
 import { VillaFiltreSidebar } from "@/components/villa-filtre-sidebar";
 import { aramaStore } from "@/lib/arama-store";
@@ -15,15 +16,15 @@ import type { Ilan } from "@/types/supabase";
 type ListingRow = Ilan & { ilan_medyalari?: Array<{ url: string; sira: number }> | null };
 
 const SkeletonKart = () => (
-  <div className="overflow-hidden rounded-2xl border border-slate-100 animate-pulse">
-    <div className="h-48 w-full bg-slate-200" />
+  <div className="overflow-hidden rounded-xl border border-slate-100 bg-white shadow-sm">
+    <div className="skeleton h-[240px] w-full rounded-none" />
     <div className="space-y-3 p-4">
-      <div className="h-4 w-3/4 rounded-full bg-slate-200" />
-      <div className="h-3 w-1/2 rounded-full bg-slate-200" />
-      <div className="h-3 w-2/3 rounded-full bg-slate-200" />
-      <div className="mt-4 flex items-center justify-between">
-        <div className="h-6 w-24 rounded-full bg-slate-200" />
-        <div className="h-9 w-20 rounded-xl bg-slate-200" />
+      <div className="skeleton h-4 w-3/4" />
+      <div className="skeleton h-3 w-1/2" />
+      <div className="skeleton h-3 w-2/3" />
+      <div className="mt-4 flex justify-between gap-3">
+        <div className="skeleton h-4 w-20" />
+        <div className="skeleton h-8 w-24 rounded-lg" />
       </div>
     </div>
   </div>
@@ -68,6 +69,34 @@ export default function ListingsPage() {
   const kategoriKey = useMemo(() => filtre.kategori.join("|"), [filtre.kategori]);
   const ozellikKey = useMemo(() => filtre.ozellikler.join("|"), [filtre.ozellikler]);
 
+  const listeAnimasyonAnahtari = useMemo(
+    () =>
+      [
+        bolgeKey,
+        kategoriKey,
+        ozellikKey,
+        filtre.minFiyat,
+        filtre.maxFiyat,
+        filtre.minKisi,
+        filtre.minYatakOdasi,
+        filtre.minBanyo,
+        filtre.siralama,
+        geceSayisi,
+      ].join("|"),
+    [
+      bolgeKey,
+      kategoriKey,
+      ozellikKey,
+      filtre.minFiyat,
+      filtre.maxFiyat,
+      filtre.minKisi,
+      filtre.minYatakOdasi,
+      filtre.minBanyo,
+      filtre.siralama,
+      geceSayisi,
+    ],
+  );
+
   useEffect(() => {
     if (currentArama?.tip === "villa" && currentArama.giris && currentArama.cikis) {
       setGiris(currentArama.giris);
@@ -89,9 +118,7 @@ export default function ListingsPage() {
     let query = supabase.from("ilanlar").select("*, ilan_medyalari(url,sira,tip)").eq("aktif", true).eq("tip", "villa");
 
     if (aktifFiltre.bolge.length > 0) {
-      const bolgeFiltre = aktifFiltre.bolge
-        .map((b) => `konum.ilike.%${b.split(",")[0].trim()}%`)
-        .join(",");
+      const bolgeFiltre = aktifFiltre.bolge.map((b) => `konum.ilike.%${b.split(",")[0].trim()}%`).join(",");
       query = query.or(bolgeFiltre);
     }
 
@@ -217,36 +244,39 @@ export default function ListingsPage() {
 
   return (
     <div className="min-h-0 w-full space-y-6 overflow-x-hidden py-6">
-      <section className="overflow-visible rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div className="border-b border-slate-200 bg-[#f0fdfd] px-4 py-3 md:px-5">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-700">Tarih ve misafir</p>
-        </div>
-        <div className="p-4 md:p-5">
-          <SearchForm
-            bugunIso={bugunIso}
-            initialGiris={giris || undefined}
-            initialCikis={cikis || undefined}
-            initialYetiskin={yetiskin}
-            initialCocuk={cocuk}
-            initialBebek={bebek}
-          />
-        </div>
+      <section
+        className="overflow-visible rounded-2xl px-4 py-5 shadow-lg md:px-6 md:py-6"
+        style={{
+          background: "linear-gradient(120deg, #0F6E56 0%, #0c4a6e 55%, #185FA5 100%)",
+        }}
+      >
+        <p className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-white/75">Tarih ve misafir</p>
+        <SearchForm
+          bugunIso={bugunIso}
+          catalogBar
+          initialGiris={giris || undefined}
+          initialCikis={cikis || undefined}
+          initialYetiskin={yetiskin}
+          initialCocuk={cocuk}
+          initialBebek={bebek}
+        />
       </section>
+
       <button
         onClick={() => setMobilFiltre(true)}
-        className="mb-4 flex w-full items-center justify-center gap-2 rounded-xl border border-[#0e9aa7] px-4 py-2.5 text-sm font-semibold text-[#0e9aa7] lg:hidden"
+        className="mb-1 flex w-full items-center justify-center gap-2 rounded-xl border border-[#1D9E75]/40 bg-white px-4 py-3 text-sm font-semibold text-[#1D9E75] shadow-sm lg:hidden"
         type="button"
       >
         <SlidersHorizontal className="h-4 w-4" />
         Filtrele
         {aktifFiltreSayisi > 0 ? (
-          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#0e9aa7] text-xs text-white">
+          <span className="flex h-6 min-w-6 items-center justify-center rounded-full bg-[#1D9E75] px-1.5 text-xs text-white">
             {aktifFiltreSayisi}
           </span>
         ) : null}
       </button>
 
-      <div className="flex flex-col gap-6 lg:flex-row">
+      <div className="flex flex-col gap-8 lg:flex-row lg:items-start">
         <div className="hidden lg:block">
           <VillaFiltreSidebar
             filtre={filtre}
@@ -258,14 +288,14 @@ export default function ListingsPage() {
         </div>
 
         <main className="min-w-0 flex-1">
-          <div className="mb-5 flex items-center justify-between gap-3">
-            <p className="text-sm text-slate-500">
+          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-[13px] text-slate-500">
               <span className="font-semibold text-slate-800">{ilanlar.length}</span> villa listeleniyor
             </p>
             <select
               value={filtre.siralama}
               onChange={(e) => setFiltre({ ...filtre, siralama: e.target.value as VillaFiltre["siralama"] })}
-              className="cursor-pointer rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none focus:border-[#0e9aa7]"
+              className="w-full cursor-pointer rounded-xl border border-[#185FA5]/25 bg-white px-4 py-2.5 text-sm text-slate-700 shadow-sm outline-none transition-shadow focus:border-[#185FA5]/50 focus:ring-2 focus:ring-[#185FA5]/15 sm:w-auto sm:min-w-[220px]"
             >
               <option value="onerilen">Önerilen Sıra</option>
               <option value="fiyat_artan">Fiyat: Düşükten Yükseğe</option>
@@ -280,10 +310,10 @@ export default function ListingsPage() {
               {aktifFiltreler.map((f, i) => (
                 <span
                   key={`${f.key}-${f.value}-${i}`}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-[#0e9aa7]/20 bg-[#0e9aa7]/10 px-3 py-1.5 text-xs font-medium text-[#0e9aa7]"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-[#1D9E75]/25 bg-emerald-50/80 px-3 py-1.5 text-xs font-medium text-emerald-900"
                 >
                   {f.label}
-                  <button onClick={() => filtreKaldir(f.key, f.value)} type="button">
+                  <button onClick={() => filtreKaldir(f.key, f.value)} type="button" className="rounded-full p-0.5 hover:bg-white/80">
                     <X className="h-3 w-3" />
                   </button>
                 </span>
@@ -298,57 +328,59 @@ export default function ListingsPage() {
             </div>
           ) : null}
 
-          <p className="rounded-xl border border-slate-200 bg-[#f0fdfd] px-3 py-2 text-sm text-slate-700">
-            {loading ? "Villa ilanları yükleniyor..." : `${ilanlar.length} villa bulundu`}
-          </p>
-          <div className="mt-4 flex w-full flex-col gap-4">
+          <div
+            className={`transition-opacity duration-300 ${loading ? "opacity-90" : "opacity-100"}`}
+            key={listeAnimasyonAnahtari}
+          >
             {loading ? (
-              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 {[...Array(6)].map((_, i) => (
                   <SkeletonKart key={i} />
                 ))}
               </div>
             ) : ilanlar.length === 0 ? (
-              <div className="col-span-full flex flex-col items-center justify-center py-20 text-center">
-                <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-2xl bg-[#f0fdfd]">
-                  <Search className="h-8 w-8 text-[#0e9aa7]/40" />
+              <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 py-20 text-center">
+                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-slate-100">
+                  <Search className="h-7 w-7 text-[#185FA5]/50" aria-hidden />
                 </div>
-                <h3 className="mb-2 text-lg font-semibold text-slate-700">Sonuç bulunamadı</h3>
-                <p className="mb-4 text-sm text-slate-500">Farklı filtre kriterleri deneyin</p>
+                <h3 className="mb-2 text-lg font-medium text-slate-800">Kriterlere uygun villa bulunamadı</h3>
+                <p className="mb-5 max-w-sm text-sm text-slate-500">Filtreleri veya tarih aralığını değiştirerek tekrar deneyin.</p>
                 <button
                   onClick={() => setFiltre(defaultFiltre)}
-                  className="text-sm font-semibold text-[#0e9aa7] hover:underline"
+                  className="rounded-xl border-2 border-[#1D9E75] bg-white px-6 py-2.5 text-sm font-semibold text-[#1D9E75] transition-colors hover:bg-[#1D9E75] hover:text-white"
                   type="button"
                 >
-                  Filtreleri temizle
+                  Filtreleri Temizle
                 </button>
               </div>
             ) : (
-              ilanlar.map((listing) => (
-                <IlanListeKarti
-                  key={listing.id}
-                  id={listing.id}
-                  slug={listing.slug ?? listing.id}
-                  baslik={listing.baslik}
-                  konum={listing.konum ?? ""}
-                  fiyat={listing.gunluk_fiyat}
-                  tip="villa"
-                  oda_sayisi={listing.yatak_odasi}
-                  banyo_sayisi={listing.banyo}
-                  kapasite={listing.kapasite}
-                  puan={0}
-                  yorum_sayisi={0}
-                  fotograflar={listing.ilk_resim_url ? [listing.ilk_resim_url] : []}
-                  one_cikan={listing.sponsorlu}
-                  ozellikler={extractTags(listing.ozellikler)}
-                  geceSayisi={geceSayisi}
-                  giris={giris}
-                  cikis={cikis}
-                  yetiskin={yetiskin}
-                  cocuk={cocuk}
-                  bebek={bebek}
-                />
-              ))
+              <ListingReveal className="grid grid-cols-1 gap-6 md:grid-cols-2" staggerMs={50}>
+                {ilanlar.map((listing) => (
+                  <IlanListeKarti
+                    key={listing.id}
+                    id={listing.id}
+                    slug={listing.slug ?? listing.id}
+                    baslik={listing.baslik}
+                    konum={listing.konum ?? ""}
+                    fiyat={listing.gunluk_fiyat}
+                    tip="villa"
+                    oda_sayisi={listing.yatak_odasi}
+                    banyo_sayisi={listing.banyo}
+                    kapasite={listing.kapasite}
+                    puan={0}
+                    yorum_sayisi={0}
+                    fotograflar={listing.ilk_resim_url ? [listing.ilk_resim_url] : []}
+                    one_cikan={listing.sponsorlu}
+                    ozellikler={extractTags(listing.ozellikler)}
+                    geceSayisi={geceSayisi}
+                    giris={giris}
+                    cikis={cikis}
+                    yetiskin={yetiskin}
+                    cocuk={cocuk}
+                    bebek={bebek}
+                  />
+                ))}
+              </ListingReveal>
             )}
           </div>
         </main>
@@ -356,11 +388,11 @@ export default function ListingsPage() {
 
       {mobilFiltre ? (
         <div className="fixed inset-0 z-50 lg:hidden">
-          <button className="absolute inset-0 bg-black/40" onClick={() => setMobilFiltre(false)} type="button" />
-          <div className="absolute right-0 top-0 bottom-0 w-80 overflow-y-auto bg-white p-4">
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="font-bold text-slate-800">Filtreler</h3>
-              <button onClick={() => setMobilFiltre(false)} type="button">
+          <button className="absolute inset-0 bg-black/45 backdrop-blur-[2px]" onClick={() => setMobilFiltre(false)} type="button" aria-label="Kapat" />
+          <div className="absolute right-0 top-0 bottom-0 flex w-[min(100%,22rem)] flex-col overflow-y-auto rounded-l-2xl border-l border-slate-200 bg-white p-5 shadow-2xl">
+            <div className="mb-4 flex items-center justify-between border-b border-slate-100 pb-3">
+              <h3 className="font-semibold text-slate-900">Filtreler</h3>
+              <button onClick={() => setMobilFiltre(false)} type="button" className="rounded-full p-2 hover:bg-slate-100">
                 <X className="h-5 w-5 text-slate-500" />
               </button>
             </div>
