@@ -419,7 +419,7 @@ export async function getListingBySlug(tip: "villa" | "tekne", slug: string) {
         .in("durum", ["beklemede", "onaylandi"]),
       supabase
         .from("yorumlar")
-        .select("id,rezervasyon_id,kullanici_id,ilan_id,puan,yorum,olusturulma_tarihi,kullanicilar(ad_soyad,avatar_url)")
+        .select("id,rezervasyon_id,kullanici_id,ilan_id,puan,yorum,olusturulma_tarihi,kullanicilar(ad_soyad,avatar_url,email)")
         .eq("ilan_id", listing.id)
         .order("olusturulma_tarihi", { ascending: false }),
       supabase
@@ -437,13 +437,19 @@ export async function getListingBySlug(tip: "villa" | "tekne", slug: string) {
   const similarRaw = (similarListingsRes.data ?? []) as Ilan[];
   const similar = await attachPreviewImages(similarRaw);
 
+  const listingId = listing.id as string;
+  const commentsRaw = commentsRes.data ?? [];
+  const commentsForListing = commentsRaw.filter(
+    (row: { ilan_id?: string | null }) => row.ilan_id === listingId,
+  );
+
   return {
     listing: listing as Ilan,
     media: mediaRes.data ?? [],
     availability: availabilityRes.data ?? [],
     seasonPrices: seasonsRes.data ?? [],
     reservations: reservationsRes.data ?? [],
-    comments: commentsRes.data ?? [],
+    comments: commentsForListing,
     similar,
   };
 }

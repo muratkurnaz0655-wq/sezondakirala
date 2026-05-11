@@ -165,7 +165,9 @@ export async function ListingDetailPage({ tip, slug, selectedDates }: ListingDet
         }
       : undefined;
 
-  const commentRows = detail.comments as ListingCommentRow[];
+  const commentRows = (detail.comments as ListingCommentRow[]).filter(
+    (row) => row.ilan_id === detail.listing.id,
+  );
   const totalScore = commentRows.reduce<number>((sum, row) => sum + Number(row.puan ?? 0), 0);
   const averageScore = commentRows.length > 0 ? totalScore / commentRows.length : 0;
 
