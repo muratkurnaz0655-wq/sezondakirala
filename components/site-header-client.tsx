@@ -339,6 +339,7 @@ export function SiteHeaderClient({ siteName }: SiteHeaderClientProps) {
           <Link href="/paketler" className={`${navLinkBase} ${pathname.startsWith("/paketler") ? "font-semibold text-[#185FA5] after:scale-x-100" : ""}`}>Paketler</Link>
           <Link href="/hakkimizda" className={`${navLinkBase} ${pathname.startsWith("/hakkimizda") ? "font-semibold text-[#185FA5] after:scale-x-100" : ""}`}>Hakkımızda</Link>
           <Link href="/sss" className={`${navLinkBase} ${pathname.startsWith("/sss") ? "font-semibold text-[#185FA5] after:scale-x-100" : ""}`}>SSS</Link>
+          <Link href="/iletisim" className={`${navLinkBase} ${pathname.startsWith("/iletisim") ? "font-semibold text-[#185FA5] after:scale-x-100" : ""}`}>İletişim</Link>
         </nav>
 
         <div className="flex items-center gap-2 md:gap-3">

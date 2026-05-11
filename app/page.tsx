@@ -2,8 +2,8 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   getHomeFeaturedPackages,
+  getHomeCommentSummary,
   getPublicCatalogCounts,
-  getTopComments,
 } from "@/lib/data/phase2";
 import type { Ilan } from "@/types/supabase";
 import { WaveDivider } from "@/components/wave-divider";
@@ -59,9 +59,9 @@ function yorumAvatarHarf(ad: string | null): string {
 }
 
 export default async function Home() {
-  const [homePackages, topComments, settings, catalogCounts, supabase] = await Promise.all([
+  const [homePackages, homeCommentSummary, settings, catalogCounts, supabase] = await Promise.all([
     getHomeFeaturedPackages(3),
-    getTopComments(),
+    getHomeCommentSummary(3),
     getPlatformSettings(),
     getPublicCatalogCounts(),
     createClient(),
@@ -356,59 +356,73 @@ export default async function Home() {
         </MotionFadeIn>
       </section>
 
-      <section className="-mx-4 bg-white py-10 sm:py-12 md:py-16 md:-mx-6 lg:-mx-8">
-        <MotionFadeIn className="w-full space-y-4" delay={0.25}>
-          <div className="mb-12 text-center">
-            <h2 className="heading-section mb-3 text-slate-900">Misafirlerimiz Ne Diyor?</h2>
-            <div className="flex flex-wrap items-center justify-center gap-2">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <Star key={i} size={20} className="fill-amber-400 text-amber-400" />
-              ))}
-              <span className="ml-2 font-bold text-slate-800">4.9/5</span>
-              <span className="text-slate-500">— 120+ değerlendirme</span>
-            </div>
-          </div>
-          <div className="grid gap-6 md:grid-cols-3">
-            {topComments.map((item) => (
-              <article key={item.id} className="relative rounded-2xl border border-slate-100 bg-white p-6 shadow-sm transition-all duration-200 hover:shadow-md">
-                <div
-                  className="pointer-events-none absolute right-6 top-4 select-none font-serif text-8xl leading-none text-[#0e9aa7]/20"
-                  aria-hidden
-                >
-                  &ldquo;
-                </div>
-                <div className="mb-3 flex">
+      {homeCommentSummary.totalCount > 0 ? (
+        <section className="-mx-4 bg-white py-10 sm:py-12 md:py-16 md:-mx-6 lg:-mx-8">
+          <MotionFadeIn className="w-full space-y-4" delay={0.25}>
+            <div className="mb-12 text-center">
+              <h2 className="heading-section mb-3 text-slate-900">Misafirlerimiz Ne Diyor?</h2>
+              {homeCommentSummary.averageRating != null ? (
+                <div className="flex flex-wrap items-center justify-center gap-2">
                   {[1, 2, 3, 4, 5].map((i) => (
-                    <Star
-                      key={i}
-                      size={14}
-                      className={
-                        i <= item.puan ? "fill-amber-400 text-amber-400" : "text-slate-300"
-                      }
-                    />
+                    <Star key={i} size={20} className="fill-amber-400 text-amber-400" />
                   ))}
+                  <span className="ml-2 font-bold text-slate-800">
+                    {homeCommentSummary.averageRating.toFixed(1)}/5
+                  </span>
+                  <span className="text-slate-500">— {homeCommentSummary.totalCount} değerlendirme</span>
                 </div>
-                <p className="relative z-10 mb-4 leading-relaxed text-slate-600">
-                  &ldquo;{fixTurkishDisplay(item.yorum)}&rdquo;
-                </p>
-                <div className="flex items-center gap-3 border-t border-slate-200 pt-4">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#0e9aa7] text-sm font-bold text-white">
-                    {yorumAvatarHarf(item.misafir_ad)}
+              ) : null}
+            </div>
+            <div className="grid gap-6 md:grid-cols-3">
+              {homeCommentSummary.comments.map((item) => (
+                <article key={item.id} className="relative rounded-2xl border border-slate-100 bg-white p-6 shadow-sm transition-all duration-200 hover:shadow-md">
+                  <div
+                    className="pointer-events-none absolute right-6 top-4 select-none font-serif text-8xl leading-none text-[#0e9aa7]/20"
+                    aria-hidden
+                  >
+                    &ldquo;
                   </div>
-                  <div>
-                    <div className="text-sm font-semibold text-slate-800">
-                      {item.misafir_ad ? fixTurkishDisplay(item.misafir_ad) : "Misafir"}
+                  <div className="mb-3 flex">
+                    {[1, 2, 3, 4, 5].map((i) => (
+                      <Star
+                        key={i}
+                        size={14}
+                        className={i <= item.puan ? "fill-amber-400 text-amber-400" : "text-slate-300"}
+                      />
+                    ))}
+                  </div>
+                  <p className="relative z-10 mb-4 leading-relaxed text-slate-600">
+                    &ldquo;{fixTurkishDisplay(item.yorum)}&rdquo;
+                  </p>
+                  <div className="flex items-center gap-3 border-t border-slate-200 pt-4">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#0e9aa7] text-sm font-bold text-white">
+                      {yorumAvatarHarf(item.misafir_ad)}
                     </div>
-                    <div className="text-xs text-slate-500">
-                      {item.ilan_baslik ? fixTurkishDisplay(item.ilan_baslik) : SITE_NAME}
+                    <div>
+                      <div className="text-sm font-semibold text-slate-800">
+                        {fixTurkishDisplay(item.misafir_ad ?? "Kullanıcı")}
+                      </div>
+                      <div className="text-xs text-slate-500">
+                        {item.ilan_baslik ? fixTurkishDisplay(item.ilan_baslik) : SITE_NAME}
+                      </div>
                     </div>
                   </div>
-                </div>
-              </article>
-            ))}
-          </div>
-        </MotionFadeIn>
-      </section>
+                </article>
+              ))}
+            </div>
+            {homeCommentSummary.totalCount > 3 ? (
+              <div className="pt-2 text-center">
+                <Link
+                  href="/konaklama"
+                  className="inline-flex items-center justify-center rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+                >
+                  Tüm yorumları gör
+                </Link>
+              </div>
+            ) : null}
+          </MotionFadeIn>
+        </section>
+      ) : null}
 
       <section className="-mx-4 bg-gradient-to-b from-[#0f4c5c]/20 to-[#111827] py-10 sm:py-12 md:py-16 text-[#e2e8f0] md:-mx-6 lg:-mx-8">
         <MotionFadeIn className="w-full" delay={0.3}>

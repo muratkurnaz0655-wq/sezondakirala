@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getPlatformSettings } from "@/lib/settings";
 import { SITE_NAME, formatWhatsappTrDisplay, whatsappHref } from "@/lib/constants";
-import { mesajGonder } from "@/app/iletisim/actions";
-import { ContactSubmitButton } from "@/components/contact-submit-button";
+import { ContactForm } from "@/components/contact-form";
 import { Clock3, Mail, MapPin, MessageCircle, Phone } from "lucide-react";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -20,116 +19,70 @@ export default async function IletisimPage() {
   const phoneHref = `tel:+${settings.whatsappNumber.replace(/\D/g, "")}`;
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 sm:space-y-8 md:space-y-10 overflow-x-hidden bg-white px-4 py-10 sm:py-12">
-      <div>
-        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-slate-900">İletişim</h1>
-        <p className="mt-2 text-slate-500">
+    <div className="-mx-4 w-[calc(100%+2rem)] bg-[#f8f9fa] px-4 py-10 sm:-mx-6 sm:w-[calc(100%+3rem)] sm:px-6 md:py-12 lg:-mx-8 lg:w-[calc(100%+4rem)] lg:px-8">
+      <div className="mx-auto max-w-6xl space-y-8 overflow-x-hidden">
+        <div className="text-center">
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">İletişim</h1>
+          <p className="mt-2 text-slate-500">
           Sorularınız için bize yazın veya WhatsApp üzerinden anında ulaşın.
-        </p>
-      </div>
-
-      <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
-        <div className="space-y-6 rounded-2xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <a href={phoneHref} className="rounded-xl border border-slate-200 bg-[#f0fdfd] p-4 transition-all hover:border-[#0e9aa7]/45">
-              <Phone className="mb-2 h-5 w-5 text-[#0e9aa7]" />
-              <p className="text-xs font-semibold uppercase text-slate-500">Telefon</p>
-              <p className="text-sm text-slate-800">{formatWhatsappTrDisplay(settings.whatsappNumber)}</p>
-            </a>
-            <Link href={wa} className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 transition-all hover:border-emerald-400 hover-lift-soft">
-              <MessageCircle className="mb-2 h-5 w-5 text-emerald-600" />
-              <p className="text-xs font-semibold uppercase text-slate-500">WhatsApp</p>
-              <p className="text-sm text-slate-800">Mesaj Gönder</p>
-            </Link>
-            <a
-              href={`mailto:${settings.contactEmail}`}
-              className="rounded-xl border border-slate-200 bg-[#f0fdfd] p-4 transition-all hover:border-[#0e9aa7]/45"
-            >
-              <Mail className="mb-2 h-5 w-5 text-[#0e9aa7]" />
-              <p className="text-xs font-semibold uppercase text-slate-500">E-posta</p>
-              <p className="text-sm text-slate-800">{settings.contactEmail}</p>
-            </a>
-            <div className="rounded-xl border border-slate-200 bg-[#f0fdfd] p-4">
-              <Clock3 className="mb-2 h-5 w-5 text-[#0e9aa7]" />
-              <p className="text-xs font-semibold uppercase text-slate-500">Çalışma Saatleri</p>
-              <p className="text-sm text-slate-800">Pzt-Cmt 09:00-18:00</p>
-            </div>
-          </div>
-          <div className="overflow-hidden rounded-2xl border border-slate-200 shadow-sm">
-            <iframe
-              title="Fethiye harita"
-              src="https://www.google.com/maps?q=Fethiye,+Mu%C4%9Fla,+T%C3%BCrkiye&output=embed"
-              width="100%"
-              height="280"
-              style={{ border: 0 }}
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-              allowFullScreen
-            />
-          </div>
-          <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-[#f0fdfd] px-3 py-1.5 text-xs text-slate-500">
-            <MapPin className="h-4 w-4" /> Fethiye, Muğla, Türkiye
-          </div>
+          </p>
+          <div className="mx-auto mt-4 h-[2px] w-28 rounded-full bg-gradient-to-r from-transparent via-[#185FA5] to-transparent" />
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm">
-        <h2 className="text-lg font-semibold text-slate-800">Mesaj bırakın</h2>
-        <p className="mt-1 text-sm text-slate-500">
-          Formu doldurduğunuzda mesajınız doğrudan destek ekibimize iletilir.
-        </p>
-        <form className="mt-4 space-y-3" action={mesajGonder}>
-          <div>
-            <label className="text-xs font-medium text-slate-500">Ad Soyad</label>
-            <input
-              required
-              name="ad"
-              type="text"
-              placeholder="Adınız Soyadınız"
-              className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 transition-all focus:border-[#0e9aa7] focus:ring-2 focus:ring-[#0e9aa7]/25"
-            />
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div>
-              <label className="text-xs font-medium text-slate-500">E-posta</label>
-              <input
-                required
-                name="email"
-                type="email"
-                placeholder="ornek@mail.com"
-                className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 transition-all focus:border-[#0e9aa7] focus:ring-2 focus:ring-[#0e9aa7]/25"
-              />
+        <div className="grid gap-6 lg:grid-cols-2">
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <a href={phoneHref} className="hover-lift-soft rounded-xl border border-slate-200 border-l-4 border-l-[#185FA5] bg-white p-4">
+                <Phone className="mb-2 h-6 w-6 text-[#185FA5]" />
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Telefon</p>
+                <p className="mt-1 text-base font-semibold text-slate-900">{formatWhatsappTrDisplay(settings.whatsappNumber)}</p>
+              </a>
+              <Link href={wa} className="hover-lift-soft rounded-xl border border-slate-200 border-l-4 border-l-[#1D9E75] bg-white p-4">
+                <MessageCircle className="mb-2 h-6 w-6 text-[#1D9E75]" />
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">WhatsApp</p>
+                <p className="mt-1 text-base font-semibold text-slate-900">Mesaj Gönder</p>
+              </Link>
+              <a
+                href={`mailto:${settings.contactEmail}`}
+                className="hover-lift-soft rounded-xl border border-slate-200 border-l-4 border-l-[#f59e0b] bg-white p-4"
+              >
+                <Mail className="mb-2 h-6 w-6 text-[#f59e0b]" />
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">E-posta</p>
+                <p className="mt-1 text-base font-semibold text-slate-900">{settings.contactEmail}</p>
+              </a>
+              <div className="hover-lift-soft rounded-xl border border-slate-200 border-l-4 border-l-[#7c3aed] bg-white p-4">
+                <Clock3 className="mb-2 h-6 w-6 text-[#7c3aed]" />
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Çalışma Saatleri</p>
+                <p className="mt-1 text-base font-semibold text-slate-900">Pzt-Cmt 09:00-18:00</p>
+              </div>
             </div>
+
             <div>
-              <label className="text-xs font-medium text-slate-500">Telefon</label>
-              <input
-                name="telefon"
-                type="tel"
-                placeholder="+90 5xx xxx xx xx"
-                className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 transition-all focus:border-[#0e9aa7] focus:ring-2 focus:ring-[#0e9aa7]/25"
-              />
+              <h3 className="mb-3 text-lg font-semibold text-slate-900">Konumumuz</h3>
+              <div className="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
+                <iframe
+                  title="Fethiye harita"
+                  src="https://www.google.com/maps?q=Fethiye,+Mu%C4%9Fla,+T%C3%BCrkiye&output=embed"
+                  width="100%"
+                  height="280"
+                  style={{ border: 0 }}
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  allowFullScreen
+                />
+              </div>
+              <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-600">
+                <MapPin className="h-4 w-4 text-[#185FA5]" /> Fethiye, Muğla, Türkiye
+              </div>
             </div>
           </div>
-          <div>
-            <label className="text-xs font-medium text-slate-500">Konu</label>
-            <input
-              name="konu"
-              type="text"
-              placeholder="Konu"
-              className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 transition-all focus:border-[#0e9aa7] focus:ring-2 focus:ring-[#0e9aa7]/25"
-            />
+          <div className="rounded-xl border border-slate-200 bg-white p-8 shadow-sm">
+            <h2 className="text-2xl font-bold text-slate-900">Mesaj Bırakın</h2>
+            <p className="mt-2 text-sm text-slate-500">
+              Formu doldurduğunuzda mesajınız doğrudan destek ekibimize iletilir.
+            </p>
+            <ContactForm />
           </div>
-          <div>
-            <label className="text-xs font-medium text-slate-500">Mesajınız</label>
-            <textarea
-              required
-              name="mesaj"
-              rows={4}
-              className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 transition-all focus:border-[#0e9aa7] focus:ring-2 focus:ring-[#0e9aa7]/25"
-              placeholder="Mesajınızı yazın..."
-            />
-          </div>
-          <ContactSubmitButton />
-        </form>
         </div>
       </div>
     </div>

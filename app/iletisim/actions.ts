@@ -64,3 +64,20 @@ export async function mesajGonder(formData: FormData): Promise<void> {
     throw new Error("Mesaj gonderilirken bir hata olustu.");
   }
 }
+export type ContactFormState = {
+  status: "idle" | "success" | "error";
+  message?: string;
+};
+
+export async function mesajGonderState(
+  _prevState: ContactFormState,
+  formData: FormData,
+): Promise<ContactFormState> {
+  try {
+    await mesajGonder(formData);
+    return { status: "success" };
+  } catch (e) {
+    console.error("[mesajGonder]", e);
+    return { status: "error", message: "Bir hata oluştu, lütfen tekrar deneyin." };
+  }
+}

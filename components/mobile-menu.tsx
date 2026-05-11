@@ -15,6 +15,7 @@ const navLinks = [
   { href: "/paketler", label: "Paketler" },
   { href: "/hakkimizda", label: "Hakkımızda" },
   { href: "/sss", label: "SSS" },
+  { href: "/iletisim", label: "İletişim" },
 ] as const;
 
 export type MobileMenuProps = {

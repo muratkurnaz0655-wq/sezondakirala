@@ -198,8 +198,9 @@ export type TopCommentRow = {
   ilan_id: string;
   kullanici_id: string;
   ilan_baslik: string | null;
-  /** `kullanicilar.ad_soyad` join; yoksa arayüzde "Misafir" */
+  /** `kullanicilar.ad_soyad` join; yoksa email on eki */
   misafir_ad: string | null;
+  misafir_email: string | null;
 };
 
 type YorumSelectRow = {
@@ -209,8 +210,19 @@ type YorumSelectRow = {
   ilan_id: string;
   kullanici_id: string;
   ilanlar: { baslik: string } | { baslik: string }[] | null;
-  kullanicilar?: { ad_soyad: string | null } | { ad_soyad: string | null }[] | null;
+  kullanicilar?:
+    | { ad_soyad: string | null; email?: string | null }
+    | { ad_soyad: string | null; email?: string | null }[]
+    | null;
 };
+
+function yorumGosterimAdi(adSoyad: string | null | undefined, email: string | null | undefined) {
+  const trimmed = adSoyad?.trim();
+  if (trimmed) return trimmed;
+  const emailTrimmed = email?.trim();
+  if (!emailTrimmed) return "Kullanıcı";
+  return emailTrimmed.split("@")[0] || "Kullanıcı";
+}
 
 function mapTopCommentRows(rows: YorumSelectRow[]): TopCommentRow[] {
   return rows.map((row) => {
@@ -218,7 +230,7 @@ function mapTopCommentRows(rows: YorumSelectRow[]): TopCommentRow[] {
     const ilan = Array.isArray(ilanRel) ? ilanRel[0] : ilanRel;
     const kulRel = row.kullanicilar;
     const kul = kulRel ? (Array.isArray(kulRel) ? kulRel[0] : kulRel) : null;
-    const ad = kul?.ad_soyad?.trim() || null;
+    const ad = yorumGosterimAdi(kul?.ad_soyad ?? null, kul?.email ?? null);
     return {
       id: row.id,
       puan: row.puan,
@@ -227,6 +239,7 @@ function mapTopCommentRows(rows: YorumSelectRow[]): TopCommentRow[] {
       kullanici_id: row.kullanici_id,
       ilan_baslik: ilan?.baslik ?? null,
       misafir_ad: ad,
+      misafir_email: kul?.email?.trim() || null,
     };
   });
 }
@@ -237,7 +250,7 @@ export async function getTopComments(): Promise<TopCommentRow[]> {
     const supabase = await dbForPublicReads();
     const withUser = await supabase
       .from("yorumlar")
-      .select("id,puan,yorum,ilan_id,kullanici_id,ilanlar(baslik),kullanicilar(ad_soyad)")
+      .select("id,puan,yorum,ilan_id,kullanici_id,ilanlar(baslik),kullanicilar(ad_soyad,email)")
       .gte("puan", 4)
       .order("olusturulma_tarihi", { ascending: false })
       .limit(6);
@@ -248,7 +261,7 @@ export async function getTopComments(): Promise<TopCommentRow[]> {
 
     const fallback = await supabase
       .from("yorumlar")
-      .select("id,puan,yorum,ilan_id,kullanici_id,ilanlar(baslik)")
+      .select("id,puan,yorum,ilan_id,kullanici_id,ilanlar(baslik),kullanicilar(ad_soyad,email)")
       .gte("puan", 4)
       .order("olusturulma_tarihi", { ascending: false })
       .limit(6);
@@ -258,6 +271,49 @@ export async function getTopComments(): Promise<TopCommentRow[]> {
     return mapTopCommentRows((fallback.data ?? []) as YorumSelectRow[]);
   } catch {
     return [];
+  }
+}
+
+export type HomeCommentSummary = {
+  comments: TopCommentRow[];
+  totalCount: number;
+  averageRating: number | null;
+};
+
+export async function getHomeCommentSummary(limit = 3): Promise<HomeCommentSummary> {
+  if (!isSupabaseEnvConfigured()) {
+    return { comments: [], totalCount: 0, averageRating: null };
+  }
+  try {
+    const supabase = await dbForPublicReads();
+    const safeLimit = Math.max(1, Math.min(6, limit));
+
+    const [rowsResult, statsResult] = await Promise.all([
+      supabase
+        .from("yorumlar")
+        .select("id,puan,yorum,ilan_id,kullanici_id,ilanlar(baslik),kullanicilar(ad_soyad,email)")
+        .order("olusturulma_tarihi", { ascending: false })
+        .limit(safeLimit),
+      supabase.from("yorumlar").select("puan", { count: "exact" }),
+    ]);
+
+    const statsRows = statsResult.data ?? [];
+    const totalCount = statsResult.count ?? statsRows.length;
+    const averageRating = statsRows.length
+      ? statsRows.reduce((sum, item) => sum + Number(item.puan ?? 0), 0) / statsRows.length
+      : null;
+
+    if (rowsResult.error) {
+      return { comments: [], totalCount, averageRating };
+    }
+
+    return {
+      comments: mapTopCommentRows((rowsResult.data ?? []) as YorumSelectRow[]),
+      totalCount,
+      averageRating,
+    };
+  } catch {
+    return { comments: [], totalCount: 0, averageRating: null };
   }
 }
 
