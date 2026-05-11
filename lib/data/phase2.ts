@@ -122,29 +122,46 @@ export async function getPublicCatalogCounts(): Promise<PublicCatalogCounts | nu
   }
 }
 
+/** Ana sayfa önizlemesinde gösterilmeyecek taslak / test paketleri. */
+function excludeFromHomeFeaturedPreview(p: Paket): boolean {
+  const baslik = (p.baslik ?? "").trim().toLowerCase();
+  if (baslik === "deneme") return true;
+  if (baslik.startsWith("deneme ")) return true;
+  const aciklama = (p.aciklama ?? "").toLowerCase();
+  if (aciklama.includes("test verisi")) return true;
+  if (aciklama.includes("test veri")) return true;
+  if (aciklama.includes("test data")) return true;
+  return false;
+}
+
 /** Ana sayfa önizlemesi — tam liste `/paketler`. */
 export async function getHomeFeaturedPackages(limit = 3) {
   if (!isSupabaseEnvConfigured()) return [];
   try {
     const supabase = await dbForPublicReads();
     const safeLimit = Math.min(Math.max(1, limit), 12);
+    const fetchCap = Math.min(24, Math.max(safeLimit * 4, safeLimit + 6));
     const firstTry = await supabase
       .from("paketler")
       .select("*")
       .eq("aktif", true)
       .order("olusturulma_tarihi", { ascending: false })
       .order("id", { ascending: false })
-      .limit(safeLimit);
-    if (!firstTry.error) return (firstTry.data ?? []) as Paket[];
+      .limit(fetchCap);
+    if (!firstTry.error) {
+      const rows = ((firstTry.data ?? []) as Paket[]).filter((p) => !excludeFromHomeFeaturedPreview(p));
+      return rows.slice(0, safeLimit);
+    }
 
     const fallback = await supabase
       .from("paketler")
       .select("*")
       .eq("aktif", true)
       .order("id", { ascending: false })
-      .limit(safeLimit);
+      .limit(fetchCap);
     if (fallback.error) return [];
-    return (fallback.data ?? []) as Paket[];
+    const rows = ((fallback.data ?? []) as Paket[]).filter((p) => !excludeFromHomeFeaturedPreview(p));
+    return rows.slice(0, safeLimit);
   } catch {
     return [];
   }

@@ -43,10 +43,10 @@ export function HomePaketFiltreler({ categories = [], paketler }: HomePaketFiltr
       ) : null}
 
       <div
-        className={`grid auto-rows-fr grid-cols-1 items-stretch gap-6 md:grid-cols-2 lg:grid-cols-3 ${gorunen.length === 1 ? "mx-auto max-w-xl md:grid-cols-1" : ""} ${showTabs ? "mt-4" : "mt-0"}`}
+        className={`grid w-full grid-cols-1 items-stretch gap-6 md:grid-cols-3 ${showTabs ? "mt-4" : "mt-0"}`}
       >
         {gorunen.map((paket) => (
-          <PackageCard key={paket.id} paket={paket} />
+          <PackageCard key={paket.id} paket={paket} variant="home" />
         ))}
       </div>
 

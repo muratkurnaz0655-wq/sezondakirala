@@ -1,12 +1,14 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Clock, Users } from "lucide-react";
+import { Clock, Package, Users } from "lucide-react";
 import type { Paket } from "@/types/supabase";
 import { formatCurrency } from "@/lib/utils/format";
 import { fixTurkishDisplay } from "@/lib/utils/turkish-display";
 
 type PackageCardProps = {
   paket: Paket;
+  /** Ana sayfa öne çıkan grid — sabit görsel yüksekliği ve kart token'ları */
+  variant?: "default" | "home";
 };
 
 const KATEGORI_ETIKET: Record<string, string> = {
@@ -17,12 +19,19 @@ const KATEGORI_ETIKET: Record<string, string> = {
   aile: "Aile",
 };
 
-/** Lüks → amber, Romantik → pembe, Macera → turuncu, Aile → mavi */
 const KATEGORI_RENK: Record<string, string> = {
   macera: "border-orange-200/90 bg-orange-50 text-orange-900",
   luks: "border-amber-200/90 bg-amber-100 text-amber-950",
   romantik: "border-pink-200/90 bg-pink-50 text-pink-900",
   aile: "border-sky-200/90 bg-sky-50 text-sky-900",
+};
+
+/** Ana sayfa — spesifikasyon renkleri */
+const KATEGORI_RENK_HOME: Record<string, string> = {
+  luks: "bg-[#FEF3C7] text-[#92400E]",
+  romantik: "bg-[#FCE7F3] text-[#9D174D]",
+  macera: "bg-[#FED7AA] text-[#92400E]",
+  aile: "bg-[#DBEAFE] text-[#1E40AF]",
 };
 
 const PAKET_GORSEL =
@@ -34,12 +43,70 @@ function kategoriLabel(raw: string | null | undefined) {
   return KATEGORI_ETIKET[key] ?? fixTurkishDisplay(raw);
 }
 
-export function PackageCard({ paket }: PackageCardProps) {
+export function PackageCard({ paket, variant = "default" }: PackageCardProps) {
+  const isHome = variant === "home";
   const baslik = fixTurkishDisplay(paket.baslik);
   const aciklama = fixTurkishDisplay(paket.aciklama ?? "").trim();
   const kat = (paket.kategori ?? "macera").toLowerCase().trim();
-  const kapak = paket.gorsel_url ?? PAKET_GORSEL;
-  const badgeClass = KATEGORI_RENK[kat] ?? "border-slate-200/90 bg-slate-100 text-slate-800";
+  const hasCustomImage = Boolean(paket.gorsel_url?.trim());
+  const kapak = hasCustomImage ? (paket.gorsel_url as string) : PAKET_GORSEL;
+  const badgeClassDefault = KATEGORI_RENK[kat] ?? "border-slate-200/90 bg-slate-100 text-slate-800";
+  const badgeClassHome = KATEGORI_RENK_HOME[kat] ?? "bg-slate-100 text-slate-700";
+
+  if (isHome) {
+    return (
+      <article className="flex h-full w-full max-w-full flex-col overflow-hidden rounded-2xl border border-[#E2E8F0] bg-white">
+        <div className="relative h-[200px] w-full shrink-0 overflow-hidden bg-[#F1F5F9]">
+          {hasCustomImage ? (
+            <Image
+              src={kapak}
+              alt={baslik}
+              fill
+              loading="lazy"
+              className="object-cover"
+              sizes="(max-width: 768px) 100vw, 360px"
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center" aria-hidden>
+              <Package className="h-14 w-14 text-slate-300" strokeWidth={1.25} />
+            </div>
+          )}
+          <span
+            className={`absolute left-3 top-3 rounded-full px-3 py-1 text-[12px] font-medium shadow-sm ${badgeClassHome}`}
+          >
+            {kategoriLabel(paket.kategori)}
+          </span>
+        </div>
+
+        <div className="flex min-h-0 flex-1 flex-col p-5">
+          <h3 className="mb-2 break-words text-[17px] font-semibold leading-snug text-[#1E293B]">{baslik}</h3>
+          <p className="line-clamp-2 text-[14px] leading-[1.6] text-[#64748B]">
+            {aciklama || "Paket detayları için inceleyin."}
+          </p>
+
+          <div className="mt-3 flex flex-wrap gap-4 text-[13px] text-[#64748B]">
+            <span className="inline-flex items-center gap-1.5">
+              <Clock size={14} className="shrink-0 text-[#64748B]" aria-hidden />
+              {paket.sure_gun} gün
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <Users size={14} className="shrink-0 text-[#64748B]" aria-hidden />
+              Max {paket.kapasite} kişi
+            </span>
+          </div>
+
+          <p className="mt-auto pt-3 text-[20px] font-bold leading-tight text-[#1D9E75]">{formatCurrency(paket.fiyat)}</p>
+
+          <Link
+            href={`/paketler/${paket.slug}`}
+            className="mt-4 flex w-full items-center justify-center rounded-lg border-[1.5px] border-[#1D9E75] bg-white py-3 text-[15px] font-medium text-[#1D9E75] transition-colors duration-200 hover:bg-[#1D9E75] hover:text-white"
+          >
+            İncele
+          </Link>
+        </div>
+      </article>
+    );
+  }
 
   return (
     <div className="group flex h-full min-h-0 flex-col overflow-hidden rounded-xl border border-slate-100 bg-white shadow-md transition-all duration-300 motion-safe:hover:-translate-y-1 motion-safe:hover:shadow-xl motion-safe:hover:shadow-slate-900/10">
@@ -53,7 +120,7 @@ export function PackageCard({ paket }: PackageCardProps) {
           sizes="(max-width: 768px) 100vw, 33vw"
         />
         <span
-          className={`absolute left-3 top-3 rounded-full border px-3 py-1 text-xs font-semibold shadow-sm backdrop-blur-[2px] ${badgeClass}`}
+          className={`absolute left-3 top-3 rounded-full border px-3 py-1 text-xs font-semibold shadow-sm backdrop-blur-[2px] ${badgeClassDefault}`}
         >
           {kategoriLabel(paket.kategori)}
         </span>

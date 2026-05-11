@@ -286,12 +286,12 @@ export default async function Home() {
       </section>
 
       <section className="-mx-4 bg-[#f0fdfd] py-10 sm:py-12 md:py-16 md:-mx-6 lg:-mx-8">
-        <MotionFadeIn className="w-full space-y-5" delay={0.05}>
+        <MotionFadeIn className="mx-auto w-full max-w-[1200px] space-y-5 px-6" delay={0.05}>
           <div className="text-center">
             <h2 className="text-xl font-bold text-slate-900 sm:text-2xl md:text-3xl">Hazır Tatil Paketleri</h2>
             <p className="mt-1 text-base leading-relaxed text-slate-500">Konaklama + aktivite bir arada — örnek paketler</p>
           </div>
-          <HomePaketFiltreler paketler={homePackages.slice(0, 3)} />
+          <HomePaketFiltreler paketler={homePackages} />
           <div className="flex justify-center pt-8">
             <Link
               href="/paketler"
