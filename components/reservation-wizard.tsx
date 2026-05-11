@@ -407,6 +407,11 @@ export function ReservationWizard({
           email: userInfo.email,
           adSoyad: `${userInfo.ad} ${userInfo.soyad}`,
           referansNo: referenceNo,
+          ilanBaslik: listingTitle,
+          girisTarihi: reservationInfo.giris_tarihi,
+          cikisTarihi: reservationInfo.cikis_tarihi,
+          misafirSayisi,
+          toplamFiyat: totalPrice.total,
         });
         if (!result.success) {
           setErrorMessage(result.error ?? "E-posta gönderiminde hata oluştu.");

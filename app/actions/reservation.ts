@@ -5,10 +5,29 @@ import { getPlatformSettings } from "@/lib/settings";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function formatTrDateYmd(ymd: string): string {
+  const d = new Date(`${ymd.trim()}T12:00:00`);
+  if (Number.isNaN(d.getTime())) return ymd;
+  return d.toLocaleDateString("tr-TR", { day: "2-digit", month: "long", year: "numeric" });
+}
+
 type SendReservationConfirmationInput = {
   email: string;
   adSoyad: string;
   referansNo: string;
+  ilanBaslik: string;
+  girisTarihi: string;
+  cikisTarihi: string;
+  misafirSayisi: number;
+  toplamFiyat: number;
 };
 
 export async function sendReservationConfirmation(
@@ -18,24 +37,49 @@ export async function sendReservationConfirmation(
     return { success: false, error: "E-posta servisi henüz hazır değil." };
   }
 
+  const from = process.env.RESEND_FROM_EMAIL;
+  const subject = `Rezervasyonunuz Alındı — ${input.referansNo}`;
+  const toplamStr = new Intl.NumberFormat("tr-TR", {
+    style: "currency",
+    currency: "TRY",
+    maximumFractionDigits: 0,
+  }).format(input.toplamFiyat);
+
   try {
     const settings = await getPlatformSettings();
     const resend = new Resend(process.env.RESEND_API_KEY);
+    const safe = {
+      adSoyad: escapeHtml(input.adSoyad.trim()),
+      ilan: escapeHtml(input.ilanBaslik.trim()),
+      giris: escapeHtml(formatTrDateYmd(input.girisTarihi)),
+      cikis: escapeHtml(formatTrDateYmd(input.cikisTarihi)),
+      misafir: escapeHtml(String(input.misafirSayisi)),
+      toplam: escapeHtml(toplamStr),
+      ref: escapeHtml(input.referansNo),
+      tursab: escapeHtml(settings.tursabNo),
+    };
     await resend.emails.send({
-      from: process.env.RESEND_FROM_EMAIL,
+      from,
       to: input.email,
-      subject: "Rezervasyon Onayı",
+      subject,
       html: `
-        <h2>Rezervasyonunuz alındı</h2>
-        <p>Sayın ${input.adSoyad}, rezervasyon talebiniz başarıyla alındı.</p>
-        <p>Referans Numaranız: <strong>${input.referansNo}</strong></p>
-        <hr />
-        <p>TURSAB Belge No: ${settings.tursabNo}</p>
+        <p>Merhaba ${safe.adSoyad},</p>
+        <p>Rezervasyon talebiniz alındı. Özet bilgiler aşağıdadır.</p>
+        <table cellpadding="8" cellspacing="0" style="border-collapse:collapse;margin:16px 0;">
+          <tr><td style="border:1px solid #e5e7eb;"><strong>İlan</strong></td><td style="border:1px solid #e5e7eb;">${safe.ilan}</td></tr>
+          <tr><td style="border:1px solid #e5e7eb;"><strong>Giriş</strong></td><td style="border:1px solid #e5e7eb;">${safe.giris}</td></tr>
+          <tr><td style="border:1px solid #e5e7eb;"><strong>Çıkış</strong></td><td style="border:1px solid #e5e7eb;">${safe.cikis}</td></tr>
+          <tr><td style="border:1px solid #e5e7eb;"><strong>Misafir sayısı</strong></td><td style="border:1px solid #e5e7eb;">${safe.misafir}</td></tr>
+          <tr><td style="border:1px solid #e5e7eb;"><strong>Toplam tutar</strong></td><td style="border:1px solid #e5e7eb;">${safe.toplam}</td></tr>
+          <tr><td style="border:1px solid #e5e7eb;"><strong>Referans no</strong></td><td style="border:1px solid #e5e7eb;">${safe.ref}</td></tr>
+        </table>
+        <p style="color:#64748b;font-size:13px;">TURSAB Belge No: ${safe.tursab}</p>
       `,
     });
 
     return { success: true };
-  } catch {
+  } catch (e) {
+    console.error("[sendReservationConfirmation]", e);
     return { success: false, error: "Onay e-postası gönderilemedi." };
   }
 }
