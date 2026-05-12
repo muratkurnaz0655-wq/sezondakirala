@@ -8,6 +8,7 @@ import { useReducedMotion } from "framer-motion";
 import type { User } from "@supabase/supabase-js";
 import { Bell, CalendarDays, Home, UserPlus, XCircle } from "lucide-react";
 import { toast } from "sonner";
+import { markMyNotificationReadAction, markMyNotificationsReadAllAction } from "@/app/actions/notifications";
 import { createClient } from "@/lib/supabase/client";
 import { isSupabaseEnvConfigured } from "@/lib/supabase/env";
 import { MobileMenu } from "@/components/mobile-menu";
@@ -245,42 +246,11 @@ export function SiteHeaderClient({ siteName }: SiteHeaderClientProps) {
   const dropdownVariant = "solid";
   const loggedIn = user !== null;
 
-  function isMissingMarkAllRpcError(err: { message?: string; code?: string } | null) {
-    if (!err?.message) return false;
-    const m = err.message.toLowerCase();
-    return (
-      err.code === "PGRST202" ||
-      m.includes("could not find the function") ||
-      m.includes("schema cache")
-    );
-  }
-
   async function markAllNotificationsRead() {
     if (!isSupabaseEnvConfigured()) return;
-    const supabase = createClient();
-    // PostgREST / supabase-js: explicit empty args avoids "without parameters" / PGRST202 for zero-arg RPCs.
-    const { error } = await supabase.rpc("mark_all_notifications_read", {});
-
-    if (error) {
-      if (isMissingMarkAllRpcError(error)) {
-        const ids = notifications.filter((item) => !item.okundu).map((item) => item.id);
-        if (ids.length) {
-          const results = await Promise.all(
-            ids.map((id) => supabase.rpc("mark_notification_read", { notification_id: id })),
-          );
-          const batchErr = results.find((r) => r.error)?.error;
-          if (batchErr) {
-            toast.error(
-              batchErr.message?.trim() ||
-                "Toplu okundu kullanılamıyor. Supabase SQL Editor’de NOTIFY pgrst, 'reload schema'; çalıştırın veya bildirim migration’larını uygulayın.",
-            );
-            return;
-          }
-        }
-        await syncNotificationsRef.current?.(false);
-        return;
-      }
-      toast.error(error.message?.trim() || "Bildirimler okundu olarak işaretlenemedi.");
+    const result = await markMyNotificationsReadAllAction();
+    if (!result.success) {
+      toast.error(result.error);
       return;
     }
     await syncNotificationsRef.current?.(false);
@@ -288,14 +258,10 @@ export function SiteHeaderClient({ siteName }: SiteHeaderClientProps) {
 
   async function markNotificationRead(notificationId: string) {
     if (!isSupabaseEnvConfigured()) return;
-    const supabase = createClient();
-    const { data, error } = await supabase.rpc("mark_notification_read", { notification_id: notificationId });
-    if (error) {
-      toast.error(error.message?.trim() || "Bildirim okundu olarak işaretlenemedi.");
+    const result = await markMyNotificationReadAction(notificationId);
+    if (!result.success) {
+      toast.error(result.error);
       return;
-    }
-    if (data === false) {
-      toast.error("Bu bildirim okundu olarak güncellenemedi.");
     }
     await syncNotificationsRef.current?.(false);
   }
