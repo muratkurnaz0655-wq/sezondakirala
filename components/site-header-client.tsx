@@ -79,6 +79,7 @@ export function SiteHeaderClient({ siteName }: SiteHeaderClientProps) {
   >([]);
   const [authLoading, setAuthLoading] = useState(() => Boolean(isSupabaseEnvConfigured()));
   const seenNotificationIdsRef = useRef<Set<string>>(new Set());
+  const syncNotificationsRef = useRef<((showToastForNew: boolean) => Promise<void>) | null>(null);
 
   const isVisibleForCurrentUser = (
     item: {
@@ -149,10 +150,11 @@ export function SiteHeaderClient({ siteName }: SiteHeaderClientProps) {
     const supabase = createClient();
 
     const syncNotifications = async (showToastForNew: boolean) => {
-      const [rowsResult, countResult] = await Promise.all([
-        supabase.from("bildirimler").select("*").order("olusturulma_tarihi", { ascending: false }).limit(20),
-        supabase.from("bildirimler").select("*", { count: "exact", head: true }).eq("okundu", false),
-      ]);
+      const rowsResult = await supabase
+        .from("bildirimler")
+        .select("*")
+        .order("olusturulma_tarihi", { ascending: false })
+        .limit(20);
       if (!mounted) return;
       const allRows = (rowsResult.data as typeof notifications) ?? [];
       const legacyReservationRows = allRows.filter(
@@ -199,17 +201,20 @@ export function SiteHeaderClient({ siteName }: SiteHeaderClientProps) {
       seenNotificationIdsRef.current = current;
     };
 
+    syncNotificationsRef.current = syncNotifications;
+
     void syncNotifications(false);
 
     const intervalId = setInterval(() => {
-      void syncNotifications(true);
+      void syncNotificationsRef.current?.(true);
     }, 5000);
 
     return () => {
       mounted = false;
+      syncNotificationsRef.current = null;
       clearInterval(intervalId);
     };
-  }, [user?.id]);
+  }, [user?.id, profil?.rol]);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 80);
@@ -243,19 +248,26 @@ export function SiteHeaderClient({ siteName }: SiteHeaderClientProps) {
   async function markAllNotificationsRead() {
     if (!isSupabaseEnvConfigured()) return;
     const supabase = createClient();
-    await supabase.rpc("mark_all_notifications_read");
-    setNotifications((prev) => prev.map((item) => ({ ...item, okundu: true })));
-    setNotificationCount(0);
+    const { error } = await supabase.rpc("mark_all_notifications_read");
+    if (error) {
+      toast.error(error.message?.trim() || "Bildirimler okundu olarak işaretlenemedi.");
+      return;
+    }
+    await syncNotificationsRef.current?.(false);
   }
 
   async function markNotificationRead(notificationId: string) {
     if (!isSupabaseEnvConfigured()) return;
     const supabase = createClient();
-    await supabase.rpc("mark_notification_read", { notification_id: notificationId });
-    setNotifications((prev) =>
-      prev.map((item) => (item.id === notificationId ? { ...item, okundu: true } : item)),
-    );
-    setNotificationCount((prev) => Math.max(0, prev - 1));
+    const { data, error } = await supabase.rpc("mark_notification_read", { notification_id: notificationId });
+    if (error) {
+      toast.error(error.message?.trim() || "Bildirim okundu olarak işaretlenemedi.");
+      return;
+    }
+    if (data === false) {
+      toast.error("Bu bildirim okundu olarak güncellenemedi.");
+    }
+    await syncNotificationsRef.current?.(false);
   }
 
   const formatDate = (value: string) => {
