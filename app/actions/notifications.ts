@@ -5,12 +5,18 @@ import { createClient } from "@/lib/supabase/server";
 
 type BildirimRow = {
   id: string;
-  hedef_kullanici_id: string | null;
+  hedef_kullanici_id?: string | null;
   tip: string | null;
   entity_tip: string | null;
   entity_id: string | null;
   mesaj: string | null;
 };
+
+function isMissingHedefColumnError(message: string | undefined) {
+  if (!message) return false;
+  const m = message.toLowerCase();
+  return m.includes("hedef_kullanici_id") && m.includes("does not exist");
+}
 
 async function legacyReservationEntityOwned(
   admin: ReturnType<typeof createAdminClient>,
@@ -51,11 +57,24 @@ function userMayMarkRow(
   legacyEntityOwned: boolean,
   legacyRefOwned: boolean,
 ) {
-  if (row.hedef_kullanici_id === userId) return true;
-  if (!row.hedef_kullanici_id && row.tip === "duyuru") return true;
-  if (isAdmin && !row.hedef_kullanici_id) return true;
-  if (!row.hedef_kullanici_id && row.entity_tip === "rezervasyon" && row.entity_id && legacyEntityOwned) return true;
-  if (!row.hedef_kullanici_id && row.entity_tip === "rezervasyon" && !row.entity_id && legacyRefOwned) return true;
+  const hedef = row.hedef_kullanici_id;
+  if (hedef === userId) return true;
+  if ((hedef === null || hedef === undefined) && row.tip === "duyuru") return true;
+  if (isAdmin && (hedef === null || hedef === undefined)) return true;
+  if (
+    (hedef === null || hedef === undefined) &&
+    row.entity_tip === "rezervasyon" &&
+    row.entity_id &&
+    legacyEntityOwned
+  )
+    return true;
+  if (
+    (hedef === null || hedef === undefined) &&
+    row.entity_tip === "rezervasyon" &&
+    !row.entity_id &&
+    legacyRefOwned
+  )
+    return true;
   return false;
 }
 
@@ -73,13 +92,19 @@ export async function markMyNotificationsReadAllAction(): Promise<NotificationMa
     const admin = createAdminClient();
     const payload = { okundu: true as const, okundu_tarihi: new Date().toISOString() };
 
-    const { error } = await admin
+    const scoped = await admin
       .from("bildirimler")
       .update(payload)
       .eq("okundu", false)
       .or(`hedef_kullanici_id.eq.${user.id},hedef_kullanici_id.is.null`);
 
-    if (error) return { success: false, error: error.message?.trim() || "Bildirimler güncellenemedi." };
+    if (scoped.error && isMissingHedefColumnError(scoped.error.message)) {
+      const legacy = await admin.from("bildirimler").update(payload).eq("okundu", false);
+      if (legacy.error) return { success: false, error: legacy.error.message?.trim() || "Bildirimler güncellenemedi." };
+      return { success: true };
+    }
+
+    if (scoped.error) return { success: false, error: scoped.error.message?.trim() || "Bildirimler güncellenemedi." };
     return { success: true };
   } catch (e) {
     const message = e instanceof Error ? e.message : "Beklenmeyen hata.";
@@ -109,7 +134,8 @@ export async function markMyNotificationReadAction(notificationId: string): Prom
     const typed = row as BildirimRow;
     let legacyEntityOwned = false;
     let legacyRefOwned = false;
-    if (!typed.hedef_kullanici_id && typed.entity_tip === "rezervasyon") {
+    const hedefUnset = typed.hedef_kullanici_id === null || typed.hedef_kullanici_id === undefined;
+    if (hedefUnset && typed.entity_tip === "rezervasyon") {
       if (typed.entity_id) {
         legacyEntityOwned = await legacyReservationEntityOwned(admin, user.id, String(typed.entity_id));
       } else {
