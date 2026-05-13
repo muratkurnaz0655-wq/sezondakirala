@@ -14,17 +14,24 @@ const LABELS: Record<(typeof TABS)[number], string> = {
 
 type PaketlerCategoryTabsProps = {
   activeCategory: string;
+  giris?: string;
+  cikis?: string;
 };
 
-export function PaketlerCategoryTabs({ activeCategory }: PaketlerCategoryTabsProps) {
+export function PaketlerCategoryTabs({ activeCategory, giris, cikis }: PaketlerCategoryTabsProps) {
   const router = useRouter();
 
   function setTab(slug: string) {
-    if (slug === "tumu") {
+    const params = new URLSearchParams();
+    if (slug !== "tumu") params.set("kategori", slug);
+    if (giris) params.set("giris", giris);
+    if (cikis) params.set("cikis", cikis);
+    const query = params.toString();
+    if (!query) {
       router.replace("/paketler", { scroll: false });
-    } else {
-      router.replace(`/paketler?kategori=${slug}`, { scroll: false });
+      return;
     }
+    router.replace(`/paketler?${query}`, { scroll: false });
   }
 
   return (

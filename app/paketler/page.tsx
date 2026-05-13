@@ -9,17 +9,20 @@ import { CatalogHeroWave } from "@/components/catalog-hero-wave";
 import { PaketlerAnimatedGrid } from "@/components/paketler-animated-grid";
 import { PaketlerCategoryTabs } from "@/components/paketler-category-tabs";
 import { formatWhatsappTrDisplay, whatsappHref } from "@/lib/constants";
-import { getFeaturedPackages } from "@/lib/data/phase2";
+import { getFeaturedPackagesWithAvailability } from "@/lib/data/phase2";
 
 type PackagesPageProps = {
-  searchParams: Promise<{ kategori?: string }>;
+  searchParams: Promise<{ kategori?: string; giris?: string; cikis?: string }>;
 };
 
 export default async function PackagesPage({ searchParams }: PackagesPageProps) {
   const params = await searchParams;
   const category = params.kategori ?? "tumu";
-  const packages = await getFeaturedPackages(category);
+  const giris = params.giris?.trim() ?? "";
+  const cikis = params.cikis?.trim() ?? "";
+  const packages = await getFeaturedPackagesWithAvailability(category, { giris, cikis });
   const paketSayisi = packages.length;
+  const hasDateFilter = Boolean(giris) && Boolean(cikis);
 
   return (
     <div className="w-full overflow-x-hidden">
@@ -57,8 +60,51 @@ export default async function PackagesPage({ searchParams }: PackagesPageProps) 
               <p className="text-xs font-semibold uppercase tracking-wide text-[#185FA5]">Kategori</p>
             </div>
             <div className="p-4 md:p-6">
-              <PaketlerCategoryTabs activeCategory={category} />
+              <PaketlerCategoryTabs activeCategory={category} giris={giris} cikis={cikis} />
             </div>
+          </div>
+
+          <div className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-100/80">
+            <div className="border-b border-slate-100 bg-slate-50/80 px-4 py-4 md:px-6">
+              <p className="text-xs font-semibold uppercase tracking-wide text-[#185FA5]">Tarih filtrele</p>
+            </div>
+            <form className="grid gap-4 p-4 md:grid-cols-[1fr_1fr_auto] md:items-end md:p-6" action="/paketler">
+              <input type="hidden" name="kategori" value={category} />
+              <label className="space-y-1.5 text-sm text-slate-700">
+                <span>Giriş tarihi</span>
+                <input
+                  type="date"
+                  name="giris"
+                  defaultValue={giris}
+                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-[#1D9E75] focus:ring-2 focus:ring-[#1D9E75]/20"
+                />
+              </label>
+              <label className="space-y-1.5 text-sm text-slate-700">
+                <span>Çıkış tarihi</span>
+                <input
+                  type="date"
+                  name="cikis"
+                  defaultValue={cikis}
+                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-[#1D9E75] focus:ring-2 focus:ring-[#1D9E75]/20"
+                />
+              </label>
+              <div className="flex gap-2">
+                <button
+                  type="submit"
+                  className="inline-flex h-10 items-center justify-center rounded-lg bg-[#1D9E75] px-4 text-sm font-semibold text-white transition hover:bg-[#0F6E56]"
+                >
+                  Uygula
+                </button>
+                {hasDateFilter ? (
+                  <Link
+                    href={category === "tumu" ? "/paketler" : `/paketler?kategori=${category}`}
+                    className="inline-flex h-10 items-center justify-center rounded-lg border border-slate-300 px-4 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                  >
+                    Temizle
+                  </Link>
+                ) : null}
+              </div>
+            </form>
           </div>
 
           {packages.length === 0 ? (
@@ -68,7 +114,9 @@ export default async function PackagesPage({ searchParams }: PackagesPageProps) 
               </div>
               <h2 className="text-lg font-bold text-slate-800">Bu kategoride henüz paket yok</h2>
               <p className="mx-auto mt-2 max-w-md text-sm text-slate-500">
-                Farklı bir kategori seçin veya özel tarih ve bütçe için bizimle iletişime geçin.
+                {hasDateFilter
+                  ? "Seçtiğiniz tarih aralığında uygun paket bulunamadı. Tarihi değiştirip tekrar deneyin."
+                  : "Farklı bir kategori seçin veya özel tarih ve bütçe için bizimle iletişime geçin."}
               </p>
               <div className="mt-6 flex flex-wrap justify-center gap-3">
                 <Link

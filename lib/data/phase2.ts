@@ -93,6 +93,66 @@ export async function getFeaturedPackages(category?: string) {
   }
 }
 
+type PackageAvailabilityFilters = {
+  giris?: string;
+  cikis?: string;
+};
+
+function isValidDateInput(value: string | undefined) {
+  if (!value) return false;
+  return /^\d{4}-\d{2}-\d{2}$/.test(value);
+}
+
+export async function getFeaturedPackagesWithAvailability(
+  category?: string,
+  filters?: PackageAvailabilityFilters,
+) {
+  const packages = await getFeaturedPackages(category);
+  const giris = filters?.giris?.trim();
+  const cikis = filters?.cikis?.trim();
+  if (!isValidDateInput(giris) || !isValidDateInput(cikis) || !giris || !cikis || giris >= cikis) {
+    return packages;
+  }
+  if (!packages.length || !isSupabaseEnvConfigured()) return packages;
+
+  const packageListingIds = Array.from(
+    new Set(
+      packages.flatMap((pkg) =>
+        Array.isArray(pkg.ilan_idleri) ? pkg.ilan_idleri.map((id) => String(id).trim()).filter(Boolean) : [],
+      ),
+    ),
+  );
+  if (!packageListingIds.length) return packages;
+
+  const supabase = await dbForPublicReads();
+  const [musaitlikRes, rezervasyonRes] = await Promise.all([
+    supabase
+      .from("musaitlik")
+      .select("ilan_id")
+      .in("ilan_id", packageListingIds)
+      .eq("durum", "dolu")
+      .gte("tarih", giris)
+      .lt("tarih", cikis),
+    supabase
+      .from("rezervasyonlar")
+      .select("ilan_id")
+      .in("ilan_id", packageListingIds)
+      .in("durum", ["beklemede", "onaylandi"])
+      .lt("giris_tarihi", cikis)
+      .gt("cikis_tarihi", giris),
+  ]);
+
+  const blockedListingIds = new Set<string>();
+  (musaitlikRes.data ?? []).forEach((row) => blockedListingIds.add(String(row.ilan_id)));
+  (rezervasyonRes.data ?? []).forEach((row) => blockedListingIds.add(String(row.ilan_id)));
+
+  return packages.filter((pkg) => {
+    const ids = Array.isArray(pkg.ilan_idleri) ? pkg.ilan_idleri.map((id) => String(id)) : [];
+    if (!ids.length) return true;
+    return ids.every((listingId) => !blockedListingIds.has(listingId));
+  });
+}
+
 /** Ana sayfa paket bandı: kategori sekmeleri istemcide süzülür; tek seferde yeterli kayıt. */
 export type PublicCatalogCounts = {
   villaCount: number;
