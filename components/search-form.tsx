@@ -26,8 +26,9 @@ type SearchFormProps = {
   initialGun?: number;
   /** Takvim alanını popup yerine form içinde sürekli açık gösterir */
   inlineDatePicker?: boolean;
-  searchPath?: "/konaklama" | "/tekneler";
+  searchPath?: "/konaklama" | "/tekneler" | "/paketler";
   submitLabel?: string;
+  extraQueryParams?: Record<string, string | undefined>;
   /** Dar sidebar kullanımlarında formu dikey ve daha geniş gösterir */
   forceVertical?: boolean;
 };
@@ -128,6 +129,7 @@ export function SearchForm({
   inlineDatePicker = false,
   searchPath = "/konaklama",
   submitLabel = "Villa Ara",
+  extraQueryParams,
   forceVertical = false,
 }: SearchFormProps) {
   const router = useRouter();
@@ -277,6 +279,19 @@ export function SearchForm({
       return;
     }
     setDateError(false);
+    if (searchPath === "/paketler") {
+      const params = new URLSearchParams();
+      params.set("giris", toLocalIso(giris));
+      params.set("cikis", toLocalIso(cikis));
+      if (extraQueryParams) {
+        Object.entries(extraQueryParams).forEach(([key, value]) => {
+          if (value && value.trim() !== "") params.set(key, value);
+        });
+      }
+      router.push(`/paketler?${params.toString()}`);
+      return;
+    }
+
     aramaStore.save({
       giris: toLocalIso(giris),
       cikis: toLocalIso(cikis),
