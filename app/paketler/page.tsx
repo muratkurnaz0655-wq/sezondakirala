@@ -64,48 +64,50 @@ export default async function PackagesPage({ searchParams }: PackagesPageProps) 
             </div>
           </div>
 
-          <div className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-100/80">
-            <div className="border-b border-slate-100 bg-slate-50/80 px-4 py-4 md:px-6">
-              <p className="text-xs font-semibold uppercase tracking-wide text-[#185FA5]">Tarih filtrele</p>
-            </div>
-            <form className="grid gap-4 p-4 md:grid-cols-[1fr_1fr_auto] md:items-end md:p-6" action="/paketler">
-              <input type="hidden" name="kategori" value={category} />
-              <label className="space-y-1.5 text-sm text-slate-700">
-                <span>Giriş tarihi</span>
-                <input
-                  type="date"
-                  name="giris"
-                  defaultValue={giris}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-[#1D9E75] focus:ring-2 focus:ring-[#1D9E75]/20"
-                />
-              </label>
-              <label className="space-y-1.5 text-sm text-slate-700">
-                <span>Çıkış tarihi</span>
-                <input
-                  type="date"
-                  name="cikis"
-                  defaultValue={cikis}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-[#1D9E75] focus:ring-2 focus:ring-[#1D9E75]/20"
-                />
-              </label>
-              <div className="flex gap-2">
-                <button
-                  type="submit"
-                  className="inline-flex h-10 items-center justify-center rounded-lg bg-[#1D9E75] px-4 text-sm font-semibold text-white transition hover:bg-[#0F6E56]"
-                >
-                  Uygula
-                </button>
-                {hasDateFilter ? (
-                  <Link
-                    href={category === "tumu" ? "/paketler" : `/paketler?kategori=${category}`}
-                    className="inline-flex h-10 items-center justify-center rounded-lg border border-slate-300 px-4 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
-                  >
-                    Temizle
-                  </Link>
-                ) : null}
+          <section className="border-y border-[#E2E8F0] bg-[#F8FAFC] py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.6)]">
+            <div className="mx-auto max-w-6xl px-4 md:px-6">
+              <p className="mb-3 text-[12px] font-semibold uppercase tracking-wide text-[#64748B]">Tarih ve konaklama</p>
+              <div className="rounded-xl border border-[#E2E8F0] bg-white px-5 py-4 shadow-sm">
+                <form className="grid gap-4 md:grid-cols-[1fr_1fr_auto] md:items-end" action="/paketler">
+                  <input type="hidden" name="kategori" value={category} />
+                  <label className="space-y-1.5 text-sm text-slate-700">
+                    <span>Giriş tarihi</span>
+                    <input
+                      type="date"
+                      name="giris"
+                      defaultValue={giris}
+                      className="h-11 w-full rounded-xl border border-[#E2E8F0] bg-white px-3.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-[#1D9E75]/60 focus:ring-2 focus:ring-[#1D9E75]/15"
+                    />
+                  </label>
+                  <label className="space-y-1.5 text-sm text-slate-700">
+                    <span>Çıkış tarihi</span>
+                    <input
+                      type="date"
+                      name="cikis"
+                      defaultValue={cikis}
+                      className="h-11 w-full rounded-xl border border-[#E2E8F0] bg-white px-3.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-[#1D9E75]/60 focus:ring-2 focus:ring-[#1D9E75]/15"
+                    />
+                  </label>
+                  <div className="flex gap-2">
+                    <button
+                      type="submit"
+                      className="inline-flex h-11 items-center justify-center rounded-xl bg-[#1D9E75] px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#0F6E56]"
+                    >
+                      Uygula
+                    </button>
+                    {hasDateFilter ? (
+                      <Link
+                        href={category === "tumu" ? "/paketler" : `/paketler?kategori=${category}`}
+                        className="inline-flex h-11 items-center justify-center rounded-xl border border-[#E2E8F0] bg-white px-5 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50"
+                      >
+                        Temizle
+                      </Link>
+                    ) : null}
+                  </div>
+                </form>
               </div>
-            </form>
-          </div>
+            </div>
+          </section>
 
           {packages.length === 0 ? (
             <div className="rounded-2xl border border-slate-200 bg-white py-16 text-center shadow-sm">
