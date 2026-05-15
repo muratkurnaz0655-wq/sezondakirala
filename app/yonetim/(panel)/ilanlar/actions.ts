@@ -248,7 +248,10 @@ export async function bulkDeactivateListings(ids: string[]) {
   const cleanIds = ids.filter(Boolean);
   if (!cleanIds.length) return { success: false as const, error: "İlan seçin." };
 
-  const { error } = await admin.supabase.from("ilanlar").update({ aktif: false }).in("id", cleanIds);
+  const { error } = await admin.supabase
+    .from("ilanlar")
+    .update({ aktif: false, onay_durumu: LISTING_ONAY_DURUMU.PENDING })
+    .in("id", cleanIds);
   if (error) return { success: false as const, error: error.message };
   await recordAdminAction({
     islem: "ilan_pasife_alindi",

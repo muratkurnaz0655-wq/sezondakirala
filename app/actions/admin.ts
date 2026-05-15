@@ -10,6 +10,7 @@ import { generateUniqueSlug } from "@/lib/slugify";
 import { eachDateInRangeYmd, ymdFromLocalDate } from "@/lib/availability-dates";
 import { recordAdminAction } from "@/lib/admin-log";
 import { dateFromYmdLocal } from "@/lib/tr-today";
+import { LISTING_ONAY_DURUMU } from "@/lib/listing-approval";
 
 function normalizeDate(value: string) {
   return dateFromYmdLocal(value);
@@ -88,7 +89,13 @@ export async function approveOrRejectListing(formData: FormData) {
   const id = String(formData.get("id") ?? "");
   const aktif = String(formData.get("aktif") ?? "") === "true";
   const supabase = admin.supabase;
-  await supabase.from("ilanlar").update({ aktif }).eq("id", id);
+  await supabase
+    .from("ilanlar")
+    .update({
+      aktif,
+      onay_durumu: aktif ? LISTING_ONAY_DURUMU.PUBLISHED : LISTING_ONAY_DURUMU.PENDING,
+    })
+    .eq("id", id);
   await recordAdminAction({
     islem: aktif ? "ilan_aktife_alindi" : "ilan_pasife_alindi",
     entityTip: "ilan",

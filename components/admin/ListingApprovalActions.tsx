@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Check, X } from "lucide-react";
 import { approveListing, rejectListing } from "@/app/yonetim/(panel)/ilanlar/actions";
 import { ConfirmModal } from "@/components/admin/ConfirmModal";
@@ -17,6 +18,7 @@ export function ListingApprovalActions({
   baslik: string;
   onayDurumu?: "yayinda" | "onay_bekliyor" | "reddedildi" | null;
 }) {
+  const router = useRouter();
   const [rejectOpen, setRejectOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
   const [isPending, startTransition] = useTransition();
@@ -32,7 +34,8 @@ export function ListingApprovalActions({
         disabled={isPending}
         onClick={() =>
           startTransition(async () => {
-            await approveListing(listingId);
+            const result = await approveListing(listingId);
+            if (result.success) router.refresh();
           })
         }
         className={`${iconBtn} border-emerald-500/55 text-emerald-600 hover:bg-emerald-50`}
@@ -68,6 +71,7 @@ export function ListingApprovalActions({
               if (result.success) {
                 setRejectOpen(false);
                 setRejectReason("");
+                router.refresh();
               }
             })
           }

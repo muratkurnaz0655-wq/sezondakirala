@@ -13,7 +13,7 @@ import { AdminActionButton } from "@/components/admin/AdminActionButton";
 import { listingCoverImageUrl } from "./listing-cover";
 import { ListingsBulkTable, type ListingOwnerInfo, type ListingTableRow } from "./ListingsBulkTable";
 import { AdminEmptyState } from "@/components/admin/AdminEmptyState";
-import { resolveListingOnayDurumu } from "@/lib/listing-approval";
+import { isListingOnayDurumu, resolveListingOnayDurumu } from "@/lib/listing-approval";
 
 type AdminListingsPageProps = {
   searchParams: Promise<{
@@ -50,10 +50,14 @@ function toClientListingRow(
   row: Record<string, unknown>,
   ownerMap: Map<string, ListingOwnerInfo>,
 ): ListingTableRow {
-  const onayDurumu = resolveListingOnayDurumu({
-    aktif: Boolean(row.aktif),
-    onay_durumu: row.onay_durumu == null ? null : String(row.onay_durumu),
-  });
+  const rawOnay = row.onay_durumu == null ? null : String(row.onay_durumu);
+  /** Veritabanındaki gerçek değer — onay butonları için resolve edilmez. */
+  const onayDurumuDb = isListingOnayDurumu(rawOnay)
+    ? rawOnay
+    : resolveListingOnayDurumu({
+        aktif: Boolean(row.aktif),
+        onay_durumu: rawOnay,
+      });
   const sahipId = String(row.sahip_id ?? "");
   return {
     id: String(row.id ?? ""),
@@ -68,7 +72,7 @@ function toClientListingRow(
     yatak_odasi: Number(row.yatak_odasi ?? 0),
     banyo: Number(row.banyo ?? 0),
     aktif: Boolean(row.aktif),
-    onay_durumu: onayDurumu,
+    onay_durumu: onayDurumuDb,
     slug: row.slug != null && row.slug !== "" ? String(row.slug) : null,
     olusturulma_tarihi: String(row.olusturulma_tarihi ?? ""),
     ilan_medyalari: asMediaRows(row.ilan_medyalari),
