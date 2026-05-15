@@ -3,6 +3,7 @@ import { isSupabaseEnvConfigured } from "@/lib/supabase/env";
 import { getPublicSupabase } from "@/lib/supabase/public-anon";
 import { createClient } from "@/lib/supabase/server";
 import type { Ilan, Paket } from "@/types/supabase";
+import { isPublishedListing, LISTING_ONAY_DURUMU } from "@/lib/listing-approval";
 import { isExcludedDraftListing } from "@/lib/utils/excluded-draft-listing";
 
 /** `get_ilan_yorumlari` RPC satırlarını liste detayı şekline çevirir. */
@@ -65,6 +66,7 @@ export async function getFeaturedPackages(category?: string) {
       .from("paketler")
       .select("*")
       .eq("aktif", true)
+    .eq("onay_durumu", LISTING_ONAY_DURUMU.PUBLISHED)
       .order("olusturulma_tarihi", { ascending: false })
       .order("id", { ascending: false })
       .limit(24);
@@ -80,6 +82,7 @@ export async function getFeaturedPackages(category?: string) {
       .from("paketler")
       .select("*")
       .eq("aktif", true)
+    .eq("onay_durumu", LISTING_ONAY_DURUMU.PUBLISHED)
       .order("id", { ascending: false })
       .limit(24);
     if (category && category !== "tumu") {
@@ -166,8 +169,10 @@ export async function getPublicCatalogCounts(): Promise<PublicCatalogCounts | nu
   try {
     const supabase = await dbForPublicReads();
     const [v, b, r] = await Promise.all([
-      supabase.from("ilanlar").select("*", { count: "exact", head: true }).eq("aktif", true).eq("tip", "villa"),
-      supabase.from("ilanlar").select("*", { count: "exact", head: true }).eq("aktif", true).eq("tip", "tekne"),
+      supabase.from("ilanlar").select("*", { count: "exact", head: true }).eq("aktif", true)
+    .eq("onay_durumu", LISTING_ONAY_DURUMU.PUBLISHED).eq("tip", "villa"),
+      supabase.from("ilanlar").select("*", { count: "exact", head: true }).eq("aktif", true)
+    .eq("onay_durumu", LISTING_ONAY_DURUMU.PUBLISHED).eq("tip", "tekne"),
       supabase.from("rezervasyonlar").select("*", { count: "exact", head: true }).eq("durum", "onaylandi"),
     ]);
     const { data: yorumlar } = await supabase.from("yorumlar").select("puan");
@@ -209,6 +214,7 @@ export async function getHomeFeaturedPackages(limit = 3) {
       .from("paketler")
       .select("*")
       .eq("aktif", true)
+    .eq("onay_durumu", LISTING_ONAY_DURUMU.PUBLISHED)
       .order("olusturulma_tarihi", { ascending: false })
       .order("id", { ascending: false })
       .limit(fetchCap);
@@ -221,6 +227,7 @@ export async function getHomeFeaturedPackages(limit = 3) {
       .from("paketler")
       .select("*")
       .eq("aktif", true)
+    .eq("onay_durumu", LISTING_ONAY_DURUMU.PUBLISHED)
       .order("id", { ascending: false })
       .limit(fetchCap);
     if (fallback.error) return [];
@@ -249,6 +256,7 @@ export async function getFeaturedListings() {
       .from("ilanlar")
       .select("*, ilan_medyalari(url,sira)")
       .eq("aktif", true)
+    .eq("onay_durumu", LISTING_ONAY_DURUMU.PUBLISHED)
       .order("sira", { foreignTable: "ilan_medyalari", ascending: true })
       .order("olusturulma_tarihi", { ascending: false })
       .order("id", { ascending: false })
@@ -258,6 +266,7 @@ export async function getFeaturedListings() {
         .from("ilanlar")
         .select("*, ilan_medyalari(url,sira)")
         .eq("aktif", true)
+    .eq("onay_durumu", LISTING_ONAY_DURUMU.PUBLISHED)
         .order("sira", { foreignTable: "ilan_medyalari", ascending: true })
         .order("id", { ascending: false })
         .limit(fetchCap);
@@ -423,6 +432,7 @@ export async function getListingRegions(tip: "villa" | "tekne"): Promise<string[
     .from("ilanlar")
     .select("konum")
     .eq("aktif", true)
+    .eq("onay_durumu", LISTING_ONAY_DURUMU.PUBLISHED)
     .eq("tip", tip);
 
   const regions = new Set<string>();
@@ -442,6 +452,7 @@ export async function getFilteredListings(filters: ListingFilters) {
     .from("ilanlar")
     .select("*")
     .eq("aktif", true)
+    .eq("onay_durumu", LISTING_ONAY_DURUMU.PUBLISHED)
     .eq("tip", filters.tip)
     .order("olusturulma_tarihi", { ascending: false })
     .order("id", { ascending: false });
@@ -459,6 +470,7 @@ export async function getFilteredListings(filters: ListingFilters) {
       .from("ilanlar")
       .select("*")
       .eq("aktif", true)
+    .eq("onay_durumu", LISTING_ONAY_DURUMU.PUBLISHED)
       .eq("tip", filters.tip)
       .order("id", { ascending: false });
     if (filters.konum) query = fallbackQuery.ilike("konum", `%${filters.konum}%`);
@@ -541,6 +553,7 @@ export async function getListingBySlug(tip: "villa" | "tekne", slug: string) {
     .eq("tip", tip)
     .eq("slug", slug)
     .eq("aktif", true)
+    .eq("onay_durumu", LISTING_ONAY_DURUMU.PUBLISHED)
     .maybeSingle();
 
   if (!listing) {
@@ -549,7 +562,8 @@ export async function getListingBySlug(tip: "villa" | "tekne", slug: string) {
       .select("*")
       .eq("tip", tip)
       .eq("old_slug", slug)
-      .eq("aktif", true);
+      .eq("aktif", true)
+    .eq("onay_durumu", LISTING_ONAY_DURUMU.PUBLISHED);
     listing =
       byOldSlug.data?.[0] ?? null;
   }
@@ -561,12 +575,14 @@ export async function getListingBySlug(tip: "villa" | "tekne", slug: string) {
       .eq("tip", tip)
       .eq("id", slug)
       .eq("aktif", true)
+    .eq("onay_durumu", LISTING_ONAY_DURUMU.PUBLISHED)
       .maybeSingle();
     listing = fallback.data;
   }
 
   if (!listing) return null;
 
+  if (!isPublishedListing(listing as Ilan & { onay_durumu?: string | null })) return null;
   if (isExcludedDraftListing(listing as Ilan)) return null;
 
   const listingId = listing.id as string;
@@ -593,6 +609,7 @@ export async function getListingBySlug(tip: "villa" | "tekne", slug: string) {
         .eq("konum", listing.konum)
         .neq("id", listingId)
         .eq("aktif", true)
+    .eq("onay_durumu", LISTING_ONAY_DURUMU.PUBLISHED)
         .order("sponsorlu", { ascending: false })
         .order("olusturulma_tarihi", { ascending: false })
         .limit(3),

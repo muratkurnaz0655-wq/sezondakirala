@@ -11,6 +11,7 @@ import { KATEGORILER, OZELLIKLER } from "@/lib/villa-sabitleri";
 import { createClient } from "@/lib/supabase/client";
 import { dateFromYmdLocal, istanbulDateString } from "@/lib/tr-today";
 import { defaultFiltre, type VillaFiltre } from "@/types/filtre";
+import { LISTING_ONAY_DURUMU } from "@/lib/listing-approval";
 import { isExcludedDraftListing } from "@/lib/utils/excluded-draft-listing";
 import type { Ilan } from "@/types/supabase";
 
@@ -116,7 +117,12 @@ export default function ListingsPage() {
       signal?: AbortSignal,
     ) => {
     const supabase = createClient();
-    let query = supabase.from("ilanlar").select("*, ilan_medyalari(url,sira,tip)").eq("aktif", true).eq("tip", "villa");
+    let query = supabase
+      .from("ilanlar")
+      .select("*, ilan_medyalari(url,sira,tip)")
+      .eq("aktif", true)
+      .eq("onay_durumu", LISTING_ONAY_DURUMU.PUBLISHED)
+      .eq("tip", "villa");
     const aktifGeceSayisi = tarih.geceSayisi;
 
     if (aktifFiltre.bolge.length > 0) {

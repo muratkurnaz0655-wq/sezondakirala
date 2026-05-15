@@ -4,7 +4,9 @@ import { revalidatePath } from "next/cache";
 import { requireAdminUser } from "@/lib/auth/guards";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { generateUniqueSlug } from "@/lib/slugify";
+import { insertAdminNotification } from "@/lib/admin-notifications";
 import { recordAdminAction } from "@/lib/admin-log";
+import { LISTING_ONAY_DURUMU } from "@/lib/listing-approval";
 
 function composeKonum(bolgeRaw: FormDataEntryValue | null, locationRaw: FormDataEntryValue | null) {
   const bolge = String(bolgeRaw ?? "").trim();
@@ -29,6 +31,7 @@ export async function createListing(formData: FormData) {
     konum,
     slug,
     aktif: true,
+    onay_durumu: LISTING_ONAY_DURUMU.PUBLISHED,
   };
   const { error } = await supabase.from("ilanlar").insert(payload);
   if (error) throw new Error(error.message);
@@ -63,6 +66,7 @@ export async function createAdminListing(formData: FormData) {
     ozellikler,
     slug,
     aktif: true,
+    onay_durumu: LISTING_ONAY_DURUMU.PUBLISHED,
   };
   const coverIndex = Number(formData.get("cover_index") ?? 0);
   const files = formData.getAll("medya").filter((f): f is File => f instanceof File && f.size > 0);
@@ -145,6 +149,97 @@ export async function deleteListing(id: string) {
   if (error) throw new Error(error.message);
   await recordAdminAction({ islem: "ilan_silindi", entityTip: "ilan", entityId: id });
   revalidatePath("/yonetim/ilanlar");
+}
+
+export async function approveListing(listingId: string) {
+  const admin = await assertAdminForMedia();
+  if (!admin.ok) return { success: false as const, error: admin.error };
+
+  const { data: listing, error: fetchError } = await admin.supabase
+    .from("ilanlar")
+    .select("id,baslik,sahip_id")
+    .eq("id", listingId)
+    .maybeSingle();
+  if (fetchError || !listing) {
+    return { success: false as const, error: fetchError?.message ?? "İlan bulunamadı." };
+  }
+
+  const { error } = await admin.supabase
+    .from("ilanlar")
+    .update({ aktif: true, onay_durumu: LISTING_ONAY_DURUMU.PUBLISHED })
+    .eq("id", listingId);
+  if (error) return { success: false as const, error: error.message };
+
+  await insertAdminNotification({
+    tip: "bilgi",
+    baslik: "İlanınız yayına alındı",
+    mesaj: `"${listing.baslik ?? "İlanınız"}" onaylandı ve sitede yayınlanıyor.`,
+    entity_tip: "ilan",
+    entity_id: listingId,
+    hedef_kullanici_id: listing.sahip_id ? String(listing.sahip_id) : undefined,
+  });
+
+  await recordAdminAction({
+    islem: "ilan_onaylandi",
+    entityTip: "ilan",
+    entityId: listingId,
+    entityBaslik: listing.baslik,
+  });
+
+  revalidatePath("/yonetim/ilanlar");
+  revalidatePath("/yonetim");
+  revalidatePath("/panel/ilanlarim");
+  revalidatePath("/");
+  revalidatePath("/konaklama");
+  revalidatePath("/tekneler");
+  return { success: true as const };
+}
+
+export async function rejectListing(listingId: string, neden?: string) {
+  const admin = await assertAdminForMedia();
+  if (!admin.ok) return { success: false as const, error: admin.error };
+
+  const reason = (neden ?? "").trim();
+  const { data: listing, error: fetchError } = await admin.supabase
+    .from("ilanlar")
+    .select("id,baslik,sahip_id")
+    .eq("id", listingId)
+    .maybeSingle();
+  if (fetchError || !listing) {
+    return { success: false as const, error: fetchError?.message ?? "İlan bulunamadı." };
+  }
+
+  const { error } = await admin.supabase
+    .from("ilanlar")
+    .update({ aktif: false, onay_durumu: LISTING_ONAY_DURUMU.REJECTED })
+    .eq("id", listingId);
+  if (error) return { success: false as const, error: error.message };
+
+  const mesaj = reason
+    ? `"${listing.baslik ?? "İlanınız"}" reddedildi. Neden: ${reason}`
+    : `"${listing.baslik ?? "İlanınız"}" reddedildi. Detay için destek ile iletişime geçebilirsiniz.`;
+
+  await insertAdminNotification({
+    tip: "bilgi",
+    baslik: "İlan başvurunuz reddedildi",
+    mesaj,
+    entity_tip: "ilan",
+    entity_id: listingId,
+    hedef_kullanici_id: listing.sahip_id ? String(listing.sahip_id) : undefined,
+  });
+
+  await recordAdminAction({
+    islem: "ilan_reddedildi",
+    entityTip: "ilan",
+    entityId: listingId,
+    entityBaslik: listing.baslik,
+    detaylar: reason ? { neden: reason } : null,
+  });
+
+  revalidatePath("/yonetim/ilanlar");
+  revalidatePath("/yonetim");
+  revalidatePath("/panel/ilanlarim");
+  return { success: true as const };
 }
 
 export async function bulkDeactivateListings(ids: string[]) {

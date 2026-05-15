@@ -31,6 +31,7 @@ export type Ilan = {
   banyo: number;
   ozellikler: Record<string, unknown> | string[];
   aktif: boolean;
+  onay_durumu?: "yayinda" | "onay_bekliyor" | "reddedildi" | null;
   sponsorlu: boolean;
   olusturulma_tarihi: string;
   ilk_resim_url?: string | null;

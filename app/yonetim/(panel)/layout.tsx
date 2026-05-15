@@ -59,7 +59,7 @@ export default async function AdminPanelSegmentLayout({ children }: { children: 
         row.entity_tip === "rezervasyon"
           ? `/yonetim/rezervasyonlar/${String(row.entity_id ?? "")}`
           : row.entity_tip === "ilan"
-            ? `/yonetim/ilanlar/${String(row.entity_id ?? "")}`
+            ? `/yonetim/ilanlar?durum=onay_bekliyor`
             : row.entity_tip === "kullanici"
               ? `/yonetim/kullanicilar/${String(row.entity_id ?? "")}`
               : "/yonetim",

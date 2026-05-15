@@ -10,8 +10,9 @@ import {
 import { STORAGE_BUCKET } from "@/lib/constants";
 import { normalizeReservationStatus } from "@/lib/reservation-status";
 import { storageUploadUserMessage } from "@/lib/storage-upload-messages";
+import { insertAdminNotification } from "@/lib/admin-notifications";
+import { LISTING_ONAY_DURUMU } from "@/lib/listing-approval";
 import { generateUniqueSlug } from "@/lib/slugify";
-
 function normalizeDate(value: string) {
   return new Date(`${value}T00:00:00`);
 }
@@ -151,6 +152,7 @@ export async function createListing(formData: FormData) {
       temizlik_ucreti,
       ozellikler,
       aktif: false,
+      onay_durumu: LISTING_ONAY_DURUMU.PENDING,
       sponsorlu: false,
     })
     .select("id")
@@ -205,7 +207,21 @@ export async function createListing(formData: FormData) {
     }
   }
 
+  try {
+    await insertAdminNotification({
+      tip: "yeni_ilan",
+      baslik: "Yeni ilan onay bekliyor",
+      mesaj: `"${baslik.trim()}" başlıklı ilan incelemenizi bekliyor.`,
+      entity_tip: "ilan",
+      entity_id: inserted.id,
+    });
+  } catch (e) {
+    console.error("[createListing] admin bildirimi:", e);
+  }
+
   revalidatePath("/panel/ilanlarim");
+  revalidatePath("/yonetim/ilanlar");
+  revalidatePath("/yonetim");
   return { success: true };
 }
 

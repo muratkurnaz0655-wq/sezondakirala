@@ -6,6 +6,7 @@ import { CalendarDays, ExternalLink, Pencil, Trash2 } from "lucide-react";
 import { deleteListing } from "./actions";
 import { EditListingModal } from "./EditListingModal";
 import { ConfirmModal } from "@/components/admin/ConfirmModal";
+import { ListingApprovalActions } from "@/components/admin/ListingApprovalActions";
 
 type Listing = {
   id: string;
@@ -15,6 +16,7 @@ type Listing = {
   aciklama?: string | null;
   gunluk_fiyat: number;
   konum: string;
+  onay_durumu?: "yayinda" | "onay_bekliyor" | "reddedildi" | null;
   ilan_medyalari?: { id: string; url: string; sira: number }[] | null;
 };
 
@@ -28,6 +30,11 @@ export function ListingActions({ listing }: { listing: Listing }) {
 
   return (
     <div className="flex flex-wrap items-center gap-1.5">
+      <ListingApprovalActions
+        listingId={listing.id}
+        baslik={listing.baslik}
+        onayDurumu={listing.onay_durumu}
+      />
       <button
         type="button"
         title="Düzenle"

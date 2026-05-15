@@ -12,6 +12,7 @@ import { AdminActionButton } from "@/components/admin/AdminActionButton";
 import { listingCoverImageUrl } from "./listing-cover";
 import { ListingsBulkTable, type ListingTableRow } from "./ListingsBulkTable";
 import { AdminEmptyState } from "@/components/admin/AdminEmptyState";
+import { resolveListingOnayDurumu } from "@/lib/listing-approval";
 
 type AdminListingsPageProps = {
   searchParams: Promise<{
@@ -45,9 +46,10 @@ function parseOptionalNumber(value: string | undefined) {
 
 /** RSC → client: yalnızca JSON-güvenli alanlar (BigInt / ekstra view kolonları serileştirmeyi bozmasın). */
 function toClientListingRow(row: Record<string, unknown>): ListingTableRow {
-  const od = row.onay_durumu;
-  const onayDurumu =
-    od === "yayinda" || od === "onay_bekliyor" || od === "reddedildi" ? od : null;
+  const onayDurumu = resolveListingOnayDurumu({
+    aktif: Boolean(row.aktif),
+    onay_durumu: row.onay_durumu == null ? null : String(row.onay_durumu),
+  });
   return {
     id: String(row.id ?? ""),
     baslik: String(row.baslik ?? ""),
@@ -129,9 +131,7 @@ export default async function AdminListingsPage({ searchParams }: AdminListingsP
   const maxFiyat = parseOptionalNumber(params.max_fiyat);
   const supabase = createAdminClient();
   const buildListingsQuery = () => {
-    let query = supabase
-      .from("admin_ilanlar")
-      .select("*");
+    let query = supabase.from("ilanlar").select("*");
 
     if (durum === "onay_bekliyor" || durum === "yayinda" || durum === "reddedildi") {
       query = query.eq("onay_durumu", durum);

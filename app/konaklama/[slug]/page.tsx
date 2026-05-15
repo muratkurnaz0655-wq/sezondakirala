@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { notFound, permanentRedirect } from "next/navigation";
 import { ListingDetailPage } from "@/components/listing-detail-page";
 import { getListingBySlug } from "@/lib/data/phase2";
+import { LISTING_ONAY_DURUMU } from "@/lib/listing-approval";
 import { createClient } from "@/lib/supabase/server";
 import { fixTurkishDisplay } from "@/lib/utils/turkish-display";
 
@@ -19,6 +20,7 @@ export default async function ListingSlugPage({ params }: ListingSlugPageProps) 
     .eq("tip", "villa")
     .eq("slug", slug)
     .eq("aktif", true)
+    .eq("onay_durumu", LISTING_ONAY_DURUMU.PUBLISHED)
     .maybeSingle();
 
   if (!currentSlugListing) {
@@ -28,6 +30,7 @@ export default async function ListingSlugPage({ params }: ListingSlugPageProps) 
       .eq("tip", "villa")
       .eq("old_slug", slug)
       .eq("aktif", true)
+      .eq("onay_durumu", LISTING_ONAY_DURUMU.PUBLISHED)
       .maybeSingle();
     if (byOldSlug?.slug) permanentRedirect(`/konaklama/${byOldSlug.slug}`);
     notFound();

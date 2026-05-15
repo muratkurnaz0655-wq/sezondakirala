@@ -11,6 +11,7 @@ import { SlidersHorizontal, X } from "lucide-react";
 import { aramaStore } from "@/lib/arama-store";
 import { istanbulDateString } from "@/lib/tr-today";
 import { defaultTekneFiltre, type TekneFiltre } from "@/lib/villa-sabitleri";
+import { LISTING_ONAY_DURUMU } from "@/lib/listing-approval";
 import { isExcludedDraftListing } from "@/lib/utils/excluded-draft-listing";
 
 type TekneRow = {
@@ -68,6 +69,7 @@ export default function TeknelerPage() {
       .from("ilanlar")
       .select("*", { count: "exact", head: true })
       .eq("aktif", true)
+      .eq("onay_durumu", LISTING_ONAY_DURUMU.PUBLISHED)
       .eq("tip", "tekne")
       .then(({ count }) => {
         if (!cancelled) setTekneToplam(count ?? null);
@@ -97,6 +99,7 @@ export default function TeknelerPage() {
         "id, slug, baslik, aciklama, konum, gunluk_fiyat, kapasite, yatak_odasi, ozellikler, sponsorlu, olusturulma_tarihi, ilan_medyalari(url, sira, tip)",
       )
       .eq("aktif", true)
+      .eq("onay_durumu", LISTING_ONAY_DURUMU.PUBLISHED)
       .eq("tip", "tekne")
       .gte("gunluk_fiyat", Number(f.minFiyat) || 0)
       .lte("gunluk_fiyat", Number(f.maxFiyat) || 50000);

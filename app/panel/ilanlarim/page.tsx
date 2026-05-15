@@ -2,6 +2,7 @@ import Link from "next/link";
 import { CalendarDays, ExternalLink, Tag } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { OwnerListingDeleteDialog } from "@/components/panel/owner-listing-delete-dialog";
+import { isPublishedListing, LISTING_ONAY_DURUMU } from "@/lib/listing-approval";
 import { formatCurrency } from "@/lib/utils/format";
 
 export default async function OwnerListingsPage() {
@@ -64,7 +65,8 @@ export default async function OwnerListingsPage() {
         ) : null}
 
         {(listings ?? []).map((listing) => {
-          const yayinda = Boolean(listing.aktif);
+          const reddedildi = listing.onay_durumu === LISTING_ONAY_DURUMU.REJECTED;
+          const yayinda = isPublishedListing(listing);
           const publicPath = listing.tip === "tekne" ? "tekneler" : "konaklama";
           const slugOrId = listing.slug ?? listing.id;
 
@@ -91,6 +93,10 @@ export default async function OwnerListingsPage() {
                   {yayinda ? (
                     <span className="inline-flex items-center rounded-full bg-emerald-600/95 px-3 py-1 text-xs font-semibold text-white shadow-sm backdrop-blur-sm">
                       İlanınız yayında
+                    </span>
+                  ) : reddedildi ? (
+                    <span className="inline-flex items-center rounded-full bg-rose-600/95 px-3 py-1 text-xs font-semibold text-white shadow-sm backdrop-blur-sm">
+                      Reddedildi
                     </span>
                   ) : (
                     <span className="inline-flex items-center rounded-full bg-amber-500/95 px-3 py-1 text-xs font-semibold text-white shadow-sm backdrop-blur-sm">
