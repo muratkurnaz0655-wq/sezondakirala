@@ -16,7 +16,10 @@ export function isListingOnayDurumu(value: unknown): value is ListingOnayDurumu 
 
 /** Kamuya açık sitede gösterilebilir ilan veya paket */
 export function isPublishedListing(row: { aktif?: boolean | null; onay_durumu?: string | null }) {
-  return Boolean(row.aktif) && row.onay_durumu === LISTING_ONAY_DURUMU.PUBLISHED;
+  const onay = String(row.onay_durumu ?? "")
+    .trim()
+    .toLowerCase();
+  return Boolean(row.aktif) && onay === LISTING_ONAY_DURUMU.PUBLISHED;
 }
 
 /** Paket — kolon yokken veya eski kayıtta `onay_durumu` boşsa aktif yeterli */

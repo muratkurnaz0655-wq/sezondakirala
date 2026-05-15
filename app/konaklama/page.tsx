@@ -12,8 +12,8 @@ import { VillaFiltreSidebar } from "@/components/villa-filtre-sidebar";
 import { aramaStore } from "@/lib/arama-store";
 import { parseGuestParam, parseListingDateParam } from "@/lib/listing-search-params";
 import { KATEGORILER, OZELLIKLER } from "@/lib/villa-sabitleri";
-import { queryPublishedListings } from "@/lib/catalog-queries";
 import { getCatalogSupabase } from "@/lib/catalog-supabase";
+import { fetchPublishedListingsFromApi } from "@/lib/fetch-published-listings";
 import { applyVillaCatalogFilters, sortVillaCatalogListings } from "@/lib/villa-catalog-filters";
 import { dateFromYmdLocal, istanbulDateString } from "@/lib/tr-today";
 import { defaultFiltre, VILLA_PRICE_FILTER_DEFAULT_MAX, type VillaFiltre } from "@/types/filtre";
@@ -155,7 +155,7 @@ function KonaklamaListingsContent() {
       signal?: AbortSignal,
     ) => {
     const supabase = getCatalogSupabase();
-    const published = await queryPublishedListings(supabase, { tip: "villa", limit: 200 });
+    const published = await fetchPublishedListingsFromApi("villa", 200);
     if (signal?.aborted) return;
 
     const catalogRows = withCoverImage(published as ListingRow[]).filter((row) => !isExcludedDraftListing(row));

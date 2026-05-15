@@ -7,6 +7,7 @@ import {
   TEKNE_OZELLIKLERI,
   TEKNE_SURE_SECENEKLERI,
   TEKNE_TIPLERI,
+  TEKNE_PRICE_FILTER_DEFAULT_MAX,
   type TekneFiltre,
 } from "@/lib/villa-sabitleri";
 
@@ -153,7 +154,7 @@ export function TekneFiltreSidebar({ filtre, onChange, onTemizle, sonucSayisi }:
                 <input
                   type="number"
                   value={filtre.maxFiyat}
-                  max={50000}
+                  max={TEKNE_PRICE_FILTER_DEFAULT_MAX}
                   step={500}
                   onChange={(e) => onChange({ ...filtre, maxFiyat: Number(e.target.value) })}
                   className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-[#185FA5] focus:ring-1 focus:ring-[#185FA5]/20"

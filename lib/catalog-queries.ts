@@ -44,7 +44,7 @@ export async function queryPublishedListings(
   supabase: SupabaseClient,
   options: { tip: "villa" | "tekne"; limit?: number },
 ): Promise<ListingWithMedia[]> {
-  const limit = options.limit ?? 120;
+  const limit = options.limit ?? 200;
   const selectWithMedia = "*, ilan_medyalari(url,sira,tip)";
 
   type Builder = (withOnay: boolean) => PromiseLike<{ data: unknown; error: { message?: string; code?: string } | null }>;

@@ -69,6 +69,9 @@ export const TEKNE_SURE_SECENEKLERI = [
   { value: "haftalik", label: "📅 Haftalık" },
 ] as const;
 
+/** Varsayılan üst sınır — bu değerdeyken fiyat filtresi uygulanmaz. */
+export const TEKNE_PRICE_FILTER_DEFAULT_MAX = 300_000;
+
 export interface TekneFiltre {
   liman: string[];
   tekne_tipi: string[];
@@ -84,7 +87,7 @@ export const defaultTekneFiltre: TekneFiltre = {
   liman: [],
   tekne_tipi: [],
   minFiyat: 0,
-  maxFiyat: 15000,
+  maxFiyat: TEKNE_PRICE_FILTER_DEFAULT_MAX,
   minKapasite: 1,
   sure: [],
   ozellikler: [],

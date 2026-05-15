@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
-import { isCatalogSchemaError } from "@/lib/catalog-queries";
-import { getCatalogSupabase } from "@/lib/catalog-supabase";
+import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { CatalogHeroWave } from "@/components/catalog-hero-wave";
+import { fetchPublishedListingsFromApi } from "@/lib/fetch-published-listings";
+import { applyTekneCatalogFilters, sortTekneCatalogListings } from "@/lib/tekne-catalog-filters";
 import { ListingReveal } from "@/components/listing-reveal";
 import { SearchForm } from "@/components/search-form";
 import { TekneFiltreSidebar } from "@/components/tekne-filtre-sidebar";
@@ -11,8 +11,7 @@ import { TekneKarti } from "@/components/tekne-karti";
 import { SlidersHorizontal, X } from "lucide-react";
 import { aramaStore } from "@/lib/arama-store";
 import { istanbulDateString } from "@/lib/tr-today";
-import { defaultTekneFiltre, type TekneFiltre } from "@/lib/villa-sabitleri";
-import { isPublishedListing, LISTING_ONAY_DURUMU } from "@/lib/listing-approval";
+import { defaultTekneFiltre, TEKNE_PRICE_FILTER_DEFAULT_MAX, type TekneFiltre } from "@/lib/villa-sabitleri";
 import { isExcludedDraftListing } from "@/lib/utils/excluded-draft-listing";
 
 type TekneRow = {
@@ -32,19 +31,6 @@ type TekneRow = {
   ilan_medyalari?: Array<{ url: string; sira: number; tip: string }> | null;
 };
 
-function parseEtiketler(ozellikler: unknown): string[] {
-  if (Array.isArray(ozellikler)) {
-    return ozellikler.filter((item): item is string => typeof item === "string");
-  }
-  if (!ozellikler || typeof ozellikler !== "object") return [];
-  const row = ozellikler as Record<string, unknown>;
-  const etiketler = row.etiketler;
-  if (Array.isArray(etiketler)) {
-    return etiketler.filter((item): item is string => typeof item === "string");
-  }
-  return Object.keys(row).filter((key) => row[key] === true);
-}
-
 const SkeletonTekne = () => (
   <div className="overflow-hidden rounded-xl border border-slate-100 bg-white shadow-sm">
     <div className="skeleton h-[200px] w-full rounded-none" />
@@ -62,119 +48,45 @@ export default function TeknelerPage() {
   const [filtre, setFiltre] = useState<TekneFiltre>(defaultTekneFiltre);
   const [yukleniyor, setYukleniyor] = useState(true);
   const [mobilFiltre, setMobilFiltre] = useState(false);
-  const [tekneToplam, setTekneToplam] = useState<number | null>(null);
+  const [yayinTekneSayisi, setYayinTekneSayisi] = useState<number | null>(null);
   const bugunIso = useMemo(() => istanbulDateString(), []);
 
   useEffect(() => {
-    let cancelled = false;
-    const supabase = getCatalogSupabase();
-    void supabase
-      .from("ilanlar")
-      .select("*", { count: "exact", head: true })
-      .eq("aktif", true)
-      .eq("onay_durumu", LISTING_ONAY_DURUMU.PUBLISHED)
-      .eq("tip", "tekne")
-      .then(({ count }) => {
-        if (!cancelled) setTekneToplam(count ?? null);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  useEffect(() => {
     if (currentArama?.tip !== "tekne") return;
-    const gun = currentArama.gun ?? 1;
     const kap = Math.max(1, currentArama.yetiskin ?? 2);
     setFiltre((prev) => ({
       ...prev,
-      minKapasite: kap,
-      sure: gun >= 7 ? ["haftalik"] : ["gunluk"],
+      minKapasite: Math.max(prev.minKapasite, kap),
     }));
-  }, [currentArama?.tip, currentArama?.gun, currentArama?.yetiskin]);
+  }, [currentArama?.tip, currentArama?.yetiskin]);
 
-  const fetchTekneler = async (f: TekneFiltre) => {
+  const fetchTekneler = useCallback(async (f: TekneFiltre) => {
     setYukleniyor(true);
-    const supabase = getCatalogSupabase();
-
-    const buildQuery = (withOnay: boolean, skipSponsorluOrder: boolean) => {
-      let query = supabase
-        .from("ilanlar")
-        .select(
-          "id, slug, baslik, aciklama, konum, gunluk_fiyat, kapasite, yatak_odasi, ozellikler, sponsorlu, olusturulma_tarihi, onay_durumu, ilan_medyalari(url, sira, tip)",
-        )
-        .eq("aktif", true)
-        .eq("tip", "tekne")
-        .gte("gunluk_fiyat", Number(f.minFiyat) || 0)
-        .lte("gunluk_fiyat", Number(f.maxFiyat) || 50000);
-      if (withOnay) query = query.eq("onay_durumu", LISTING_ONAY_DURUMU.PUBLISHED);
-
-      if (f.minKapasite > 1) query = query.gte("kapasite", f.minKapasite);
-      if (f.liman.length > 0) {
-        const limanFiltre = f.liman.map((l) => `konum.ilike.%${l.split(",")[0].trim()}%`).join(",");
-        query = query.or(limanFiltre);
-      }
-      switch (f.siralama) {
-        case "fiyat_artan":
-          query = query.order("gunluk_fiyat", { ascending: true });
-          break;
-        case "fiyat_azalan":
-          query = query.order("gunluk_fiyat", { ascending: false });
-          break;
-        case "kapasite_buyuk":
-          query = query.order("kapasite", { ascending: false });
-          break;
-        default:
-          if (skipSponsorluOrder) {
-            query = query.order("olusturulma_tarihi", { ascending: false });
-          } else {
-            query = query.order("sponsorlu", { ascending: false }).order("olusturulma_tarihi", { ascending: false });
-          }
-      }
-      return query;
-    };
-
-    let raw: TekneRow[] | null = null;
-    for (const attempt of [
-      { withOnay: true, skipSponsorluOrder: false },
-      { withOnay: true, skipSponsorluOrder: true },
-      { withOnay: false, skipSponsorluOrder: true },
-    ]) {
-      const res = await buildQuery(attempt.withOnay, attempt.skipSponsorluOrder);
-      if (!res.error) {
-        raw = (res.data as TekneRow[]) ?? [];
-        break;
-      }
-      if (!isCatalogSchemaError(res.error)) {
-        console.error("[tekneler]", res.error);
-        break;
-      }
-    }
-
-    const rows = (raw ?? [])
-      .filter((row) => !isExcludedDraftListing({ baslik: row.baslik, aciklama: row.aciklama }))
-      .filter((row) => isPublishedListing(row))
-      .filter((row) => {
-      const etiketler = parseEtiketler(row.ozellikler);
-      const hasSure = f.sure.length === 0 || f.sure.every((sure) => etiketler.includes(sure));
-      const hasOzellik = f.ozellikler.length === 0 || f.ozellikler.every((oz) => etiketler.includes(oz));
-      const hasTip = f.tekne_tipi.length === 0 || f.tekne_tipi.some((tip) => etiketler.includes(tip));
-      return hasSure && hasOzellik && hasTip;
-    });
+    const published = await fetchPublishedListingsFromApi("tekne", 200);
+    const catalogRows = (published as TekneRow[]).filter(
+      (row) => !isExcludedDraftListing({ baslik: row.baslik, aciklama: row.aciklama }),
+    );
+    setYayinTekneSayisi(catalogRows.length);
+    const rows = sortTekneCatalogListings(applyTekneCatalogFilters(catalogRows, f), f.siralama);
     setTekneler(rows);
     setYukleniyor(false);
-  };
+  }, []);
 
   useEffect(() => {
     void fetchTekneler(filtre);
-  }, [filtre]);
+  }, [filtre, fetchTekneler]);
+
+  const tumFiltreleriTemizle = useCallback(() => {
+    setFiltre(defaultTekneFiltre);
+    aramaStore.clear();
+  }, []);
 
   const aktifFiltreSayisi = [
     ...filtre.liman,
     ...filtre.tekne_tipi,
     ...filtre.sure,
     ...filtre.ozellikler,
-    ...(filtre.minFiyat > 0 || filtre.maxFiyat < 15000 ? ["fiyat"] : []),
+    ...(filtre.minFiyat > 0 || filtre.maxFiyat < TEKNE_PRICE_FILTER_DEFAULT_MAX ? ["fiyat"] : []),
     ...(filtre.minKapasite > 1 ? ["kapasite"] : []),
   ].length;
 
@@ -198,7 +110,7 @@ export default function TeknelerPage() {
           <p className="mb-2 text-[13px] text-white/75">Ana Sayfa / Tekneler</p>
           <h1 className="mb-3 text-3xl font-medium tracking-tight md:text-5xl md:leading-tight">Fethiye Tekne Kiralama</h1>
           <p className="mb-8 max-w-xl text-base leading-relaxed text-white/85 md:text-lg">
-            {(tekneToplam ?? tekneler.length)}+ tekne ile hayalinizdeki deniz tatilini bulun
+            {(yayinTekneSayisi ?? tekneler.length)}+ tekne ile hayalinizdeki deniz tatilini bulun
           </p>
           <div className="flex flex-wrap gap-2 md:gap-3">
             {["Günlük / Haftalık", "Mürettebatlı Seçenekler", "TURSAB Güvencesi"].map((chip) => (
@@ -252,7 +164,7 @@ export default function TeknelerPage() {
           <TekneFiltreSidebar
             filtre={filtre}
             onChange={(f) => setFiltre(f)}
-            onTemizle={() => setFiltre(defaultTekneFiltre)}
+            onTemizle={tumFiltreleriTemizle}
             sonucSayisi={tekneler.length}
           />
         </div>
@@ -270,7 +182,7 @@ export default function TeknelerPage() {
               <TekneFiltreSidebar
                 filtre={filtre}
                 onChange={(f) => setFiltre(f)}
-                onTemizle={() => setFiltre(defaultTekneFiltre)}
+                onTemizle={tumFiltreleriTemizle}
                 sonucSayisi={tekneler.length}
               />
             </div>
@@ -281,6 +193,12 @@ export default function TeknelerPage() {
           <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-[13px] text-slate-500">
               <span className="font-semibold text-slate-800">{tekneler.length}</span> tekne listeleniyor
+              {yayinTekneSayisi != null && yayinTekneSayisi > tekneler.length ? (
+                <span className="text-slate-400">
+                  {" "}
+                  ({yayinTekneSayisi - tekneler.length} filtreler nedeniyle gizli)
+                </span>
+              ) : null}
             </p>
             <select
               value={filtre.siralama}
@@ -314,7 +232,7 @@ export default function TeknelerPage() {
                 <p className="mb-5 text-sm text-slate-500">Farklı filtre kriterleri deneyin</p>
                 <button
                   type="button"
-                  onClick={() => setFiltre(defaultTekneFiltre)}
+                  onClick={tumFiltreleriTemizle}
                   className="rounded-xl border-2 border-[#1D9E75] bg-white px-6 py-2.5 text-sm font-semibold text-[#1D9E75] transition-colors hover:bg-[#1D9E75] hover:text-white"
                 >
                   Filtreleri temizle
