@@ -6,6 +6,7 @@ import { normalizePaketListingIds } from "@/lib/paket-ilan-idleri";
 import { formatCurrency } from "@/lib/utils/format";
 import { getPlatformSettings } from "@/lib/settings";
 import type { Ilan, Paket } from "@/types/supabase";
+import { isPublishedPackage, LISTING_ONAY_DURUMU } from "@/lib/listing-approval";
 import { isExcludedDraftListing } from "@/lib/utils/excluded-draft-listing";
 
 type PackageDetailPageProps = {
@@ -24,9 +25,20 @@ export default async function PackageDetailPage({ params }: PackageDetailPagePro
     notFound();
   }
 
-  const { data: paket } = await supabase.from("paketler").select("*").eq("slug", slug).eq("aktif", true).maybeSingle();
+  let paketQuery = await supabase
+    .from("paketler")
+    .select("*")
+    .eq("slug", slug)
+    .eq("aktif", true)
+    .eq("onay_durumu", LISTING_ONAY_DURUMU.PUBLISHED)
+    .maybeSingle();
 
-  if (!paket) {
+  if (paketQuery.error) {
+    paketQuery = await supabase.from("paketler").select("*").eq("slug", slug).eq("aktif", true).maybeSingle();
+  }
+
+  const paket = paketQuery.data;
+  if (!paket || !isPublishedPackage(paket)) {
     notFound();
   }
 

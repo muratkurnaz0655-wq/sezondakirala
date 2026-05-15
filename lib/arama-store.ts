@@ -43,6 +43,11 @@ function safeClear(key: string) {
   window.sessionStorage.removeItem(key);
 }
 
+function clearAramaCookie() {
+  if (typeof document === "undefined") return;
+  document.cookie = "arama=; path=/; max-age=0; samesite=lax";
+}
+
 const ARAMA_STORE_CHANGED_EVENT = "arama-store:changed";
 let cachedAramaState: AramaState | null | undefined;
 
@@ -64,6 +69,29 @@ export const aramaStore = {
   clear: () => {
     cachedAramaState = null;
     safeClear("arama");
+    clearAramaCookie();
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new Event(ARAMA_STORE_CHANGED_EVENT));
+    }
+  },
+  /** Misafir / tip korunur; yalnızca tarih aralığı kaldırılır (liste sayfası filtresi). */
+  clearDates: () => {
+    const current = getAramaSnapshot();
+    if (!current) {
+      clearAramaCookie();
+    } else {
+      const next: AramaState = {
+        ...current,
+        giris: null,
+        cikis: null,
+        gun: null,
+      };
+      cachedAramaState = next;
+      safeSet("arama", next);
+      if (typeof document !== "undefined") {
+        document.cookie = `arama=${encodeURIComponent(JSON.stringify(next))}; path=/; max-age=86400; samesite=lax`;
+      }
+    }
     if (typeof window !== "undefined") {
       window.dispatchEvent(new Event(ARAMA_STORE_CHANGED_EVENT));
     }

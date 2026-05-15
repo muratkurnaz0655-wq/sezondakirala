@@ -161,6 +161,7 @@ export async function createAdminPackage(formData: FormData) {
       ilan_idleri: ilanIdleri,
       slug,
       aktif: true,
+      onay_durumu: LISTING_ONAY_DURUMU.PUBLISHED,
     })
     .select("id")
     .single();
@@ -229,13 +230,21 @@ export async function updateAdminPackageStatus(formData: FormData) {
 
   const id = String(formData.get("id") ?? "");
   const aktif = String(formData.get("aktif") ?? "") === "true";
-  await admin.supabase.from("paketler").update({ aktif }).eq("id", id);
+  await admin.supabase
+    .from("paketler")
+    .update({
+      aktif,
+      onay_durumu: aktif ? LISTING_ONAY_DURUMU.PUBLISHED : LISTING_ONAY_DURUMU.PENDING,
+    })
+    .eq("id", id);
   await recordAdminAction({
     islem: aktif ? "paket_eklendi" : "paket_pasife_alindi",
     entityTip: "paket",
     entityId: id,
   });
   revalidatePath("/yonetim/paketler");
+  revalidatePath("/paketler");
+  revalidatePath("/");
 }
 
 export async function deleteAdminPackage(formData: FormData) {

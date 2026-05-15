@@ -76,6 +76,7 @@ export type Paket = {
   slug: string;
   gorsel_url?: string | null;
   aktif: boolean;
+  onay_durumu?: "yayinda" | "onay_bekliyor" | "reddedildi" | null;
   olusturulma_tarihi?: string;
 };
 

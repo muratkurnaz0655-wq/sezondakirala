@@ -1,12 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { format } from "date-fns";
+import { tr } from "date-fns/locale";
 import { Search, SlidersHorizontal, X } from "lucide-react";
 import { IlanListeKarti } from "@/components/ilan-liste-karti";
 import { ListingReveal } from "@/components/listing-reveal";
 import { SearchForm } from "@/components/search-form";
 import { VillaFiltreSidebar } from "@/components/villa-filtre-sidebar";
 import { aramaStore } from "@/lib/arama-store";
+import { parseGuestParam, parseListingDateParam } from "@/lib/listing-search-params";
 import { KATEGORILER, OZELLIKLER } from "@/lib/villa-sabitleri";
 import { createClient } from "@/lib/supabase/client";
 import { dateFromYmdLocal, istanbulDateString } from "@/lib/tr-today";
@@ -54,30 +58,62 @@ function extractTags(ozellikler: unknown): string[] {
   return Object.keys(row).filter((key) => row[key] === true);
 }
 
-export default function ListingsPage() {
-  const currentArama = useSyncExternalStore(aramaStore.subscribe, aramaStore.get, aramaStore.get);
+function formatTarihChip(ymd: string) {
+  const d = dateFromYmdLocal(ymd);
+  if (Number.isNaN(d.getTime())) return ymd;
+  return format(d, "d MMM yyyy", { locale: tr });
+}
+
+function KonaklamaListingsContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const urlGiris = parseListingDateParam(searchParams.get("giris"));
+  const urlCikis = parseListingDateParam(searchParams.get("cikis"));
+  const yetiskin = parseGuestParam(searchParams.get("yetiskin"), 2);
+  const cocuk = parseGuestParam(searchParams.get("cocuk"), 0);
+  const bebek = parseGuestParam(searchParams.get("bebek"), 0);
+  const hasDateFilter = Boolean(urlGiris && urlCikis);
+
   const [ilanlar, setIlanlar] = useState<Ilan[]>([]);
   const [filtre, setFiltre] = useState<VillaFiltre>(defaultFiltre);
   const [mobilFiltre, setMobilFiltre] = useState(false);
   const [loading, setLoading] = useState(true);
-  const yetiskin = currentArama?.yetiskin ?? 2;
-  const cocuk = currentArama?.cocuk ?? 0;
-  const bebek = currentArama?.bebek ?? 0;
   const bugunIso = useMemo(() => istanbulDateString(), []);
+
   const aramaTarihleri = useMemo(() => {
-    const arama = currentArama;
-    if (arama?.tip === "villa" && arama.giris && arama.cikis) {
+    if (hasDateFilter) {
       const geceSayisi = Math.max(
         0,
         Math.ceil(
-          (dateFromYmdLocal(arama.cikis).getTime() - dateFromYmdLocal(arama.giris).getTime()) / 86400000,
+          (dateFromYmdLocal(urlCikis).getTime() - dateFromYmdLocal(urlGiris).getTime()) / 86400000,
         ),
       );
-      return { giris: arama.giris, cikis: arama.cikis, geceSayisi };
+      return { giris: urlGiris, cikis: urlCikis, geceSayisi };
     }
     return { giris: "", cikis: "", geceSayisi: 0 };
-  }, [currentArama?.cikis, currentArama?.giris, currentArama?.tip]);
+  }, [hasDateFilter, urlCikis, urlGiris]);
+
   const { giris, cikis, geceSayisi } = aramaTarihleri;
+
+  const clearDateFilter = useCallback(() => {
+    aramaStore.clearDates();
+    router.replace("/konaklama");
+  }, [router]);
+
+  useEffect(() => {
+    if (hasDateFilter) {
+      aramaStore.save({
+        giris: urlGiris,
+        cikis: urlCikis,
+        yetiskin,
+        cocuk,
+        bebek,
+        tip: "villa",
+      });
+    } else {
+      aramaStore.clearDates();
+    }
+  }, [hasDateFilter, urlGiris, urlCikis, yetiskin, cocuk, bebek]);
   const bolgeKey = useMemo(() => filtre.bolge.join("|"), [filtre.bolge]);
   const kategoriKey = useMemo(() => filtre.kategori.join("|"), [filtre.kategori]);
   const ozellikKey = useMemo(() => filtre.ozellikler.join("|"), [filtre.ozellikler]);
@@ -238,6 +274,15 @@ export default function ListingsPage() {
 
   const aktifFiltreler = useMemo(
     () => [
+      ...(hasDateFilter
+        ? [
+            {
+              label: `${formatTarihChip(giris)} — ${formatTarihChip(cikis)}`,
+              key: "tarih",
+              value: "",
+            },
+          ]
+        : []),
       ...filtre.bolge.map((b) => ({ label: b, key: "bolge", value: b })),
       ...filtre.kategori.map((k) => ({
         label: KATEGORILER.find((kat) => kat.value === k)?.label ?? k,
@@ -255,19 +300,24 @@ export default function ListingsPage() {
       ...(filtre.minKisi > 1 ? [{ label: `${filtre.minKisi}+ kişi`, key: "kisi", value: "" }] : []),
       ...(filtre.minYatakOdasi > 1 ? [{ label: `${filtre.minYatakOdasi}+ oda`, key: "oda", value: "" }] : []),
     ],
-    [filtre],
+    [filtre, cikis, giris, hasDateFilter],
   );
 
   const aktifFiltreSayisi = useMemo(() => {
     let count = filtre.bolge.length + filtre.kategori.length + filtre.ozellikler.length;
+    if (hasDateFilter) count += 1;
     if (filtre.minFiyat > 0 || filtre.maxFiyat < 50000) count += 1;
     if (filtre.minKisi > 1) count += 1;
     if (filtre.minYatakOdasi > 1) count += 1;
     return count;
-  }, [filtre]);
+  }, [filtre, hasDateFilter]);
 
   const filtreKaldir = useCallback(
     (key: string, value: string) => {
+      if (key === "tarih") {
+        clearDateFilter();
+        return;
+      }
       if (key === "bolge") setFiltre((prev) => ({ ...prev, bolge: prev.bolge.filter((b) => b !== value) }));
       if (key === "kategori") setFiltre((prev) => ({ ...prev, kategori: prev.kategori.filter((k) => k !== value) }));
       if (key === "ozellikler") setFiltre((prev) => ({ ...prev, ozellikler: prev.ozellikler.filter((o) => o !== value) }));
@@ -275,8 +325,13 @@ export default function ListingsPage() {
       if (key === "kisi") setFiltre((prev) => ({ ...prev, minKisi: defaultFiltre.minKisi }));
       if (key === "oda") setFiltre((prev) => ({ ...prev, minYatakOdasi: defaultFiltre.minYatakOdasi }));
     },
-    [],
+    [clearDateFilter],
   );
+
+  const tumFiltreleriTemizle = useCallback(() => {
+    setFiltre(defaultFiltre);
+    clearDateFilter();
+  }, [clearDateFilter]);
 
   return (
     <div className="min-h-0 w-full space-y-6 overflow-x-hidden py-6">
@@ -299,12 +354,23 @@ export default function ListingsPage() {
             <SearchForm
               bugunIso={bugunIso}
               embedded
-              initialGiris={giris || undefined}
-              initialCikis={cikis || undefined}
+              initialGiris={hasDateFilter ? giris : undefined}
+              initialCikis={hasDateFilter ? cikis : undefined}
               initialYetiskin={yetiskin}
               initialCocuk={cocuk}
               initialBebek={bebek}
             />
+            {hasDateFilter ? (
+              <div className="mt-3 flex justify-end">
+                <button
+                  type="button"
+                  onClick={clearDateFilter}
+                  className="inline-flex h-10 items-center justify-center rounded-lg border border-[#E2E8F0] bg-white px-4 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50"
+                >
+                  Tarihi temizle
+                </button>
+              </div>
+            ) : null}
           </div>
         </div>
       </section>
@@ -328,7 +394,7 @@ export default function ListingsPage() {
           <VillaFiltreSidebar
             filtre={filtre}
             onChange={setFiltre}
-            onTemizle={() => setFiltre(defaultFiltre)}
+            onTemizle={tumFiltreleriTemizle}
             sonucSayisi={ilanlar.length}
             geceSayisi={geceSayisi}
           />
@@ -366,7 +432,7 @@ export default function ListingsPage() {
                 </span>
               ))}
               <button
-                onClick={() => setFiltre(defaultFiltre)}
+                onClick={tumFiltreleriTemizle}
                 className="self-center text-xs text-slate-400 underline hover:text-slate-600"
                 type="button"
               >
@@ -393,7 +459,7 @@ export default function ListingsPage() {
                 <h3 className="mb-2 text-lg font-medium text-slate-800">Kriterlere uygun villa bulunamadı</h3>
                 <p className="mb-5 max-w-sm text-sm text-slate-500">Filtreleri veya tarih aralığını değiştirerek tekrar deneyin.</p>
                 <button
-                  onClick={() => setFiltre(defaultFiltre)}
+                  onClick={tumFiltreleriTemizle}
                   className="rounded-xl border-2 border-[#1D9E75] bg-white px-6 py-2.5 text-sm font-semibold text-[#1D9E75] transition-colors hover:bg-[#1D9E75] hover:text-white"
                   type="button"
                 >
@@ -446,7 +512,7 @@ export default function ListingsPage() {
             <VillaFiltreSidebar
               filtre={filtre}
               onChange={setFiltre}
-              onTemizle={() => setFiltre(defaultFiltre)}
+              onTemizle={tumFiltreleriTemizle}
               sonucSayisi={ilanlar.length}
               geceSayisi={geceSayisi}
             />
@@ -454,5 +520,26 @@ export default function ListingsPage() {
         </div>
       ) : null}
     </div>
+  );
+}
+
+function KonaklamaPageFallback() {
+  return (
+    <div className="min-h-0 w-full space-y-6 overflow-x-hidden py-6">
+      <div className="h-40 animate-pulse rounded-2xl bg-slate-200" />
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+        {[...Array(6)].map((_, i) => (
+          <SkeletonKart key={i} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export default function KonaklamaPage() {
+  return (
+    <Suspense fallback={<KonaklamaPageFallback />}>
+      <KonaklamaListingsContent />
+    </Suspense>
   );
 }

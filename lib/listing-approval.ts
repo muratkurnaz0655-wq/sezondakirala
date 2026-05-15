@@ -14,10 +14,24 @@ export function isListingOnayDurumu(value: unknown): value is ListingOnayDurumu 
   );
 }
 
-/** Kamuya açık sitede gösterilebilir ilan */
+/** Kamuya açık sitede gösterilebilir ilan veya paket */
 export function isPublishedListing(row: { aktif?: boolean | null; onay_durumu?: string | null }) {
   return Boolean(row.aktif) && row.onay_durumu === LISTING_ONAY_DURUMU.PUBLISHED;
 }
+
+/** Paket — kolon yokken veya eski kayıtta `onay_durumu` boşsa aktif yeterli */
+export function isPublishedPackage(row: { aktif?: boolean | null; onay_durumu?: string | null }) {
+  if (!row.aktif) return false;
+  if (row.onay_durumu == null || row.onay_durumu === "") return true;
+  return row.onay_durumu === LISTING_ONAY_DURUMU.PUBLISHED;
+}
+
+function isMissingOnayDurumuColumn(error: { message?: string } | null | undefined) {
+  const msg = (error?.message ?? "").toLowerCase();
+  return msg.includes("onay_durumu") && (msg.includes("column") || msg.includes("schema"));
+}
+
+export { isMissingOnayDurumuColumn };
 
 /** Admin tablosu / rozet için onay durumu (eksik değerlerde aktif bayrağına göre) */
 export function resolveListingOnayDurumu(row: {

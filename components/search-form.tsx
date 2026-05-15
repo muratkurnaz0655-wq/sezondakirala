@@ -292,25 +292,25 @@ export function SearchForm({
       return;
     }
 
-    aramaStore.save({
-      giris: toLocalIso(giris),
-      cikis: toLocalIso(cikis),
+    const girisIso = toLocalIso(giris);
+    const cikisIso = toLocalIso(cikis);
+    const payload = {
+      giris: girisIso,
+      cikis: cikisIso,
       yetiskin,
       cocuk,
       bebek,
-      tip: "villa",
-    });
-    document.cookie = `arama=${encodeURIComponent(
-      JSON.stringify({
-        giris: toLocalIso(giris),
-        cikis: toLocalIso(cikis),
-        yetiskin,
-        cocuk,
-        bebek,
-        tip: "villa",
-      }),
-    )}; path=/; max-age=86400; samesite=lax`;
-    router.push("/konaklama");
+      tip: "villa" as const,
+    };
+    aramaStore.save(payload);
+    document.cookie = `arama=${encodeURIComponent(JSON.stringify(payload))}; path=/; max-age=86400; samesite=lax`;
+    const params = new URLSearchParams();
+    params.set("giris", girisIso);
+    params.set("cikis", cikisIso);
+    if (yetiskin !== 2) params.set("yetiskin", String(yetiskin));
+    if (cocuk > 0) params.set("cocuk", String(cocuk));
+    if (bebek > 0) params.set("bebek", String(bebek));
+    router.push(`/konaklama?${params.toString()}`);
   }
 
   const shellClass = catalogBar

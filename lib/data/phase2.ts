@@ -3,7 +3,12 @@ import { isSupabaseEnvConfigured } from "@/lib/supabase/env";
 import { getPublicSupabase } from "@/lib/supabase/public-anon";
 import { createClient } from "@/lib/supabase/server";
 import type { Ilan, Paket } from "@/types/supabase";
-import { isPublishedListing, LISTING_ONAY_DURUMU } from "@/lib/listing-approval";
+import {
+  isMissingOnayDurumuColumn,
+  isPublishedListing,
+  isPublishedPackage,
+  LISTING_ONAY_DURUMU,
+} from "@/lib/listing-approval";
 import { isExcludedDraftListing } from "@/lib/utils/excluded-draft-listing";
 
 /** `get_ilan_yorumlari` RPC satırlarını liste detayı şekline çevirir. */
@@ -58,39 +63,69 @@ async function attachPreviewImages(listings: Ilan[]) {
   }));
 }
 
+type PaketRow = Paket & { onay_durumu?: string | null };
+
+function filterPublicPackages(rows: PaketRow[]) {
+  return rows.filter((p) => !isExcludedDraftPackage(p)).filter((p) => isPublishedPackage(p));
+}
+
+async function queryPublishedPackages(options: { category?: string; limit: number }) {
+  const supabase = await dbForPublicReads();
+
+  const attempts = [
+    () => {
+      let q = supabase
+        .from("paketler")
+        .select("*")
+        .eq("aktif", true)
+        .eq("onay_durumu", LISTING_ONAY_DURUMU.PUBLISHED)
+        .order("olusturulma_tarihi", { ascending: false })
+        .order("id", { ascending: false })
+        .limit(options.limit);
+      if (options.category && options.category !== "tumu") q = q.eq("kategori", options.category);
+      return q;
+    },
+    () => {
+      let q = supabase
+        .from("paketler")
+        .select("*")
+        .eq("aktif", true)
+        .eq("onay_durumu", LISTING_ONAY_DURUMU.PUBLISHED)
+        .order("id", { ascending: false })
+        .limit(options.limit);
+      if (options.category && options.category !== "tumu") q = q.eq("kategori", options.category);
+      return q;
+    },
+    () => {
+      let q = supabase
+        .from("paketler")
+        .select("*")
+        .eq("aktif", true)
+        .order("olusturulma_tarihi", { ascending: false })
+        .order("id", { ascending: false })
+        .limit(options.limit);
+      if (options.category && options.category !== "tumu") q = q.eq("kategori", options.category);
+      return q;
+    },
+    () => {
+      let q = supabase.from("paketler").select("*").eq("aktif", true).order("id", { ascending: false }).limit(options.limit);
+      if (options.category && options.category !== "tumu") q = q.eq("kategori", options.category);
+      return q;
+    },
+  ];
+
+  for (const build of attempts) {
+    const res = await build();
+    if (!res.error) return filterPublicPackages((res.data ?? []) as PaketRow[]);
+    if (!isMissingOnayDurumuColumn(res.error)) break;
+  }
+  return [];
+}
+
 export async function getFeaturedPackages(category?: string) {
   if (!isSupabaseEnvConfigured()) return [];
   try {
-    const supabase = await dbForPublicReads();
-    let firstQuery = supabase
-      .from("paketler")
-      .select("*")
-      .eq("aktif", true)
-    .eq("onay_durumu", LISTING_ONAY_DURUMU.PUBLISHED)
-      .order("olusturulma_tarihi", { ascending: false })
-      .order("id", { ascending: false })
-      .limit(24);
-    if (category && category !== "tumu") {
-      firstQuery = firstQuery.eq("kategori", category);
-    }
-    const firstTry = await firstQuery;
-    if (!firstTry.error) {
-      return ((firstTry.data ?? []) as Paket[]).filter((p) => !isExcludedDraftPackage(p));
-    }
-
-    let fallbackQuery = supabase
-      .from("paketler")
-      .select("*")
-      .eq("aktif", true)
-    .eq("onay_durumu", LISTING_ONAY_DURUMU.PUBLISHED)
-      .order("id", { ascending: false })
-      .limit(24);
-    if (category && category !== "tumu") {
-      fallbackQuery = fallbackQuery.eq("kategori", category);
-    }
-    const fallback = await fallbackQuery;
-    if (fallback.error) return [];
-    return ((fallback.data ?? []) as Paket[]).filter((p) => !isExcludedDraftPackage(p));
+    return await queryPublishedPackages({ category, limit: 24 });
   } catch {
     return [];
   }
@@ -207,31 +242,9 @@ export function isExcludedDraftPackage(p: Paket): boolean {
 export async function getHomeFeaturedPackages(limit = 3) {
   if (!isSupabaseEnvConfigured()) return [];
   try {
-    const supabase = await dbForPublicReads();
     const safeLimit = Math.min(Math.max(1, limit), 12);
     const fetchCap = Math.min(24, Math.max(safeLimit * 4, safeLimit + 6));
-    const firstTry = await supabase
-      .from("paketler")
-      .select("*")
-      .eq("aktif", true)
-    .eq("onay_durumu", LISTING_ONAY_DURUMU.PUBLISHED)
-      .order("olusturulma_tarihi", { ascending: false })
-      .order("id", { ascending: false })
-      .limit(fetchCap);
-    if (!firstTry.error) {
-      const rows = ((firstTry.data ?? []) as Paket[]).filter((p) => !isExcludedDraftPackage(p));
-      return rows.slice(0, safeLimit);
-    }
-
-    const fallback = await supabase
-      .from("paketler")
-      .select("*")
-      .eq("aktif", true)
-    .eq("onay_durumu", LISTING_ONAY_DURUMU.PUBLISHED)
-      .order("id", { ascending: false })
-      .limit(fetchCap);
-    if (fallback.error) return [];
-    const rows = ((fallback.data ?? []) as Paket[]).filter((p) => !isExcludedDraftPackage(p));
+    const rows = await queryPublishedPackages({ limit: fetchCap });
     return rows.slice(0, safeLimit);
   } catch {
     return [];
