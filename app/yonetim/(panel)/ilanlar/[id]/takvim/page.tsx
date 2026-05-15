@@ -8,6 +8,8 @@ type AdminListingCalendarPageProps = {
   params: Promise<{ id: string }>;
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminListingCalendarPage({ params }: AdminListingCalendarPageProps) {
   const { id } = await params;
   const supabase = createAdminClient();
@@ -23,7 +25,7 @@ export default async function AdminListingCalendarPage({ params }: AdminListingC
   const [musaitlikRes, sezonRes, rezervasyonRes] = await Promise.all([
     supabase
       .from("musaitlik")
-      .select("id,tarih,durum")
+      .select("id,tarih,durum,fiyat_override")
       .eq("ilan_id", id)
       .order("tarih", { ascending: true }),
     supabase
@@ -33,11 +35,15 @@ export default async function AdminListingCalendarPage({ params }: AdminListingC
       .order("baslangic_tarihi", { ascending: true }),
     supabase
       .from("rezervasyonlar")
-      .select("id,giris_tarihi,cikis_tarihi")
+      .select("id,giris_tarihi,cikis_tarihi,durum")
       .eq("ilan_id", id)
-      .eq("durum", "onaylandi")
+      .in("durum", ["onaylandi", "beklemede", "pending", "onay_bekliyor"])
       .order("giris_tarihi", { ascending: true }),
   ]);
+
+  if (musaitlikRes.error) {
+    console.error("[admin-takvim] musaitlik:", musaitlikRes.error);
+  }
 
   return (
     <AdminPageLayout

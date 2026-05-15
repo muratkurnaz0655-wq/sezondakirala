@@ -10,11 +10,13 @@ import {
   setAvailabilityRangeByAdmin,
 } from "@/app/actions/admin";
 import { formatCurrency } from "@/lib/utils/format";
+import { dateFromYmdLocal } from "@/lib/tr-today";
 
 type AvailabilityRow = {
   id: string;
   tarih: string;
   durum: "musait" | "dolu" | "ozel_fiyat";
+  fiyat_override?: number | null;
 };
 
 type SeasonPriceRow = {
@@ -28,6 +30,7 @@ type ReservationRow = {
   id: string;
   giris_tarihi: string;
   cikis_tarihi: string;
+  durum?: string;
 };
 
 type AdminListingCalendarManagerProps = {
@@ -40,11 +43,14 @@ type AdminListingCalendarManagerProps = {
 };
 
 function toDate(value: string) {
-  return new Date(`${value}T00:00:00`);
+  return dateFromYmdLocal(value);
 }
 
 function dateToIso(value: Date) {
-  return value.toISOString().slice(0, 10);
+  const y = value.getFullYear();
+  const m = String(value.getMonth() + 1).padStart(2, "0");
+  const d = String(value.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
 }
 
 function createRangeDates(start: string, end: string) {
@@ -400,6 +406,43 @@ export function AdminListingCalendarManager({
             </tbody>
           </table>
         </div>
+      </div>
+
+      <div className={cardShell}>
+        <h2 className={`text-lg font-semibold ${titleClass}`}>İlan sahibi / sistem kayıtları</h2>
+        <p className={`mt-1 text-sm ${subText}`}>
+          Kullanıcı panelinden işaretlenen dolu ve özel fiyat günleri burada listelenir.
+        </p>
+        {musaitlik.length === 0 ? (
+          <p className={`mt-4 text-sm ${bodyText}`}>Henüz müsaitlik kaydı yok.</p>
+        ) : (
+          <div className="mt-4 max-h-64 overflow-y-auto">
+            <table className="min-w-full text-sm">
+              <thead className="sticky top-0 bg-white text-left text-slate-500">
+                <tr>
+                  <th className="py-2 pr-3">Tarih</th>
+                  <th className="py-2 pr-3">Durum</th>
+                  <th className="py-2">Özel fiyat</th>
+                </tr>
+              </thead>
+              <tbody>
+                {musaitlik.map((item) => (
+                  <tr key={item.id} className="border-t border-slate-100">
+                    <td className="py-2 pr-3 font-medium text-slate-800">{item.tarih}</td>
+                    <td className="py-2 pr-3 capitalize text-slate-700">
+                      {item.durum === "dolu" ? "Dolu" : item.durum === "ozel_fiyat" ? "Özel fiyat" : item.durum}
+                    </td>
+                    <td className="py-2 text-slate-600">
+                      {item.durum === "ozel_fiyat" && item.fiyat_override
+                        ? formatCurrency(item.fiyat_override)
+                        : "—"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       {message ? <p className="rounded-lg bg-slate-100 px-3 py-2 text-sm text-slate-700">{message}</p> : null}

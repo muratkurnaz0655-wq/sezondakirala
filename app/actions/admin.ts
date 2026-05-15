@@ -7,28 +7,12 @@ import { normalizeReservationStatus } from "@/lib/reservation-status";
 import { STORAGE_BUCKET } from "@/lib/constants";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { generateUniqueSlug } from "@/lib/slugify";
+import { eachDateInRangeYmd, ymdFromLocalDate } from "@/lib/availability-dates";
 import { recordAdminAction } from "@/lib/admin-log";
+import { dateFromYmdLocal } from "@/lib/tr-today";
 
 function normalizeDate(value: string) {
-  return new Date(`${value}T00:00:00`);
-}
-
-function formatDate(value: Date) {
-  return value.toISOString().slice(0, 10);
-}
-
-function eachDateInRange(start: string, end: string) {
-  const dates: string[] = [];
-  const startDate = normalizeDate(start);
-  const endDate = normalizeDate(end);
-  const current = new Date(startDate);
-
-  while (current <= endDate) {
-    dates.push(formatDate(current));
-    current.setDate(current.getDate() + 1);
-  }
-
-  return dates;
+  return dateFromYmdLocal(value);
 }
 
 function safeStorageFileName(name: string) {
@@ -61,7 +45,7 @@ async function syncReservationAvailability(
   end.setDate(end.getDate() - 1);
   if (end < start) return;
 
-  const dates = eachDateInRange(formatDate(start), formatDate(end));
+  const dates = eachDateInRangeYmd(ymdFromLocalDate(start), ymdFromLocalDate(end));
   if (!dates.length) return;
 
   if (durum === "approved") {
@@ -381,7 +365,7 @@ export async function setAvailabilityRangeByAdmin(input: SetAvailabilityRangeInp
   if (!admin.ok) return { success: false, error: admin.error };
 
   const supabase = admin.supabase;
-  const dates = eachDateInRange(input.baslangicTarihi, input.bitisTarihi);
+  const dates = eachDateInRangeYmd(input.baslangicTarihi, input.bitisTarihi);
 
   if (!dates.length) {
     return { success: false, error: "Geçerli tarih aralığı seçin." };

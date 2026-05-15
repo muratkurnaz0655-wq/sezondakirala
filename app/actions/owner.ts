@@ -10,29 +10,20 @@ import {
 import { STORAGE_BUCKET } from "@/lib/constants";
 import { normalizeReservationStatus } from "@/lib/reservation-status";
 import { storageUploadUserMessage } from "@/lib/storage-upload-messages";
+import { eachDateInRangeYmd, ymdFromLocalDate } from "@/lib/availability-dates";
 import { insertAdminNotification } from "@/lib/admin-notifications";
 import { LISTING_ONAY_DURUMU } from "@/lib/listing-approval";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { dateFromYmdLocal } from "@/lib/tr-today";
 import { generateUniqueSlug } from "@/lib/slugify";
+
+function revalidateListingCalendar(ilanId: string) {
+  revalidatePath("/panel/takvim");
+  revalidatePath(`/yonetim/ilanlar/${ilanId}/takvim`);
+}
+
 function normalizeDate(value: string) {
-  return new Date(`${value}T00:00:00`);
-}
-
-function formatDate(value: Date) {
-  return value.toISOString().slice(0, 10);
-}
-
-function eachDateInRange(start: string, end: string) {
-  const dates: string[] = [];
-  const startDate = normalizeDate(start);
-  const endDate = normalizeDate(end);
-  const current = new Date(startDate);
-
-  while (current <= endDate) {
-    dates.push(formatDate(current));
-    current.setDate(current.getDate() + 1);
-  }
-
-  return dates;
+  return dateFromYmdLocal(value);
 }
 
 function safeStorageFileName(name: string) {
@@ -229,15 +220,19 @@ export async function upsertAvailability(formData: FormData) {
   const ilanId = String(formData.get("ilan_id") ?? "");
   const access = await requireOwnerListingAccess(ilanId);
   if (!access.ok) return { success: false, error: access.error };
-  const supabase = access.supabase;
+  const db = createAdminClient();
 
-  await supabase.from("musaitlik").upsert({
-    ilan_id: ilanId,
-    tarih: String(formData.get("tarih") ?? ""),
-    durum: String(formData.get("durum") ?? "musait"),
-    fiyat_override: Number(formData.get("fiyat_override") ?? 0) || null,
-  });
-  revalidatePath("/panel/takvim");
+  const { error } = await db.from("musaitlik").upsert(
+    {
+      ilan_id: ilanId,
+      tarih: String(formData.get("tarih") ?? ""),
+      durum: String(formData.get("durum") ?? "musait"),
+      fiyat_override: Number(formData.get("fiyat_override") ?? 0) || null,
+    },
+    { onConflict: "ilan_id,tarih" },
+  );
+  if (error) return { success: false, error: error.message };
+  revalidateListingCalendar(ilanId);
   return { success: true };
 }
 
@@ -245,17 +240,19 @@ export async function setAvailabilityRangeByOwner(formData: FormData) {
   const ilanId = String(formData.get("ilan_id") ?? "");
   const access = await requireOwnerListingAccess(ilanId);
   if (!access.ok) throw new Error(access.error);
-  const supabase = access.supabase;
+  const db = createAdminClient();
   const baslangic = String(formData.get("baslangic_tarihi") ?? "");
   const bitis = String(formData.get("bitis_tarihi") ?? "");
   const durum = String(formData.get("durum") ?? "musait");
   const fiyatOverride = Number(formData.get("fiyat_override") ?? 0) || null;
-  const dates = eachDateInRange(baslangic, bitis);
+  const dates = eachDateInRangeYmd(baslangic, bitis);
+  if (!dates.length) throw new Error("Geçerli bir tarih aralığı seçin.");
 
   if (durum === "musait") {
-    await supabase.from("musaitlik").delete().eq("ilan_id", ilanId).in("tarih", dates);
+    const { error } = await db.from("musaitlik").delete().eq("ilan_id", ilanId).in("tarih", dates);
+    if (error) throw new Error(error.message);
   } else {
-    await supabase.from("musaitlik").upsert(
+    const { error } = await db.from("musaitlik").upsert(
       dates.map((tarih) => ({
         ilan_id: ilanId,
         tarih,
@@ -264,9 +261,10 @@ export async function setAvailabilityRangeByOwner(formData: FormData) {
       })),
       { onConflict: "ilan_id,tarih" },
     );
+    if (error) throw new Error(error.message);
   }
 
-  revalidatePath("/panel/takvim");
+  revalidateListingCalendar(ilanId);
 }
 
 export async function upsertSeasonPrice(formData: FormData) {
@@ -330,9 +328,10 @@ export async function updateReservationStatus(formData: FormData) {
     end.setDate(end.getDate() - 1);
 
     if (end >= start) {
-      const dates = eachDateInRange(formatDate(start), formatDate(end));
+      const dates = eachDateInRangeYmd(ymdFromLocalDate(start), ymdFromLocalDate(end));
+      const db = createAdminClient();
       if (durum === "approved") {
-        await supabase.from("musaitlik").upsert(
+        await db.from("musaitlik").upsert(
           dates.map((tarih) => ({
             ilan_id: reservation.ilan_id,
             tarih,
@@ -343,11 +342,7 @@ export async function updateReservationStatus(formData: FormData) {
         );
       }
       if (durum === "cancelled") {
-        await supabase
-          .from("musaitlik")
-          .delete()
-          .eq("ilan_id", reservation.ilan_id)
-          .in("tarih", dates);
+        await db.from("musaitlik").delete().eq("ilan_id", reservation.ilan_id).in("tarih", dates);
       }
     }
   }
