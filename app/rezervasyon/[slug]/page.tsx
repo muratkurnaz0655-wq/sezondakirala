@@ -7,6 +7,7 @@ import { aramaStore, rezervasyonStore } from "@/lib/arama-store";
 import { looksLikeUuid } from "@/lib/rezervasyon-segment";
 import { createClient } from "@/lib/supabase/client";
 import { TURSAB_NO } from "@/lib/constants";
+import { generateReferansNo } from "@/lib/referans-no";
 import { istanbulDateString } from "@/lib/tr-today";
 
 type RezervasyonRedirectPayload = {
@@ -38,6 +39,7 @@ export default function ReservationPage() {
   const [listing, setListing] = useState<ReservationListing | null>(null);
   const [redirectPayload, setRedirectPayload] = useState<RezervasyonRedirectPayload | null>(null);
   const [stored] = useState<ReturnType<typeof rezervasyonStore.get>>(() => rezervasyonStore.get());
+  const [placeholderReferans] = useState(() => generateReferansNo());
   const bugunIso = istanbulDateString();
   const nowIso = useMemo(() => new Date().toISOString().slice(0, 10), []);
   const plusTwo = useMemo(() => {
@@ -165,7 +167,7 @@ export default function ReservationPage() {
       gunlukFiyat={listing.gunluk_fiyat ?? 0}
       initialStep={activeStored?.adim ?? 1}
       tursabNo={TURSAB_NO}
-      initialReferenceNo={`SZK-${new Date().toISOString().slice(0, 10).replace(/-/g, "")}-0001`}
+      initialReferenceNo={placeholderReferans}
       listingTitle={listing.baslik ?? "Seçilen ilan"}
       listingKonum={listing.konum ?? ""}
       listingKapakUrl={kapakUrl}

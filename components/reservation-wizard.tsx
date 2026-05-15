@@ -28,6 +28,7 @@ import {
   Users,
 } from "lucide-react";
 import { ClientDayPicker } from "@/components/day-picker-client";
+import { generateReferansNo } from "@/lib/referans-no";
 import { dateFromYmdLocal } from "@/lib/tr-today";
 import { toast } from "sonner";
 
@@ -44,12 +45,6 @@ const BTN_PRIMARY = `${BTN_BASE} min-h-11 bg-[#185FA5] text-white hover:bg-[#154
 const BTN_WHITE = `${BTN_BASE} min-h-11 border border-slate-200 bg-white text-slate-800 hover:bg-slate-50 active:brightness-[0.98]`;
 const INPUT_FOCUS =
   "rounded-lg border border-slate-200 px-4 py-3 text-sm text-slate-800 transition-[box-shadow,border-color] focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-400/35";
-
-function referansSayiEki(): string {
-  const buf = new Uint32Array(1);
-  crypto.getRandomValues(buf);
-  return String(1000 + (buf[0]! % 9000));
-}
 
 const infoSchema = z.object({
   ad: z.string().min(2, "Ad zorunludur."),
@@ -393,8 +388,7 @@ export function ReservationWizard({
     setErrorMessage(null);
     setSavingReservation(true);
 
-    const stamp = new Date().toISOString().slice(0, 10).replace(/-/g, "");
-    const referenceNo = `SZK-${stamp}-${referansSayiEki()}`;
+    const referenceNo = generateReferansNo();
     const userInfo = infoForm.getValues();
     const odemeYontemi = paymentForm.getValues("odeme_yontemi");
     const paketId = packageSummary?.id?.trim() ? packageSummary.id.trim() : null;
