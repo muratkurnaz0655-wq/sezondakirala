@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { isCatalogSchemaError } from "@/lib/catalog-queries";
+import { getCatalogSupabase } from "@/lib/catalog-supabase";
 import { CatalogHeroWave } from "@/components/catalog-hero-wave";
 import { ListingReveal } from "@/components/listing-reveal";
 import { SearchForm } from "@/components/search-form";
@@ -11,7 +12,7 @@ import { SlidersHorizontal, X } from "lucide-react";
 import { aramaStore } from "@/lib/arama-store";
 import { istanbulDateString } from "@/lib/tr-today";
 import { defaultTekneFiltre, type TekneFiltre } from "@/lib/villa-sabitleri";
-import { LISTING_ONAY_DURUMU } from "@/lib/listing-approval";
+import { isPublishedListing, LISTING_ONAY_DURUMU } from "@/lib/listing-approval";
 import { isExcludedDraftListing } from "@/lib/utils/excluded-draft-listing";
 
 type TekneRow = {
@@ -23,6 +24,8 @@ type TekneRow = {
   gunluk_fiyat: number;
   kapasite: number;
   yatak_odasi: number;
+  aktif?: boolean | null;
+  onay_durumu?: string | null;
   ozellikler: unknown;
   sponsorlu: boolean;
   olusturulma_tarihi: string;
@@ -64,7 +67,7 @@ export default function TeknelerPage() {
 
   useEffect(() => {
     let cancelled = false;
-    const supabase = createClient();
+    const supabase = getCatalogSupabase();
     void supabase
       .from("ilanlar")
       .select("*", { count: "exact", head: true })
@@ -92,41 +95,65 @@ export default function TeknelerPage() {
 
   const fetchTekneler = async (f: TekneFiltre) => {
     setYukleniyor(true);
-    const supabase = createClient();
-    let query = supabase
-      .from("ilanlar")
-      .select(
-        "id, slug, baslik, aciklama, konum, gunluk_fiyat, kapasite, yatak_odasi, ozellikler, sponsorlu, olusturulma_tarihi, ilan_medyalari(url, sira, tip)",
-      )
-      .eq("aktif", true)
-      .eq("onay_durumu", LISTING_ONAY_DURUMU.PUBLISHED)
-      .eq("tip", "tekne")
-      .gte("gunluk_fiyat", Number(f.minFiyat) || 0)
-      .lte("gunluk_fiyat", Number(f.maxFiyat) || 50000);
+    const supabase = getCatalogSupabase();
 
-    if (f.minKapasite > 1) query = query.gte("kapasite", f.minKapasite);
-    if (f.liman.length > 0) {
-      const limanFiltre = f.liman.map((l) => `konum.ilike.%${l.split(",")[0].trim()}%`).join(",");
-      query = query.or(limanFiltre);
-    }
-    switch (f.siralama) {
-      case "fiyat_artan":
-        query = query.order("gunluk_fiyat", { ascending: true });
+    const buildQuery = (withOnay: boolean, skipSponsorluOrder: boolean) => {
+      let query = supabase
+        .from("ilanlar")
+        .select(
+          "id, slug, baslik, aciklama, konum, gunluk_fiyat, kapasite, yatak_odasi, ozellikler, sponsorlu, olusturulma_tarihi, onay_durumu, ilan_medyalari(url, sira, tip)",
+        )
+        .eq("aktif", true)
+        .eq("tip", "tekne")
+        .gte("gunluk_fiyat", Number(f.minFiyat) || 0)
+        .lte("gunluk_fiyat", Number(f.maxFiyat) || 50000);
+      if (withOnay) query = query.eq("onay_durumu", LISTING_ONAY_DURUMU.PUBLISHED);
+
+      if (f.minKapasite > 1) query = query.gte("kapasite", f.minKapasite);
+      if (f.liman.length > 0) {
+        const limanFiltre = f.liman.map((l) => `konum.ilike.%${l.split(",")[0].trim()}%`).join(",");
+        query = query.or(limanFiltre);
+      }
+      switch (f.siralama) {
+        case "fiyat_artan":
+          query = query.order("gunluk_fiyat", { ascending: true });
+          break;
+        case "fiyat_azalan":
+          query = query.order("gunluk_fiyat", { ascending: false });
+          break;
+        case "kapasite_buyuk":
+          query = query.order("kapasite", { ascending: false });
+          break;
+        default:
+          if (skipSponsorluOrder) {
+            query = query.order("olusturulma_tarihi", { ascending: false });
+          } else {
+            query = query.order("sponsorlu", { ascending: false }).order("olusturulma_tarihi", { ascending: false });
+          }
+      }
+      return query;
+    };
+
+    let raw: TekneRow[] | null = null;
+    for (const attempt of [
+      { withOnay: true, skipSponsorluOrder: false },
+      { withOnay: true, skipSponsorluOrder: true },
+      { withOnay: false, skipSponsorluOrder: true },
+    ]) {
+      const res = await buildQuery(attempt.withOnay, attempt.skipSponsorluOrder);
+      if (!res.error) {
+        raw = (res.data as TekneRow[]) ?? [];
         break;
-      case "fiyat_azalan":
-        query = query.order("gunluk_fiyat", { ascending: false });
+      }
+      if (!isCatalogSchemaError(res.error)) {
+        console.error("[tekneler]", res.error);
         break;
-      case "kapasite_buyuk":
-        query = query.order("kapasite", { ascending: false });
-        break;
-      default:
-        query = query.order("sponsorlu", { ascending: false }).order("olusturulma_tarihi", { ascending: false });
-        break;
+      }
     }
 
-    const { data } = await query;
-    const rows = ((data as TekneRow[]) ?? [])
+    const rows = (raw ?? [])
       .filter((row) => !isExcludedDraftListing({ baslik: row.baslik, aciklama: row.aciklama }))
+      .filter((row) => isPublishedListing(row))
       .filter((row) => {
       const etiketler = parseEtiketler(row.ozellikler);
       const hasSure = f.sure.length === 0 || f.sure.every((sure) => etiketler.includes(sure));

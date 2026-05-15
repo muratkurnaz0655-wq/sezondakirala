@@ -3,13 +3,12 @@ import { isSupabaseEnvConfigured } from "@/lib/supabase/env";
 import { getPublicSupabase } from "@/lib/supabase/public-anon";
 import { createClient } from "@/lib/supabase/server";
 import type { Ilan, Paket } from "@/types/supabase";
-import {
-  isMissingOnayDurumuColumn,
-  isPublishedListing,
-  isPublishedPackage,
-  LISTING_ONAY_DURUMU,
-} from "@/lib/listing-approval";
+import { isPublishedListing, LISTING_ONAY_DURUMU } from "@/lib/listing-approval";
+import { queryPublishedListings, queryPublishedPackages } from "@/lib/catalog-queries";
 import { isExcludedDraftListing } from "@/lib/utils/excluded-draft-listing";
+import { isExcludedDraftPackage } from "@/lib/utils/excluded-draft-package";
+
+export { isExcludedDraftPackage } from "@/lib/utils/excluded-draft-package";
 
 /** `get_ilan_yorumlari` RPC satırlarını liste detayı şekline çevirir. */
 function mapGetIlanYorumlariRpc(data: unknown): ListingCommentRow[] {
@@ -63,69 +62,11 @@ async function attachPreviewImages(listings: Ilan[]) {
   }));
 }
 
-type PaketRow = Paket & { onay_durumu?: string | null };
-
-function filterPublicPackages(rows: PaketRow[]) {
-  return rows.filter((p) => !isExcludedDraftPackage(p)).filter((p) => isPublishedPackage(p));
-}
-
-async function queryPublishedPackages(options: { category?: string; limit: number }) {
-  const supabase = await dbForPublicReads();
-
-  const attempts = [
-    () => {
-      let q = supabase
-        .from("paketler")
-        .select("*")
-        .eq("aktif", true)
-        .eq("onay_durumu", LISTING_ONAY_DURUMU.PUBLISHED)
-        .order("olusturulma_tarihi", { ascending: false })
-        .order("id", { ascending: false })
-        .limit(options.limit);
-      if (options.category && options.category !== "tumu") q = q.eq("kategori", options.category);
-      return q;
-    },
-    () => {
-      let q = supabase
-        .from("paketler")
-        .select("*")
-        .eq("aktif", true)
-        .eq("onay_durumu", LISTING_ONAY_DURUMU.PUBLISHED)
-        .order("id", { ascending: false })
-        .limit(options.limit);
-      if (options.category && options.category !== "tumu") q = q.eq("kategori", options.category);
-      return q;
-    },
-    () => {
-      let q = supabase
-        .from("paketler")
-        .select("*")
-        .eq("aktif", true)
-        .order("olusturulma_tarihi", { ascending: false })
-        .order("id", { ascending: false })
-        .limit(options.limit);
-      if (options.category && options.category !== "tumu") q = q.eq("kategori", options.category);
-      return q;
-    },
-    () => {
-      let q = supabase.from("paketler").select("*").eq("aktif", true).order("id", { ascending: false }).limit(options.limit);
-      if (options.category && options.category !== "tumu") q = q.eq("kategori", options.category);
-      return q;
-    },
-  ];
-
-  for (const build of attempts) {
-    const res = await build();
-    if (!res.error) return filterPublicPackages((res.data ?? []) as PaketRow[]);
-    if (!isMissingOnayDurumuColumn(res.error)) break;
-  }
-  return [];
-}
-
 export async function getFeaturedPackages(category?: string) {
   if (!isSupabaseEnvConfigured()) return [];
   try {
-    return await queryPublishedPackages({ category, limit: 24 });
+    const supabase = await dbForPublicReads();
+    return await queryPublishedPackages(supabase, { category, limit: 24 });
   } catch {
     return [];
   }
@@ -225,26 +166,14 @@ export async function getPublicCatalogCounts(): Promise<PublicCatalogCounts | nu
   }
 }
 
-/** Taslak / test paketleri — ana sayfa ve `/paketler` listesinde gösterilmez. */
-export function isExcludedDraftPackage(p: Paket): boolean {
-  const baslik = (p.baslik ?? "").trim().toLowerCase();
-  if (baslik === "deneme") return true;
-  if (baslik.startsWith("deneme ")) return true;
-  const aciklama = (p.aciklama ?? "").trim().toLowerCase();
-  if (aciklama === "deneme deneme deneme") return true;
-  if (aciklama.includes("test verisi")) return true;
-  if (aciklama.includes("test veri")) return true;
-  if (aciklama.includes("test data")) return true;
-  return false;
-}
-
 /** Ana sayfa önizlemesi — tam liste `/paketler`. */
 export async function getHomeFeaturedPackages(limit = 3) {
   if (!isSupabaseEnvConfigured()) return [];
   try {
     const safeLimit = Math.min(Math.max(1, limit), 12);
     const fetchCap = Math.min(24, Math.max(safeLimit * 4, safeLimit + 6));
-    const rows = await queryPublishedPackages({ limit: fetchCap });
+    const supabase = await dbForPublicReads();
+    const rows = await queryPublishedPackages(supabase, { limit: fetchCap });
     return rows.slice(0, safeLimit);
   } catch {
     return [];
@@ -253,46 +182,15 @@ export async function getHomeFeaturedPackages(limit = 3) {
 
 export async function getFeaturedListings() {
   if (!isSupabaseEnvConfigured()) return [];
-  const mapRows = (
-    rows: (Ilan & { ilan_medyalari?: { url: string; sira: number }[] })[],
-  ) =>
-    rows
-      .filter((item) => !isExcludedDraftListing(item))
+  try {
+    const supabase = await dbForPublicReads();
+    const rows = await queryPublishedListings(supabase, { tip: "villa", limit: 24 });
+    return rows
       .map((item) => ({
         ...item,
         ilk_resim_url: item.ilan_medyalari?.[0]?.url ?? "/images/villa-placeholder.svg",
-      }));
-  try {
-    const supabase = await dbForPublicReads();
-    const fetchCap = 24;
-    const firstTry = await supabase
-      .from("ilanlar")
-      .select("*, ilan_medyalari(url,sira)")
-      .eq("aktif", true)
-    .eq("onay_durumu", LISTING_ONAY_DURUMU.PUBLISHED)
-      .order("sira", { foreignTable: "ilan_medyalari", ascending: true })
-      .order("olusturulma_tarihi", { ascending: false })
-      .order("id", { ascending: false })
-      .limit(fetchCap);
-    if (firstTry.error) {
-      const fallback = await supabase
-        .from("ilanlar")
-        .select("*, ilan_medyalari(url,sira)")
-        .eq("aktif", true)
-    .eq("onay_durumu", LISTING_ONAY_DURUMU.PUBLISHED)
-        .order("sira", { foreignTable: "ilan_medyalari", ascending: true })
-        .order("id", { ascending: false })
-        .limit(fetchCap);
-      if (fallback.error) return [];
-      const rows = (fallback.data ?? []) as (Ilan & {
-        ilan_medyalari?: { url: string; sira: number }[];
-      })[];
-      return mapRows(rows).slice(0, 6);
-    }
-    const rows = (firstTry.data ?? []) as (Ilan & {
-      ilan_medyalari?: { url: string; sira: number }[];
-    })[];
-    return mapRows(rows).slice(0, 6);
+      }))
+      .slice(0, 6);
   } catch {
     return [];
   }
