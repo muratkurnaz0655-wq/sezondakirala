@@ -13,7 +13,7 @@ import { AdminActionButton } from "@/components/admin/AdminActionButton";
 import { listingCoverImageUrl } from "./listing-cover";
 import { ListingsBulkTable, type ListingOwnerInfo, type ListingTableRow } from "./ListingsBulkTable";
 import { AdminEmptyState } from "@/components/admin/AdminEmptyState";
-import { isListingOnayDurumu, resolveListingOnayDurumu } from "@/lib/listing-approval";
+import { isListingOnayDurumu, LISTING_ONAY_DURUMU } from "@/lib/listing-approval";
 
 type AdminListingsPageProps = {
   searchParams: Promise<{
@@ -51,13 +51,8 @@ function toClientListingRow(
   ownerMap: Map<string, ListingOwnerInfo>,
 ): ListingTableRow {
   const rawOnay = row.onay_durumu == null ? null : String(row.onay_durumu);
-  /** Veritabanındaki gerçek değer — onay butonları için resolve edilmez. */
-  const onayDurumuDb = isListingOnayDurumu(rawOnay)
-    ? rawOnay
-    : resolveListingOnayDurumu({
-        aktif: Boolean(row.aktif),
-        onay_durumu: rawOnay,
-      });
+  /** Veritabanındaki gerçek onay değeri — aktif bayrağından türetilmez (sitede görünürlük için yayinda şart). */
+  const onayDurumuDb = isListingOnayDurumu(rawOnay) ? rawOnay : LISTING_ONAY_DURUMU.PENDING;
   const sahipId = String(row.sahip_id ?? "");
   return {
     id: String(row.id ?? ""),

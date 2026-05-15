@@ -4,6 +4,7 @@ import { notFound, permanentRedirect } from "next/navigation";
 import { ListingDetailPage } from "@/components/listing-detail-page";
 import { getListingBySlug } from "@/lib/data/phase2";
 import { LISTING_ONAY_DURUMU } from "@/lib/listing-approval";
+import { getPublicSupabase } from "@/lib/supabase/public-anon";
 import { createClient } from "@/lib/supabase/server";
 import { fixTurkishDisplay } from "@/lib/utils/turkish-display";
 
@@ -13,7 +14,7 @@ type ListingSlugPageProps = {
 
 export default async function ListingSlugPage({ params }: ListingSlugPageProps) {
   const { slug } = await params;
-  const supabase = await createClient();
+  const supabase = getPublicSupabase() ?? (await createClient());
   const { data: currentSlugListing } = await supabase
     .from("ilanlar")
     .select("id")

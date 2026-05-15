@@ -195,6 +195,9 @@ export function ListingsBulkTable({ listings }: { listings: ListingTableRow[] })
                 </AdminTableCell>
                 <AdminTableCell>
                   <AdminBadge variant={onayBadgeVariant(row.onay_durumu)}>{onayLabel(row.onay_durumu)}</AdminBadge>
+                  {row.aktif && row.onay_durumu !== "yayinda" ? (
+                    <p className="mt-1 text-[11px] font-medium text-amber-700">Sitede görünmez — yeşil onay gerekli</p>
+                  ) : null}
                 </AdminTableCell>
                 <AdminTableCell className="text-right">
                   <div className="flex items-center justify-end">

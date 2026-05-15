@@ -12,11 +12,11 @@ import { VillaFiltreSidebar } from "@/components/villa-filtre-sidebar";
 import { aramaStore } from "@/lib/arama-store";
 import { parseGuestParam, parseListingDateParam } from "@/lib/listing-search-params";
 import { KATEGORILER, OZELLIKLER } from "@/lib/villa-sabitleri";
-import { isCatalogSchemaError } from "@/lib/catalog-queries";
+import { queryPublishedListings } from "@/lib/catalog-queries";
 import { getCatalogSupabase } from "@/lib/catalog-supabase";
+import { applyVillaCatalogFilters, sortVillaCatalogListings } from "@/lib/villa-catalog-filters";
 import { dateFromYmdLocal, istanbulDateString } from "@/lib/tr-today";
 import { defaultFiltre, type VillaFiltre } from "@/types/filtre";
-import { isPublishedListing, LISTING_ONAY_DURUMU } from "@/lib/listing-approval";
 import { isExcludedDraftListing } from "@/lib/utils/excluded-draft-listing";
 import type { Ilan } from "@/types/supabase";
 
@@ -154,92 +154,17 @@ function KonaklamaListingsContent() {
       signal?: AbortSignal,
     ) => {
     const supabase = getCatalogSupabase();
-    const aktifGeceSayisi = tarih.geceSayisi;
-
-    const buildFilteredQuery = (withOnay: boolean, skipSponsorluOrder: boolean) => {
-      let query = supabase
-        .from("ilanlar")
-        .select("*, ilan_medyalari(url,sira,tip)")
-        .eq("aktif", true)
-        .eq("tip", "villa");
-      if (withOnay) query = query.eq("onay_durumu", LISTING_ONAY_DURUMU.PUBLISHED);
-
-      if (aktifFiltre.bolge.length > 0) {
-        const bolgeFiltre = aktifFiltre.bolge.map((b) => `konum.ilike.%${b.split(",")[0].trim()}%`).join(",");
-        query = query.or(bolgeFiltre);
-      }
-
-      if (aktifGeceSayisi > 1) {
-        const maxGecelik = Math.ceil((Number(aktifFiltre.maxFiyat) || 50000) / aktifGeceSayisi);
-        const minGecelik = Math.floor((Number(aktifFiltre.minFiyat) || 0) / aktifGeceSayisi);
-        query = query.gte("gunluk_fiyat", minGecelik).lte("gunluk_fiyat", maxGecelik);
-      } else {
-        query = query
-          .gte("gunluk_fiyat", Number(aktifFiltre.minFiyat) || 0)
-          .lte("gunluk_fiyat", Number(aktifFiltre.maxFiyat) || 50000);
-      }
-      if (aktifFiltre.minKisi > 1) query = query.gte("kapasite", aktifFiltre.minKisi);
-      if (aktifFiltre.minYatakOdasi > 1) query = query.gte("yatak_odasi", aktifFiltre.minYatakOdasi);
-      if (aktifFiltre.minBanyo > 1) query = query.gte("banyo", aktifFiltre.minBanyo);
-
-      if (aktifFiltre.kategori.length > 0) {
-        const kategoriOr = aktifFiltre.kategori.map((kat) => `ozellikler->>kategori.eq.${kat}`).join(",");
-        query = query.or(kategoriOr);
-      }
-      if (aktifFiltre.ozellikler.length > 0) {
-        aktifFiltre.ozellikler.forEach((oz) => {
-          query = query.contains("ozellikler", { etiketler: [oz] });
-        });
-      }
-
-      switch (aktifFiltre.siralama) {
-        case "fiyat_artan":
-          query = query.order("gunluk_fiyat", { ascending: true });
-          break;
-        case "fiyat_azalan":
-          query = query.order("gunluk_fiyat", { ascending: false });
-          break;
-        case "yeni_eklenen":
-          query = query.order("olusturulma_tarihi", { ascending: false });
-          break;
-        case "kapasite_buyuk":
-          query = query.order("kapasite", { ascending: false });
-          break;
-        default:
-          if (skipSponsorluOrder) {
-            query = query.order("olusturulma_tarihi", { ascending: false });
-          } else {
-            query = query.order("sponsorlu", { ascending: false }).order("olusturulma_tarihi", { ascending: false });
-          }
-      }
-      return query;
-    };
-
-    const attempts: Array<{ withOnay: boolean; skipSponsorluOrder: boolean }> = [
-      { withOnay: true, skipSponsorluOrder: false },
-      { withOnay: true, skipSponsorluOrder: true },
-      { withOnay: false, skipSponsorluOrder: true },
-    ];
-
-    let data: ListingRow[] | null = null;
-    for (const attempt of attempts) {
-      const res = await buildFilteredQuery(attempt.withOnay, attempt.skipSponsorluOrder);
-      if (signal?.aborted) return;
-      if (!res.error) {
-        data = (res.data ?? []) as ListingRow[];
-        break;
-      }
-      if (!isCatalogSchemaError(res.error)) {
-        console.error("[konaklama]", res.error);
-        break;
-      }
-    }
+    const published = await queryPublishedListings(supabase, { tip: "villa", limit: 200 });
     if (signal?.aborted) return;
-    if (!data) return;
 
-    let rows = withCoverImage(data)
-      .filter((row) => !isExcludedDraftListing(row))
-      .filter((row) => isPublishedListing(row));
+    let rows = sortVillaCatalogListings(
+      applyVillaCatalogFilters(
+        withCoverImage(published as ListingRow[]).filter((row) => !isExcludedDraftListing(row)),
+        aktifFiltre,
+        tarih.geceSayisi,
+      ),
+      aktifFiltre.siralama,
+    );
 
     if (tarih.giris && tarih.cikis) {
       const [musaitlikRes, rezervasyonRes] = await Promise.all([

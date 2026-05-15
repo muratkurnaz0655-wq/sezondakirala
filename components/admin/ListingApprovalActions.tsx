@@ -21,6 +21,7 @@ export function ListingApprovalActions({
   const router = useRouter();
   const [rejectOpen, setRejectOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
+  const [approveError, setApproveError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   if (onayDurumu !== "onay_bekliyor") return null;
@@ -29,13 +30,18 @@ export function ListingApprovalActions({
     <>
       <button
         type="button"
-        title="Onayla"
+        title={approveError ?? "Onayla"}
         aria-label="Onayla"
         disabled={isPending}
         onClick={() =>
           startTransition(async () => {
+            setApproveError(null);
             const result = await approveListing(listingId);
-            if (result.success) router.refresh();
+            if (result.success) {
+              router.refresh();
+            } else {
+              setApproveError(result.error ?? "Onay başarısız.");
+            }
           })
         }
         className={`${iconBtn} border-emerald-500/55 text-emerald-600 hover:bg-emerald-50`}
