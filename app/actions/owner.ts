@@ -236,68 +236,126 @@ export async function upsertAvailability(formData: FormData) {
   return { success: true };
 }
 
-export async function setAvailabilityRangeByOwner(formData: FormData) {
-  const ilanId = String(formData.get("ilan_id") ?? "");
-  const access = await requireOwnerListingAccess(ilanId);
-  if (!access.ok) throw new Error(access.error);
-  const db = createAdminClient();
-  const baslangic = String(formData.get("baslangic_tarihi") ?? "");
-  const bitis = String(formData.get("bitis_tarihi") ?? "");
-  const durum = String(formData.get("durum") ?? "musait");
-  const fiyatOverride = Number(formData.get("fiyat_override") ?? 0) || null;
-  const dates = eachDateInRangeYmd(baslangic, bitis);
-  if (!dates.length) throw new Error("Geçerli bir tarih aralığı seçin.");
+export type SetOwnerAvailabilityRangeInput = {
+  ilanId: string;
+  baslangicTarihi: string;
+  bitisTarihi: string;
+  durum: "musait" | "dolu" | "ozel_fiyat";
+  fiyatOverride?: number | null;
+};
 
-  if (durum === "musait") {
-    const { error } = await db.from("musaitlik").delete().eq("ilan_id", ilanId).in("tarih", dates);
-    if (error) throw new Error(error.message);
+export async function setOwnerAvailabilityRange(input: SetOwnerAvailabilityRangeInput) {
+  const access = await requireOwnerListingAccess(input.ilanId);
+  if (!access.ok) return { success: false as const, error: access.error };
+
+  const db = createAdminClient();
+  const dates = eachDateInRangeYmd(input.baslangicTarihi, input.bitisTarihi);
+  if (!dates.length) {
+    return { success: false as const, error: "Geçerli bir tarih aralığı seçin." };
+  }
+
+  if (input.durum === "musait") {
+    const { error } = await db
+      .from("musaitlik")
+      .delete()
+      .eq("ilan_id", input.ilanId)
+      .in("tarih", dates);
+    if (error) return { success: false as const, error: error.message };
   } else {
     const { error } = await db.from("musaitlik").upsert(
       dates.map((tarih) => ({
-        ilan_id: ilanId,
+        ilan_id: input.ilanId,
         tarih,
-        durum,
-        fiyat_override: durum === "ozel_fiyat" ? fiyatOverride : null,
+        durum: input.durum,
+        fiyat_override: input.durum === "ozel_fiyat" ? (input.fiyatOverride ?? null) : null,
       })),
       { onConflict: "ilan_id,tarih" },
     );
-    if (error) throw new Error(error.message);
+    if (error) return { success: false as const, error: error.message };
   }
 
-  revalidateListingCalendar(ilanId);
+  revalidateListingCalendar(input.ilanId);
+  return { success: true as const };
+}
+
+export async function setAvailabilityRangeByOwner(formData: FormData) {
+  const result = await setOwnerAvailabilityRange({
+    ilanId: String(formData.get("ilan_id") ?? ""),
+    baslangicTarihi: String(formData.get("baslangic_tarihi") ?? ""),
+    bitisTarihi: String(formData.get("bitis_tarihi") ?? ""),
+    durum: String(formData.get("durum") ?? "musait") as SetOwnerAvailabilityRangeInput["durum"],
+    fiyatOverride: Number(formData.get("fiyat_override") ?? 0) || null,
+  });
+  if (!result.success) throw new Error(result.error);
+}
+
+export type CreateOwnerSeasonPriceInput = {
+  ilanId: string;
+  baslangicTarihi: string;
+  bitisTarihi: string;
+  gunlukFiyat: number;
+};
+
+export async function createOwnerSeasonPrice(input: CreateOwnerSeasonPriceInput) {
+  const access = await requireOwnerListingAccess(input.ilanId);
+  if (!access.ok) return { success: false as const, error: access.error };
+
+  const { error } = await access.supabase.from("sezon_fiyatlari").insert({
+    ilan_id: input.ilanId,
+    baslangic_tarihi: input.baslangicTarihi,
+    bitis_tarihi: input.bitisTarihi,
+    gunluk_fiyat: input.gunlukFiyat,
+  });
+
+  if (error) return { success: false as const, error: "Sezon fiyatı kaydedilemedi." };
+
+  revalidatePath("/panel/fiyat");
+  revalidatePath("/panel/takvim");
+  return { success: true as const };
 }
 
 export async function upsertSeasonPrice(formData: FormData) {
-  const ilanId = String(formData.get("ilan_id") ?? "");
-  const access = await requireOwnerListingAccess(ilanId);
-  if (!access.ok) throw new Error(access.error);
-  const supabase = access.supabase;
-  await supabase.from("sezon_fiyatlari").insert({
-    ilan_id: ilanId,
-    baslangic_tarihi: String(formData.get("baslangic_tarihi") ?? ""),
-    bitis_tarihi: String(formData.get("bitis_tarihi") ?? ""),
-    gunluk_fiyat: Number(formData.get("gunluk_fiyat") ?? 0),
+  const result = await createOwnerSeasonPrice({
+    ilanId: String(formData.get("ilan_id") ?? ""),
+    baslangicTarihi: String(formData.get("baslangic_tarihi") ?? ""),
+    bitisTarihi: String(formData.get("bitis_tarihi") ?? ""),
+    gunlukFiyat: Number(formData.get("gunluk_fiyat") ?? 0),
   });
-  revalidatePath("/panel/fiyat");
-  revalidatePath("/panel/takvim");
+  if (!result.success) throw new Error(result.error);
 }
 
-export async function deleteSeasonPriceByOwner(formData: FormData) {
-  const id = String(formData.get("id") ?? "");
+export async function deleteOwnerSeasonPrice(seasonPriceId: string) {
   const auth = await requireAuthenticatedOwner();
-  if (!auth.ok) throw new Error(auth.error);
+  if (!auth.ok) return { success: false as const, error: auth.error };
+
   const { data: seasonPrice } = await auth.supabase
     .from("sezon_fiyatlari")
     .select("id,ilan_id")
-    .eq("id", id)
+    .eq("id", seasonPriceId)
     .maybeSingle();
-  if (!seasonPrice) throw new Error("Sezon fiyat kaydi bulunamadi.");
+
+  if (!seasonPrice) {
+    return { success: false as const, error: "Sezon fiyat kaydı bulunamadı." };
+  }
+
   const listingAccess = await requireOwnerListingAccess(seasonPrice.ilan_id);
-  if (!listingAccess.ok) throw new Error(listingAccess.error);
-  const supabase = listingAccess.supabase;
-  await supabase.from("sezon_fiyatlari").delete().eq("id", id);
+  if (!listingAccess.ok) return { success: false as const, error: listingAccess.error };
+
+  const { error } = await listingAccess.supabase
+    .from("sezon_fiyatlari")
+    .delete()
+    .eq("id", seasonPriceId);
+
+  if (error) return { success: false as const, error: "Sezon fiyatı silinemedi." };
+
   revalidatePath("/panel/fiyat");
   revalidatePath("/panel/takvim");
+  return { success: true as const };
+}
+
+export async function deleteSeasonPriceByOwner(formData: FormData) {
+  const result = await deleteOwnerSeasonPrice(String(formData.get("id") ?? ""));
+  if (!result.success) throw new Error(result.error);
 }
 
 async function requireAuthenticatedOwner() {

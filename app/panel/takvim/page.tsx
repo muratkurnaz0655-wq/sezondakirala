@@ -35,8 +35,13 @@ export default async function PanelCalendarPage({ searchParams }: PanelTakvimPag
     : [{ data: [] }, { data: [] }, { data: [] }];
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-semibold text-slate-900">Takvim Yönetimi</h1>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Takvim Yönetimi</h1>
+        <p className="mt-1 text-sm text-slate-600">
+          Dolu günleri işaretleyin, özel fiyat tanımlayın ve onaylı rezervasyonları görüntüleyin.
+        </p>
+      </div>
       <OwnerCalendarManager
         listings={ownerListings ?? []}
         defaultListingId={preferredListingId}
