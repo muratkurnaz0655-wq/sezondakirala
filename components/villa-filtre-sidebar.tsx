@@ -3,7 +3,7 @@
 import { useState, type ReactNode } from "react";
 import { ChevronDown, ChevronUp, SlidersHorizontal } from "lucide-react";
 import { BOLGELER, KATEGORILER, OZELLIKLER } from "@/lib/villa-sabitleri";
-import type { VillaFiltre } from "@/types/filtre";
+import { VILLA_PRICE_FILTER_DEFAULT_MAX, type VillaFiltre } from "@/types/filtre";
 
 const ACCENT = "#1D9E75";
 
@@ -42,7 +42,7 @@ export function VillaFiltreSidebar({
   geceSayisi?: number;
 }) {
   const toplamModu = geceSayisi > 1;
-  const maxFiyatLimit = toplamModu ? 200000 : 50000;
+  const maxFiyatLimit = toplamModu ? 200_000 : VILLA_PRICE_FILTER_DEFAULT_MAX;
   const fiyatStep = toplamModu ? 1000 : 500;
 
   const minSliderMax = Math.max(fiyatStep, filtre.maxFiyat - fiyatStep);

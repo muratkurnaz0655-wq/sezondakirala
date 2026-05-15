@@ -16,7 +16,7 @@ import { queryPublishedListings } from "@/lib/catalog-queries";
 import { getCatalogSupabase } from "@/lib/catalog-supabase";
 import { applyVillaCatalogFilters, sortVillaCatalogListings } from "@/lib/villa-catalog-filters";
 import { dateFromYmdLocal, istanbulDateString } from "@/lib/tr-today";
-import { defaultFiltre, type VillaFiltre } from "@/types/filtre";
+import { defaultFiltre, VILLA_PRICE_FILTER_DEFAULT_MAX, type VillaFiltre } from "@/types/filtre";
 import { isExcludedDraftListing } from "@/lib/utils/excluded-draft-listing";
 import type { Ilan } from "@/types/supabase";
 
@@ -76,6 +76,7 @@ function KonaklamaListingsContent() {
   const hasDateFilter = Boolean(urlGiris && urlCikis);
 
   const [ilanlar, setIlanlar] = useState<Ilan[]>([]);
+  const [yayinVillaSayisi, setYayinVillaSayisi] = useState<number | null>(null);
   const [filtre, setFiltre] = useState<VillaFiltre>(defaultFiltre);
   const [mobilFiltre, setMobilFiltre] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -157,12 +158,11 @@ function KonaklamaListingsContent() {
     const published = await queryPublishedListings(supabase, { tip: "villa", limit: 200 });
     if (signal?.aborted) return;
 
+    const catalogRows = withCoverImage(published as ListingRow[]).filter((row) => !isExcludedDraftListing(row));
+    setYayinVillaSayisi(catalogRows.length);
+
     let rows = sortVillaCatalogListings(
-      applyVillaCatalogFilters(
-        withCoverImage(published as ListingRow[]).filter((row) => !isExcludedDraftListing(row)),
-        aktifFiltre,
-        tarih.geceSayisi,
-      ),
+      applyVillaCatalogFilters(catalogRows, aktifFiltre, tarih.geceSayisi),
       aktifFiltre.siralama,
     );
 
@@ -245,7 +245,7 @@ function KonaklamaListingsContent() {
         key: "ozellikler",
         value: o,
       })),
-      ...(filtre.minFiyat > 0 || filtre.maxFiyat < 50000
+      ...(filtre.minFiyat > 0 || filtre.maxFiyat < VILLA_PRICE_FILTER_DEFAULT_MAX
         ? [{ label: `₺${filtre.minFiyat}-₺${filtre.maxFiyat}`, key: "fiyat", value: "" }]
         : []),
       ...(filtre.minKisi > 1 ? [{ label: `${filtre.minKisi}+ kişi`, key: "kisi", value: "" }] : []),
@@ -257,7 +257,7 @@ function KonaklamaListingsContent() {
   const aktifFiltreSayisi = useMemo(() => {
     let count = filtre.bolge.length + filtre.kategori.length + filtre.ozellikler.length;
     if (hasDateFilter) count += 1;
-    if (filtre.minFiyat > 0 || filtre.maxFiyat < 50000) count += 1;
+    if (filtre.minFiyat > 0 || filtre.maxFiyat < VILLA_PRICE_FILTER_DEFAULT_MAX) count += 1;
     if (filtre.minKisi > 1) count += 1;
     if (filtre.minYatakOdasi > 1) count += 1;
     return count;
@@ -353,9 +353,17 @@ function KonaklamaListingsContent() {
 
         <main className="min-w-0 flex-1">
           <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-[13px] text-slate-500">
-              <span className="font-semibold text-slate-800">{ilanlar.length}</span> villa listeleniyor
-            </p>
+            <div className="text-[13px] text-slate-500">
+              <p>
+                <span className="font-semibold text-slate-800">{ilanlar.length}</span> villa listeleniyor
+                {yayinVillaSayisi != null && yayinVillaSayisi > ilanlar.length ? (
+                  <span className="text-slate-400">
+                    {" "}
+                    ({yayinVillaSayisi - ilanlar.length} villa filtreler nedeniyle gizli)
+                  </span>
+                ) : null}
+              </p>
+            </div>
             <select
               value={filtre.siralama}
               onChange={(e) => setFiltre({ ...filtre, siralama: e.target.value as VillaFiltre["siralama"] })}

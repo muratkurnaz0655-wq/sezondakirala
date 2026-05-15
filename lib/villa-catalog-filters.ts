@@ -1,5 +1,17 @@
 import type { Ilan } from "@/types/supabase";
-import type { VillaFiltre } from "@/types/filtre";
+import { defaultFiltre, VILLA_PRICE_FILTER_DEFAULT_MAX, type VillaFiltre } from "@/types/filtre";
+
+/** Tarih araması yokken varsayılan fiyat aralığı — üst sınır uygulanmaz. */
+export function isDefaultVillaPriceFilter(
+  filtre: Pick<VillaFiltre, "minFiyat" | "maxFiyat">,
+  geceSayisi: number,
+) {
+  if (geceSayisi > 1) return false;
+  return (
+    (filtre.minFiyat ?? 0) <= defaultFiltre.minFiyat &&
+    (filtre.maxFiyat ?? 0) >= VILLA_PRICE_FILTER_DEFAULT_MAX
+  );
+}
 
 export function listingNightlyPrice(listing: { gunluk_fiyat?: number | null }): number {
   const v = listing.gunluk_fiyat;
@@ -14,7 +26,7 @@ export function matchesVillaPriceFilter(
 ): boolean {
   const nightly = listingNightlyPrice(listing);
   const minFiyat = Number(filtre.minFiyat) || 0;
-  const maxFiyat = Number(filtre.maxFiyat) || 50000;
+  const maxFiyat = Number(filtre.maxFiyat) || VILLA_PRICE_FILTER_DEFAULT_MAX;
   if (geceSayisi > 1) {
     const maxGecelik = Math.ceil(maxFiyat / geceSayisi);
     const minGecelik = Math.floor(minFiyat / geceSayisi);
@@ -46,7 +58,9 @@ export function applyVillaCatalogFilters<T extends Ilan>(
       if (!bolgeMatch) return false;
     }
 
-    if (!matchesVillaPriceFilter(row, filtre, geceSayisi)) return false;
+    if (!isDefaultVillaPriceFilter(filtre, geceSayisi) && !matchesVillaPriceFilter(row, filtre, geceSayisi)) {
+      return false;
+    }
 
     if (filtre.minKisi > 1 && (row.kapasite ?? 0) < filtre.minKisi) return false;
     if (filtre.minYatakOdasi > 1 && (row.yatak_odasi ?? 0) < filtre.minYatakOdasi) return false;

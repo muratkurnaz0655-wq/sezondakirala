@@ -1,3 +1,6 @@
+/** Varsayılan üst sınır — bu değerdeyken fiyat filtresi uygulanmaz (tüm yayın villaları). */
+export const VILLA_PRICE_FILTER_DEFAULT_MAX = 300_000;
+
 export interface VillaFiltre {
   bolge: string[];
   minFiyat: number;
@@ -15,7 +18,7 @@ export interface VillaFiltre {
 export const defaultFiltre: VillaFiltre = {
   bolge: [],
   minFiyat: 0,
-  maxFiyat: 50000,
+  maxFiyat: VILLA_PRICE_FILTER_DEFAULT_MAX,
   minKisi: 1,
   maxKisi: 20,
   minYatakOdasi: 1,
