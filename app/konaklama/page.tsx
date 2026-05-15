@@ -59,13 +59,24 @@ export default function ListingsPage() {
   const [filtre, setFiltre] = useState<VillaFiltre>(defaultFiltre);
   const [mobilFiltre, setMobilFiltre] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [giris, setGiris] = useState<string>("");
-  const [cikis, setCikis] = useState<string>("");
-  const [geceSayisi, setGeceSayisi] = useState<number>(0);
   const yetiskin = currentArama?.yetiskin ?? 2;
   const cocuk = currentArama?.cocuk ?? 0;
   const bebek = currentArama?.bebek ?? 0;
   const bugunIso = useMemo(() => istanbulDateString(), []);
+  const aramaTarihleri = useMemo(() => {
+    const arama = currentArama;
+    if (arama?.tip === "villa" && arama.giris && arama.cikis) {
+      const geceSayisi = Math.max(
+        0,
+        Math.ceil(
+          (dateFromYmdLocal(arama.cikis).getTime() - dateFromYmdLocal(arama.giris).getTime()) / 86400000,
+        ),
+      );
+      return { giris: arama.giris, cikis: arama.cikis, geceSayisi };
+    }
+    return { giris: "", cikis: "", geceSayisi: 0 };
+  }, [currentArama?.cikis, currentArama?.giris, currentArama?.tip]);
+  const { giris, cikis, geceSayisi } = aramaTarihleri;
   const bolgeKey = useMemo(() => filtre.bolge.join("|"), [filtre.bolge]);
   const kategoriKey = useMemo(() => filtre.kategori.join("|"), [filtre.kategori]);
   const ozellikKey = useMemo(() => filtre.ozellikler.join("|"), [filtre.ozellikler]);
@@ -98,25 +109,15 @@ export default function ListingsPage() {
     ],
   );
 
-  useEffect(() => {
-    if (currentArama?.tip === "villa" && currentArama.giris && currentArama.cikis) {
-      setGiris(currentArama.giris);
-      setCikis(currentArama.cikis);
-      const fark = Math.max(
-        0,
-        Math.ceil((dateFromYmdLocal(currentArama.cikis).getTime() - dateFromYmdLocal(currentArama.giris).getTime()) / 86400000),
-      );
-      setGeceSayisi(fark);
-      return;
-    }
-    setGiris("");
-    setCikis("");
-    setGeceSayisi(0);
-  }, [currentArama?.cikis, currentArama?.giris, currentArama?.tip]);
-
-  const fetchIlanlar = useCallback(async (aktifFiltre: VillaFiltre, aktifGeceSayisi = 1) => {
+  const fetchIlanlar = useCallback(
+    async (
+      aktifFiltre: VillaFiltre,
+      tarih: { giris: string; cikis: string; geceSayisi: number },
+      signal?: AbortSignal,
+    ) => {
     const supabase = createClient();
     let query = supabase.from("ilanlar").select("*, ilan_medyalari(url,sira,tip)").eq("aktif", true).eq("tip", "villa");
+    const aktifGeceSayisi = tarih.geceSayisi;
 
     if (aktifFiltre.bolge.length > 0) {
       const bolgeFiltre = aktifFiltre.bolge.map((b) => `konum.ilike.%${b.split(",")[0].trim()}%`).join(",");
@@ -146,17 +147,6 @@ export default function ListingsPage() {
       });
     }
 
-    if (giris && cikis) {
-      const { data: doluIlanlar } = await supabase
-        .from("musaitlik")
-        .select("ilan_id")
-        .gte("tarih", giris)
-        .lt("tarih", cikis)
-        .eq("durum", "dolu");
-      const doluIds = doluIlanlar?.map((d) => d.ilan_id) ?? [];
-      if (doluIds.length) query = query.not("id", "in", `(${doluIds.join(",")})`);
-    }
-
     switch (aktifFiltre.siralama) {
       case "fiyat_artan":
         query = query.order("gunluk_fiyat", { ascending: true });
@@ -175,20 +165,58 @@ export default function ListingsPage() {
     }
 
     const { data, error } = await query;
-    if (error) console.error(error);
-    setIlanlar(
-      withCoverImage((data ?? []) as ListingRow[]).filter((row) => !isExcludedDraftListing(row)),
-    );
-    setLoading(false);
-  }, [cikis, giris]);
+    if (signal?.aborted) return;
+    if (error) {
+      console.error(error);
+      return;
+    }
+
+    let rows = withCoverImage((data ?? []) as ListingRow[]).filter((row) => !isExcludedDraftListing(row));
+
+    if (tarih.giris && tarih.cikis) {
+      const [musaitlikRes, rezervasyonRes] = await Promise.all([
+        supabase
+          .from("musaitlik")
+          .select("ilan_id")
+          .gte("tarih", tarih.giris)
+          .lt("tarih", tarih.cikis)
+          .eq("durum", "dolu"),
+        supabase
+          .from("rezervasyonlar")
+          .select("ilan_id")
+          .in("durum", ["beklemede", "onaylandi"])
+          .lt("giris_tarihi", tarih.cikis)
+          .gt("cikis_tarihi", tarih.giris),
+      ]);
+      if (signal?.aborted) return;
+
+      const doluIds = new Set<string>();
+      (musaitlikRes.data ?? []).forEach((row) => {
+        if (row.ilan_id) doluIds.add(String(row.ilan_id));
+      });
+      (rezervasyonRes.data ?? []).forEach((row) => {
+        if (row.ilan_id) doluIds.add(String(row.ilan_id));
+      });
+      if (doluIds.size > 0) {
+        rows = rows.filter((row) => !doluIds.has(row.id));
+      }
+    }
+
+    setIlanlar(rows);
+  }, []);
 
   useEffect(() => {
-    void (async () => {
-      setLoading(true);
-      await fetchIlanlar(filtre, geceSayisi);
-    })();
+    const controller = new AbortController();
+    setLoading(true);
+    void fetchIlanlar(filtre, aramaTarihleri, controller.signal).finally(() => {
+      if (!controller.signal.aborted) setLoading(false);
+    });
+    return () => controller.abort();
   }, [
     fetchIlanlar,
+    aramaTarihleri.giris,
+    aramaTarihleri.cikis,
+    aramaTarihleri.geceSayisi,
     bolgeKey,
     kategoriKey,
     ozellikKey,
@@ -200,7 +228,6 @@ export default function ListingsPage() {
     filtre.minKisi,
     filtre.minYatakOdasi,
     filtre.siralama,
-    geceSayisi,
   ]);
 
   const aktifFiltreler = useMemo(
