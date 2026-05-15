@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { formatCurrency } from "@/lib/utils/format";
 import { Home, Plus } from "lucide-react";
@@ -10,7 +11,7 @@ import { AdminMobileCard, AdminMobileCardList } from "@/components/admin/AdminMo
 import { AdminSegmentedTabs } from "@/components/admin/AdminSegmentedTabs";
 import { AdminActionButton } from "@/components/admin/AdminActionButton";
 import { listingCoverImageUrl } from "./listing-cover";
-import { ListingsBulkTable, type ListingTableRow } from "./ListingsBulkTable";
+import { ListingsBulkTable, type ListingOwnerInfo, type ListingTableRow } from "./ListingsBulkTable";
 import { AdminEmptyState } from "@/components/admin/AdminEmptyState";
 import { resolveListingOnayDurumu } from "@/lib/listing-approval";
 
@@ -45,18 +46,27 @@ function parseOptionalNumber(value: string | undefined) {
 }
 
 /** RSC → client: yalnızca JSON-güvenli alanlar (BigInt / ekstra view kolonları serileştirmeyi bozmasın). */
-function toClientListingRow(row: Record<string, unknown>): ListingTableRow {
+function toClientListingRow(
+  row: Record<string, unknown>,
+  ownerMap: Map<string, ListingOwnerInfo>,
+): ListingTableRow {
   const onayDurumu = resolveListingOnayDurumu({
     aktif: Boolean(row.aktif),
     onay_durumu: row.onay_durumu == null ? null : String(row.onay_durumu),
   });
+  const sahipId = String(row.sahip_id ?? "");
   return {
     id: String(row.id ?? ""),
     baslik: String(row.baslik ?? ""),
     konum: String(row.konum ?? ""),
     tip: String(row.tip ?? ""),
-    sahip_id: String(row.sahip_id ?? ""),
+    sahip_id: sahipId,
+    sahip: ownerMap.get(sahipId) ?? null,
     gunluk_fiyat: Number(row.gunluk_fiyat ?? 0),
+    temizlik_ucreti: Number(row.temizlik_ucreti ?? 0),
+    kapasite: Number(row.kapasite ?? 0),
+    yatak_odasi: Number(row.yatak_odasi ?? 0),
+    banyo: Number(row.banyo ?? 0),
     aktif: Boolean(row.aktif),
     onay_durumu: onayDurumu,
     slug: row.slug != null && row.slug !== "" ? String(row.slug) : null,
@@ -161,7 +171,7 @@ export default async function AdminListingsPage({ searchParams }: AdminListingsP
 
   const [{ data: listings }, { data: users }] = await Promise.all([
     Promise.resolve(listingsResult),
-    supabase.from("kullanicilar").select("id,ad_soyad,email"),
+    supabase.from("kullanicilar").select("id,ad_soyad,email,telefon"),
   ]);
 
   const listingRows = listings ?? [];
@@ -183,6 +193,17 @@ export default async function AdminListingsPage({ searchParams }: AdminListingsP
 
   const userMap = new Map(
     (users ?? []).map((user) => [String(user.id), user.ad_soyad ?? user.email ?? "-"]),
+  );
+  const ownerDetailMap = new Map<string, ListingOwnerInfo>(
+    (users ?? []).map((user) => [
+      String(user.id),
+      {
+        id: String(user.id),
+        ad_soyad: user.ad_soyad ?? null,
+        email: user.email ?? null,
+        telefon: user.telefon ?? null,
+      },
+    ]),
   );
   const locationOptions = [...new Set(listingsWithMedia.map((row) => row.konum).filter(Boolean))].sort();
   const filteredListings = listingsWithMedia.filter((row) => {
@@ -307,8 +328,10 @@ export default async function AdminListingsPage({ searchParams }: AdminListingsP
 
       <AdminMobileCardList>
         {filteredListings.map((listing) => {
-          const row = toClientListingRow(listing as Record<string, unknown>);
+          const row = toClientListingRow(listing as Record<string, unknown>, ownerDetailMap);
           const kapak = listingCoverImageUrl(row.ilan_medyalari);
+          const ownerLabel =
+            row.sahip?.ad_soyad?.trim() || row.sahip?.email || userMap.get(row.sahip_id) || "—";
           return (
             <AdminMobileCard key={row.id}>
               <div className="flex gap-3">
@@ -325,6 +348,18 @@ export default async function AdminListingsPage({ searchParams }: AdminListingsP
                 <div className="min-w-0 flex-1">
               <p className="text-sm font-semibold text-slate-800">{row.baslik}</p>
               <p className="mt-1 text-xs text-slate-500">{row.konum}</p>
+              <p className="mt-1 text-xs text-slate-600">
+                Sahip:{" "}
+                {row.sahip?.id ? (
+                  <Link href={`/yonetim/kullanicilar/${row.sahip.id}`} className="font-medium text-[#185FA5] hover:underline">
+                    {ownerLabel}
+                  </Link>
+                ) : (
+                  ownerLabel
+                )}
+              </p>
+              {row.sahip?.email ? <p className="text-xs text-slate-500">{row.sahip.email}</p> : null}
+              {row.sahip?.telefon ? <p className="text-xs text-slate-500">{row.sahip.telefon}</p> : null}
               <p className="mt-2 text-sm font-semibold text-[#0e9aa7]">{formatCurrency(Number(row.gunluk_fiyat ?? 0))}</p>
               <div className="mt-3">
                 <ListingActions listing={row} />
@@ -337,7 +372,7 @@ export default async function AdminListingsPage({ searchParams }: AdminListingsP
       </AdminMobileCardList>
       {filteredListings.length ? (
         <ListingsBulkTable
-          listings={filteredListings.map((r) => toClientListingRow(r as Record<string, unknown>))}
+          listings={filteredListings.map((r) => toClientListingRow(r as Record<string, unknown>, ownerDetailMap))}
         />
       ) : (
         <AdminEmptyState message="Henüz kayıt yok" actionHref="/yonetim/ilanlar/yeni" actionLabel="İlk ilanı ekle →" />
